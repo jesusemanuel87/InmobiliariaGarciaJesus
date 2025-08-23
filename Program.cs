@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using InmobiliariaGarciaJesus.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,11 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Add Entity Framework
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? 
-    "Server=localhost;Database=inmobiliaria;Uid=root;Pwd=;";
-builder.Services.AddDbContext<InmobiliariaContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+// Add MySQL connection manager
+builder.Services.AddScoped<MySqlConnectionManager>();
 
 var app = builder.Build();
 

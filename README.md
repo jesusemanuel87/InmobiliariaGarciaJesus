@@ -6,7 +6,7 @@ Sistema web desarrollado en ASP.NET Core MVC para la gestión de una inmobiliari
 
 - **Framework**: ASP.NET Core 9.0 MVC
 - **Base de Datos**: MySQL
-- **ORM**: Entity Framework Core
+- **Acceso a Datos**: MySQL.Data (Conector directo)
 - **Frontend**: Bootstrap 5 + Font Awesome
 - **Patrón**: MVC (Model-View-Controller)
 
@@ -95,7 +95,7 @@ Sistema web desarrollado en ASP.NET Core MVC para la gestión de una inmobiliari
    ```
 
 2. **Configurar la base de datos**
-   - Crear la base de datos MySQL ejecutando `Inmobiliaria_Improved.sql`
+   - Crear la base de datos MySQL ejecutando `Inmobiliaria_db.sql`
    - Actualizar la cadena de conexión en `appsettings.json`:
    ```json
    {
@@ -108,11 +108,6 @@ Sistema web desarrollado en ASP.NET Core MVC para la gestión de una inmobiliari
 3. **Restaurar paquetes NuGet**
    ```bash
    dotnet restore
-   ```
-
-4. **Ejecutar migraciones (opcional)**
-   ```bash
-   dotnet ef database update
    ```
 
 5. **Ejecutar la aplicación**
@@ -132,7 +127,7 @@ InmobiliariaGarciaJesus/
 │   ├── PropietariosController.cs
 │   └── InquilinosController.cs
 ├── Data/
-│   └── InmobiliariaContext.cs
+│   └── MySqlConnectionManager.cs
 ├── Models/
 │   ├── Propietario.cs
 │   ├── Inquilino.cs
@@ -147,7 +142,7 @@ InmobiliariaGarciaJesus/
 ├── wwwroot/
 ├── appsettings.json
 ├── Program.cs
-├── Inmobiliaria_Improved.sql
+├── Inmobiliaria_db.sql
 └── README.md
 ```
 
@@ -155,9 +150,9 @@ InmobiliariaGarciaJesus/
 
 ### Backend
 - **ASP.NET Core 9.0**: Framework web principal
-- **Entity Framework Core 9.0**: ORM para acceso a datos
-- **Pomelo.EntityFrameworkCore.MySql**: Provider para MySQL
+- **MySql.Data 9.0.0**: Conector directo para MySQL
 - **Data Annotations**: Validaciones de modelo
+- **ADO.NET**: Acceso a datos con consultas SQL nativas
 
 ### Frontend
 - **Bootstrap 5**: Framework CSS para diseño responsive
@@ -189,23 +184,29 @@ InmobiliariaGarciaJesus/
 
 ## 🔄 Próximas Mejoras
 
-1. **Autenticación y Autorización**
+1. **Implementación de ORM (Recomendado)**
+   - Migrar a Entity Framework Core para mayor productividad
+   - Implementar Code First con migraciones automáticas
+   - Aprovechar LINQ para consultas complejas
+   - Lazy loading para relaciones entre entidades
+
+2. **Autenticación y Autorización**
    - Sistema de login/logout
    - Roles de usuario (Admin, Empleado)
    - Protección de rutas
 
-2. **Gestión Completa**
+3. **Gestión Completa**
    - CRUD de Inmuebles
    - CRUD de Contratos
    - Gestión de Pagos
 
-3. **Funcionalidades Avanzadas**
+4. **Funcionalidades Avanzadas**
    - Dashboard con estadísticas
    - Reportes en PDF
    - Búsqueda y filtros avanzados
    - Notificaciones de vencimientos
 
-4. **Mejoras Técnicas**
+5. **Mejoras Técnicas**
    - API REST
    - Logging estructurado
    - Tests unitarios

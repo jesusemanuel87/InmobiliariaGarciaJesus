@@ -1,27 +1,46 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using InmobiliariaGarciaJesus.Data;
 using InmobiliariaGarciaJesus.Models;
+using MySql.Data.MySqlClient;
 
 namespace InmobiliariaGarciaJesus.Controllers
 {
     public class InquilinosController : Controller
     {
-        private readonly InmobiliariaContext _context;
+        private readonly MySqlConnectionManager _connectionManager;
 
-        public InquilinosController(InmobiliariaContext context)
+        public InquilinosController(MySqlConnectionManager connectionManager)
         {
-            _context = context;
+            _connectionManager = connectionManager;
         }
 
         // GET: Inquilinos
         public async Task<IActionResult> Index()
         {
-            var inquilinos = await _context.Inquilinos
-                .Where(i => i.Estado == true)
-                .OrderBy(i => i.Apellido)
-                .ThenBy(i => i.Nombre)
-                .ToListAsync();
+            var inquilinos = new List<Inquilino>();
+            
+            using var connection = await _connectionManager.GetOpenConnectionAsync();
+            var query = "SELECT * FROM inquilinos WHERE Estado = 1 ORDER BY Apellido, Nombre";
+            
+            using var command = new MySqlCommand(query, connection);
+            using var reader = await command.ExecuteReaderAsync();
+            
+            while (await reader.ReadAsync())
+            {
+                inquilinos.Add(new Inquilino
+                {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    DNI = reader["DNI"].ToString(),
+                    Nombre = reader["Nombre"].ToString(),
+                    Apellido = reader["Apellido"].ToString(),
+                    Telefono = reader["Telefono"] == DBNull.Value ? null : reader["Telefono"].ToString(),
+                    Email = reader["Email"].ToString(),
+                    Direccion = reader["Direccion"] == DBNull.Value ? null : reader["Direccion"].ToString(),
+                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                    Estado = Convert.ToBoolean(reader["Estado"])
+                });
+            }
+            
             return View(inquilinos);
         }
 
@@ -33,16 +52,32 @@ namespace InmobiliariaGarciaJesus.Controllers
                 return NotFound();
             }
 
-            var inquilino = await _context.Inquilinos
-                .Include(i => i.Contratos)
-                .ThenInclude(c => c.Inmueble)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            using var connection = await _connectionManager.GetOpenConnectionAsync();
             
-            if (inquilino == null)
+            var query = "SELECT * FROM inquilinos WHERE Id = @id";
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@id", id);
+            
+            using var reader = await command.ExecuteReaderAsync();
+            
+            if (!await reader.ReadAsync())
             {
                 return NotFound();
             }
-
+            
+            var inquilino = new Inquilino
+            {
+                Id = Convert.ToInt32(reader["Id"]),
+                DNI = reader["DNI"].ToString(),
+                Nombre = reader["Nombre"].ToString(),
+                Apellido = reader["Apellido"].ToString(),
+                Telefono = reader["Telefono"] == DBNull.Value ? null : reader["Telefono"].ToString(),
+                Email = reader["Email"].ToString(),
+                Direccion = reader["Direccion"] == DBNull.Value ? null : reader["Direccion"].ToString(),
+                FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                Estado = Convert.ToBoolean(reader["Estado"])
+            };
+            
             return View(inquilino);
         }
 
@@ -61,27 +96,47 @@ namespace InmobiliariaGarciaJesus.Controllers
             {
                 try
                 {
+                    using var connection = await _connectionManager.GetOpenConnectionAsync();
+                    
                     // Verificar si ya existe un inquilino con el mismo DNI
-                    var existeDNI = await _context.Inquilinos.AnyAsync(i => i.DNI == inquilino.DNI);
-                    if (existeDNI)
+                    var checkDNI = "SELECT COUNT(*) FROM inquilinos WHERE DNI = @dni";
+                    using var dniCommand = new MySqlCommand(checkDNI, connection);
+                    dniCommand.Parameters.AddWithValue("@dni", inquilino.DNI);
+                    var dniCount = Convert.ToInt32(await dniCommand.ExecuteScalarAsync());
+                    
+                    if (dniCount > 0)
                     {
                         ModelState.AddModelError("DNI", "Ya existe un inquilino con este DNI.");
                         return View(inquilino);
                     }
 
                     // Verificar si ya existe un inquilino con el mismo Email
-                    var existeEmail = await _context.Inquilinos.AnyAsync(i => i.Email == inquilino.Email);
-                    if (existeEmail)
+                    var checkEmail = "SELECT COUNT(*) FROM inquilinos WHERE Email = @email";
+                    using var emailCommand = new MySqlCommand(checkEmail, connection);
+                    emailCommand.Parameters.AddWithValue("@email", inquilino.Email);
+                    var emailCount = Convert.ToInt32(await emailCommand.ExecuteScalarAsync());
+                    
+                    if (emailCount > 0)
                     {
                         ModelState.AddModelError("Email", "Ya existe un inquilino con este Email.");
                         return View(inquilino);
                     }
 
-                    inquilino.FechaCreacion = DateTime.Now;
-                    inquilino.Estado = true;
+                    // Insertar nuevo inquilino
+                    var insertQuery = @"INSERT INTO inquilinos (DNI, Nombre, Apellido, Telefono, Email, Direccion, FechaCreacion, Estado) 
+                                       VALUES (@dni, @nombre, @apellido, @telefono, @email, @direccion, @fechaCreacion, @estado)";
                     
-                    _context.Add(inquilino);
-                    await _context.SaveChangesAsync();
+                    using var insertCommand = new MySqlCommand(insertQuery, connection);
+                    insertCommand.Parameters.AddWithValue("@dni", inquilino.DNI);
+                    insertCommand.Parameters.AddWithValue("@nombre", inquilino.Nombre);
+                    insertCommand.Parameters.AddWithValue("@apellido", inquilino.Apellido);
+                    insertCommand.Parameters.AddWithValue("@telefono", inquilino.Telefono ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("@email", inquilino.Email);
+                    insertCommand.Parameters.AddWithValue("@direccion", inquilino.Direccion ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("@fechaCreacion", DateTime.Now);
+                    insertCommand.Parameters.AddWithValue("@estado", true);
+                    
+                    await insertCommand.ExecuteNonQueryAsync();
                     
                     TempData["Success"] = "Inquilino creado exitosamente.";
                     return RedirectToAction(nameof(Index));
@@ -102,11 +157,31 @@ namespace InmobiliariaGarciaJesus.Controllers
                 return NotFound();
             }
 
-            var inquilino = await _context.Inquilinos.FindAsync(id);
-            if (inquilino == null)
+            using var connection = await _connectionManager.GetOpenConnectionAsync();
+            var query = "SELECT * FROM inquilinos WHERE Id = @id";
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@id", id);
+            
+            using var reader = await command.ExecuteReaderAsync();
+            
+            if (!await reader.ReadAsync())
             {
                 return NotFound();
             }
+            
+            var inquilino = new Inquilino
+            {
+                Id = Convert.ToInt32(reader["Id"]),
+                DNI = reader["DNI"].ToString(),
+                Nombre = reader["Nombre"].ToString(),
+                Apellido = reader["Apellido"].ToString(),
+                Telefono = reader["Telefono"] == DBNull.Value ? null : reader["Telefono"].ToString(),
+                Email = reader["Email"].ToString(),
+                Direccion = reader["Direccion"] == DBNull.Value ? null : reader["Direccion"].ToString(),
+                FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                Estado = Convert.ToBoolean(reader["Estado"])
+            };
+            
             return View(inquilino);
         }
 
@@ -124,38 +199,51 @@ namespace InmobiliariaGarciaJesus.Controllers
             {
                 try
                 {
+                    using var connection = await _connectionManager.GetOpenConnectionAsync();
+                    
                     // Verificar si ya existe otro inquilino con el mismo DNI
-                    var existeDNI = await _context.Inquilinos.AnyAsync(i => i.DNI == inquilino.DNI && i.Id != inquilino.Id);
-                    if (existeDNI)
+                    var checkDNI = "SELECT COUNT(*) FROM inquilinos WHERE DNI = @dni AND Id != @id";
+                    using var dniCommand = new MySqlCommand(checkDNI, connection);
+                    dniCommand.Parameters.AddWithValue("@dni", inquilino.DNI);
+                    dniCommand.Parameters.AddWithValue("@id", inquilino.Id);
+                    var dniCount = Convert.ToInt32(await dniCommand.ExecuteScalarAsync());
+                    
+                    if (dniCount > 0)
                     {
-                        ModelState.AddModelError("DNI", "Ya existe otro inquilino con este DNI.");
+                        ModelState.AddModelError("DNI", "Ya existe un inquilino con este DNI.");
                         return View(inquilino);
                     }
 
                     // Verificar si ya existe otro inquilino con el mismo Email
-                    var existeEmail = await _context.Inquilinos.AnyAsync(i => i.Email == inquilino.Email && i.Id != inquilino.Id);
-                    if (existeEmail)
+                    var checkEmail = "SELECT COUNT(*) FROM inquilinos WHERE Email = @email AND Id != @id";
+                    using var emailCommand = new MySqlCommand(checkEmail, connection);
+                    emailCommand.Parameters.AddWithValue("@email", inquilino.Email);
+                    emailCommand.Parameters.AddWithValue("@id", inquilino.Id);
+                    var emailCount = Convert.ToInt32(await emailCommand.ExecuteScalarAsync());
+                    
+                    if (emailCount > 0)
                     {
-                        ModelState.AddModelError("Email", "Ya existe otro inquilino con este Email.");
+                        ModelState.AddModelError("Email", "Ya existe un inquilino con este Email.");
                         return View(inquilino);
                     }
 
-                    _context.Update(inquilino);
-                    await _context.SaveChangesAsync();
+                    // Actualizar inquilino
+                    var updateQuery = @"UPDATE inquilinos SET DNI = @dni, Nombre = @nombre, Apellido = @apellido, 
+                                       Telefono = @telefono, Email = @email, Direccion = @direccion WHERE Id = @id";
+                    
+                    using var updateCommand = new MySqlCommand(updateQuery, connection);
+                    updateCommand.Parameters.AddWithValue("@dni", inquilino.DNI);
+                    updateCommand.Parameters.AddWithValue("@nombre", inquilino.Nombre);
+                    updateCommand.Parameters.AddWithValue("@apellido", inquilino.Apellido);
+                    updateCommand.Parameters.AddWithValue("@telefono", inquilino.Telefono ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("@email", inquilino.Email);
+                    updateCommand.Parameters.AddWithValue("@direccion", inquilino.Direccion ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("@id", inquilino.Id);
+                    
+                    await updateCommand.ExecuteNonQueryAsync();
                     
                     TempData["Success"] = "Inquilino actualizado exitosamente.";
                     return RedirectToAction(nameof(Index));
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!InquilinoExists(inquilino.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -173,15 +261,31 @@ namespace InmobiliariaGarciaJesus.Controllers
                 return NotFound();
             }
 
-            var inquilino = await _context.Inquilinos
-                .Include(i => i.Contratos)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            using var connection = await _connectionManager.GetOpenConnectionAsync();
+            var query = "SELECT * FROM inquilinos WHERE Id = @id";
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@id", id);
             
-            if (inquilino == null)
+            using var reader = await command.ExecuteReaderAsync();
+            
+            if (!await reader.ReadAsync())
             {
                 return NotFound();
             }
-
+            
+            var inquilino = new Inquilino
+            {
+                Id = Convert.ToInt32(reader["Id"]),
+                DNI = reader["DNI"].ToString(),
+                Nombre = reader["Nombre"].ToString(),
+                Apellido = reader["Apellido"].ToString(),
+                Telefono = reader["Telefono"] == DBNull.Value ? null : reader["Telefono"].ToString(),
+                Email = reader["Email"].ToString(),
+                Direccion = reader["Direccion"] == DBNull.Value ? null : reader["Direccion"].ToString(),
+                FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                Estado = Convert.ToBoolean(reader["Estado"])
+            };
+            
             return View(inquilino);
         }
 
@@ -192,26 +296,27 @@ namespace InmobiliariaGarciaJesus.Controllers
         {
             try
             {
-                var inquilino = await _context.Inquilinos
-                    .Include(i => i.Contratos)
-                    .FirstOrDefaultAsync(i => i.Id == id);
+                using var connection = await _connectionManager.GetOpenConnectionAsync();
                 
-                if (inquilino != null)
+                // Verificar si tiene contratos asociados
+                var checkContratos = "SELECT COUNT(*) FROM contratos WHERE InquilinoId = @id AND Estado = 1";
+                using var checkCommand = new MySqlCommand(checkContratos, connection);
+                checkCommand.Parameters.AddWithValue("@id", id);
+                var contratoCount = Convert.ToInt32(await checkCommand.ExecuteScalarAsync());
+                
+                if (contratoCount > 0)
                 {
-                    // Verificar si tiene contratos activos
-                    if (inquilino.Contratos != null && inquilino.Contratos.Any(c => c.Estado == EstadoContrato.Activo))
-                    {
-                        TempData["Error"] = "No se puede eliminar el inquilino porque tiene contratos activos.";
-                        return RedirectToAction(nameof(Index));
-                    }
-
-                    // Eliminación lógica
-                    inquilino.Estado = false;
-                    _context.Update(inquilino);
-                    await _context.SaveChangesAsync();
-                    
-                    TempData["Success"] = "Inquilino eliminado exitosamente.";
+                    TempData["Error"] = "No se puede eliminar el inquilino porque tiene contratos asociados.";
+                    return RedirectToAction(nameof(Index));
                 }
+                
+                // Eliminación lógica
+                var updateQuery = "UPDATE inquilinos SET Estado = 0 WHERE Id = @id";
+                using var updateCommand = new MySqlCommand(updateQuery, connection);
+                updateCommand.Parameters.AddWithValue("@id", id);
+                await updateCommand.ExecuteNonQueryAsync();
+                
+                TempData["Success"] = "Inquilino eliminado exitosamente.";
             }
             catch (Exception ex)
             {
@@ -221,9 +326,14 @@ namespace InmobiliariaGarciaJesus.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool InquilinoExists(int id)
+        private async Task<bool> InquilinoExists(int id)
         {
-            return _context.Inquilinos.Any(e => e.Id == id);
+            using var connection = await _connectionManager.GetOpenConnectionAsync();
+            var query = "SELECT COUNT(*) FROM inquilinos WHERE Id = @id";
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@id", id);
+            var count = Convert.ToInt32(await command.ExecuteScalarAsync());
+            return count > 0;
         }
     }
 }

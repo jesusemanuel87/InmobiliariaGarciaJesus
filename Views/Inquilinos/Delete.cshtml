@@ -43,13 +43,7 @@
                         </div>
                     </div>
 
-                    @if (Model.Contratos != null && Model.Contratos.Any(c => c.Estado == InmobiliariaGarciaJesus.Models.EstadoContrato.Activo))
-                    {
-                        <div class="alert alert-danger mt-3">
-                            <i class="fas fa-exclamation-circle"></i> 
-                            <strong>Atención:</strong> Este inquilino tiene contratos activos asociados.
-                        </div>
-                    }
+                    @* Nota: La validación de contratos activos se maneja en el controlador *@
 
                     <form asp-action="Delete" class="text-center mt-4">
                         <input type="hidden" asp-for="Id" />

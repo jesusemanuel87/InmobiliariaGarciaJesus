@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InmobiliariaGarciaJesus.Models
 {
@@ -47,7 +46,5 @@ namespace InmobiliariaGarciaJesus.Models
         [Display(Name = "Nombre Completo")]
         public string NombreCompleto => $"{Nombre} {Apellido}";
 
-        // Navegación - Un propietario puede tener muchos inmuebles
-        public virtual ICollection<Inmueble>? Inmuebles { get; set; }
     }
 }

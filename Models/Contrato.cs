@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InmobiliariaGarciaJesus.Models
 {
@@ -27,7 +26,6 @@ namespace InmobiliariaGarciaJesus.Models
 
         [Required(ErrorMessage = "El precio es obligatorio")]
         [Display(Name = "Precio Mensual")]
-        [Column(TypeName = "decimal(15,2)")]
         [Range(0.01, 999999999, ErrorMessage = "El precio debe ser mayor a 0")]
         public decimal Precio { get; set; }
 
@@ -45,13 +43,5 @@ namespace InmobiliariaGarciaJesus.Models
         [Display(Name = "Fecha de Creación")]
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
-        // Navegación
-        [ForeignKey("InquilinoId")]
-        public virtual Inquilino? Inquilino { get; set; }
-
-        [ForeignKey("InmuebleId")]
-        public virtual Inmueble? Inmueble { get; set; }
-
-        public virtual ICollection<Pago>? Pagos { get; set; }
     }
 }

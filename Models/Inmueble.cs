@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InmobiliariaGarciaJesus.Models
 {
@@ -37,15 +36,12 @@ namespace InmobiliariaGarciaJesus.Models
         [Required(ErrorMessage = "La superficie es obligatoria")]
         [Range(1, 10000, ErrorMessage = "La superficie debe estar entre 1 y 10000 m²")]
         [Display(Name = "Superficie (m²)")]
-        [Column(TypeName = "decimal(10,2)")]
         public decimal Superficie { get; set; }
 
         [Display(Name = "Latitud")]
-        [Column(TypeName = "decimal(10,8)")]
         public decimal? Latitud { get; set; }
 
         [Display(Name = "Longitud")]
-        [Column(TypeName = "decimal(11,8)")]
         public decimal? Longitud { get; set; }
 
         [Required(ErrorMessage = "El propietario es obligatorio")]
@@ -57,7 +53,6 @@ namespace InmobiliariaGarciaJesus.Models
         public TipoInmueble Tipo { get; set; }
 
         [Display(Name = "Precio")]
-        [Column(TypeName = "decimal(15,2)")]
         [Range(0, 999999999, ErrorMessage = "El precio debe ser mayor a 0")]
         public decimal? Precio { get; set; }
 
@@ -71,10 +66,5 @@ namespace InmobiliariaGarciaJesus.Models
         [Display(Name = "Fecha de Creación")]
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
-        // Navegación
-        [ForeignKey("PropietarioId")]
-        public virtual Propietario? Propietario { get; set; }
-
-        public virtual ICollection<Contrato>? Contratos { get; set; }
     }
 }

@@ -60,39 +60,7 @@
                         </div>
                     </div>
 
-                    @if (Model.Inmuebles != null && Model.Inmuebles.Any())
-                    {
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <h5><i class="fas fa-home"></i> Inmuebles Asociados</h5>
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Dirección</th>
-                                                <th>Tipo</th>
-                                                <th>Ambientes</th>
-                                                <th>Superficie</th>
-                                                <th>Precio</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var inmueble in Model.Inmuebles)
-                                            {
-                                                <tr>
-                                                    <td>@inmueble.Direccion</td>
-                                                    <td>@inmueble.Tipo</td>
-                                                    <td>@inmueble.Ambientes</td>
-                                                    <td>@inmueble.Superficie m²</td>
-                                                    <td>@inmueble.Precio?.ToString("C")</td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    }
+                    @* Nota: Los inmuebles asociados se pueden consultar por separado en el módulo de inmuebles *@
 
                     <div class="form-group text-center mt-4">
                         <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2">

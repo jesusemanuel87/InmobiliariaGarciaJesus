@@ -1,0 +1,122 @@
+@model InmobiliariaGarciaJesus.Models.Inquilino
+
+@{
+    ViewData["Title"] = "Detalles del Inquilino";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-user"></i> Detalles del Inquilino</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.DNI):</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.DNI)</dd>
+                                
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Nombre):</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.Nombre)</dd>
+                                
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Apellido):</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.Apellido)</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Email):</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.Email)</dd>
+                                
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Telefono):</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.Telefono)</dd>
+                                
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Direccion):</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.Direccion)</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <dl class="row">
+                                <dt class="col-sm-2">@Html.DisplayNameFor(model => model.FechaCreacion):</dt>
+                                <dd class="col-sm-10">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
+                                
+                                <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Estado):</dt>
+                                <dd class="col-sm-10">
+                                    @if (Model.Estado)
+                                    {
+                                        <span class="badge bg-success">Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Inactivo</span>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    @if (Model.Contratos != null && Model.Contratos.Any())
+                    {
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h5><i class="fas fa-file-contract"></i> Contratos Asociados</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Inmueble</th>
+                                                <th>Fecha Inicio</th>
+                                                <th>Fecha Fin</th>
+                                                <th>Precio</th>
+                                                <th>Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var contrato in Model.Contratos)
+                                            {
+                                                <tr>
+                                                    <td>@contrato.Inmueble?.Direccion</td>
+                                                    <td>@contrato.FechaInicio.ToString("dd/MM/yyyy")</td>
+                                                    <td>@contrato.FechaFin.ToString("dd/MM/yyyy")</td>
+                                                    <td>@contrato.Precio.ToString("C")</td>
+                                                    <td>
+                                                        @switch (contrato.Estado)
+                                                        {
+                                                            case InmobiliariaGarciaJesus.Models.EstadoContrato.Activo:
+                                                                <span class="badge bg-success">Activo</span>
+                                                                break;
+                                                            case InmobiliariaGarciaJesus.Models.EstadoContrato.Finalizado:
+                                                                <span class="badge bg-secondary">Finalizado</span>
+                                                                break;
+                                                            case InmobiliariaGarciaJesus.Models.EstadoContrato.Cancelado:
+                                                                <span class="badge bg-danger">Cancelado</span>
+                                                                break;
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="form-group text-center mt-4">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver al Listado
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -70,7 +70,7 @@ CREATE TABLE `contratos` (
   `Precio` decimal(15,2) NOT NULL,
   `InquilinoId` int(11) NOT NULL,
   `InmuebleId` int(11) NOT NULL,
-  `Estado` enum('Activo','Finalizado','Cancelado') NOT NULL DEFAULT 'Activo',
+  `Estado` enum('Reservado','Activo','Finalizado','Cancelado') NOT NULL DEFAULT 'Reservado',
   `FechaCreacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`Id`),
   INDEX `IDX_contratos_inquilino` (`InquilinoId`),
@@ -119,7 +119,11 @@ INSERT INTO `inquilinos` (`DNI`, `Nombre`, `Apellido`, `Telefono`, `Email`, `Dir
 
 INSERT INTO `inmuebles` (`Direccion`, `Ambientes`, `Superficie`, `Latitud`, `Longitud`, `PropietarioId`, `Tipo`, `Precio`, `Uso`) VALUES
 ('Mirador 1 Casa 22, San Luis', 4, 120.50, -33.257433, -66.334202, 1, 'Casa', 85000.00, 'Residencial'),
-('Mirador 2 Depto 10, San Luis', 3, 75.00, -33.258196, -66.334191, 2, 'Departamento', 65000.00, 'Residencial');
+('Calle 51 número 1120', 3, 95.00, -33.258000, -66.335000, 1, 'Departamento', 250000.00, 'Comercial');
+
+INSERT INTO `contratos` (`FechaInicio`, `FechaFin`, `Precio`, `InquilinoId`, `InmuebleId`, `Estado`) VALUES
+('2025-08-01', '2025-10-31', 650000.00, 1, 1, 'Activo'),
+('2025-08-20', '2025-09-06', 400000.00, 2, 1, 'Cancelado');
 
 INSERT INTO `usuarios` (`Rol`, `Nombre`, `Apellido`, `Email`, `Clave`) VALUES
 ('Administrador', 'Admin', 'Sistema', 'admin@inmobiliaria.com', 'admin123');

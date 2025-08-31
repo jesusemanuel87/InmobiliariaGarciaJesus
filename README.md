@@ -22,7 +22,7 @@ Sistema web desarrollado en ASP.NET Core MVC para la gestión de una inmobiliari
 - ✅ **Gestión de Inmuebles**: CRUD completo con estados (Activo/Inactivo)
 - ✅ **Gestión de Contratos**: CRUD completo con estados (Activo/Finalizado/Cancelado)
 - ✅ **Arquitectura Repository**: Implementación del patrón Repository con inyección de dependencias
-- ✅ **Herencia de Modelos**: Clase base Person para Propietario e Inquilino
+- ✅ **Herencia de Modelos**: Clase base Persona para Propietario e Inquilino
 - ✅ **Vista Expandible**: Inmuebles del propietario con carga AJAX inline
 - ✅ **Estados Dinámicos**: Badges coloridos para estados de inmuebles y contratos
 - ✅ **Servicio de Estados**: ContratoStateService para actualización automática de contratos vencidos
@@ -139,7 +139,7 @@ InmobiliariaGarciaJesus/
 ├── Data/
 │   └── InmobiliariaContext.cs
 ├── Models/
-│   ├── Person.cs (clase base)
+│   ├── Persona.cs (clase base)
 │   ├── Propietario.cs
 │   ├── Inquilino.cs
 │   ├── Inmueble.cs

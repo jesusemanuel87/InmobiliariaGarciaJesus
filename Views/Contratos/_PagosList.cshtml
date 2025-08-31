@@ -1,0 +1,71 @@
+@model IEnumerable<InmobiliariaGarciaJesus.Models.Pago>
+
+<thead class="table-secondary">
+    <tr>
+        <th>Número</th>
+        <th>Importe</th>
+        <th>Fecha de Pago</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+    </tr>
+</thead>
+<tbody>
+    @foreach (var pago in Model)
+    {
+        <tr>
+            <td><strong>#@pago.Numero</strong></td>
+            <td>
+                <strong class="text-success">
+                    $@pago.Importe.ToString("N0")
+                </strong>
+            </td>
+            <td>
+                @if (pago.FechaPago.HasValue)
+                {
+                    <span class="text-success">
+                        <i class="fas fa-calendar-check"></i>
+                        @pago.FechaPago.Value.ToString("dd/MM/yyyy")
+                    </span>
+                }
+                else
+                {
+                    <span class="text-muted">
+                        <i class="fas fa-calendar-times"></i> Sin fecha
+                    </span>
+                }
+            </td>
+            <td>
+                @switch (pago.Estado)
+                {
+                    case InmobiliariaGarciaJesus.Models.EstadoPago.Pendiente:
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-clock"></i> Pendiente
+                        </span>
+                        break;
+                    case InmobiliariaGarciaJesus.Models.EstadoPago.Pagado:
+                        <span class="badge bg-success">
+                            <i class="fas fa-check"></i> Pagado
+                        </span>
+                        break;
+                    case InmobiliariaGarciaJesus.Models.EstadoPago.Vencido:
+                        <span class="badge bg-danger">
+                            <i class="fas fa-exclamation-triangle"></i> Vencido
+                        </span>
+                        break;
+                }
+            </td>
+            <td>
+                <div class="btn-group btn-group-sm" role="group">
+                    <a asp-controller="Pagos" asp-action="Details" asp-route-id="@pago.Id" 
+                       class="btn btn-outline-info btn-sm" title="Ver detalles">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a asp-controller="Pagos" asp-action="Edit" asp-route-id="@pago.Id" 
+                       class="btn btn-outline-warning btn-sm" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+            </td>
+        </tr>
+    }
+</tbody>

@@ -240,5 +240,25 @@ namespace InmobiliariaGarciaJesus.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+        // GET: Contratos/GetPagos/5
+        public async Task<IActionResult> GetPagos(int id)
+        {
+            try
+            {
+                var pagos = await _pagoService.GetPagosByContratoAsync(id);
+                
+                if (!pagos.Any())
+                {
+                    return PartialView("_PagosEmpty");
+                }
+
+                return PartialView("_PagosList", pagos);
+            }
+            catch (Exception)
+            {
+                return PartialView("_PagosError");
+            }
+        }
     }
 }

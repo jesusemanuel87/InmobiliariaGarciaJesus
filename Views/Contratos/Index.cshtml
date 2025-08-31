@@ -103,19 +103,29 @@
                                                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm me-1" title="Ver detalles">
                                                         <i class="fas fa-eye me-1"></i>
                                                     </a>
+                                                    <button type="button" class="btn btn-outline-primary btn-sm me-1 toggle-pagos" 
+                                                            data-contrato-id="@item.Id" title="Ver/Ocultar pagos">
+                                                        <i class="fas fa-money-bill-wave me-1"></i>
+                                                        <i class="fas fa-chevron-down toggle-icon"></i>
+                                                    </button>
+                                                    <a asp-controller="Pagos" asp-action="ByContrato" asp-route-contratoId="@item.Id" class="btn btn-outline-success btn-sm me-1" title="Vista completa de pagos">
+                                                        <i class="fas fa-external-link-alt me-1"></i>
+                                                    </a>
                                                     @if (item.Estado == InmobiliariaGarciaJesus.Models.EstadoContrato.Activo || item.Estado == InmobiliariaGarciaJesus.Models.EstadoContrato.Reservado)
                                                     {
                                                         <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm me-1" title="Editar">
                                                             <i class="fas fa-edit me-1"></i>
                                                         </a>
-                                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm me-1" title="Cancelar">
+                                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm" title="Cancelar">
                                                             <i class="fas fa-ban me-1"></i>
                                                         </a>
                                                     }
-                                                    <a asp-controller="Pagos" asp-action="ByContrato" asp-route-contratoId="@item.Id" class="btn btn-outline-success btn-sm" title="Ver Pagos">
-                                                        <i class="fas fa-money-bill-wave me-1"></i>
-                                                    </a>
                                                 </div>
+                                            </td>
+                                        </tr>
+                                        <tr class="pagos-container" data-contrato-id="@item.Id" style="display: none;">
+                                            <td colspan="7" class="p-0">
+                                                <div class="pagos-content"></div>
                                             </td>
                                         </tr>
                                     }
@@ -139,3 +149,43 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.toggle-pagos').click(function() {
+                var contratoId = $(this).data('contrato-id');
+                var container = $('.pagos-container[data-contrato-id="' + contratoId + '"]');
+                var content = container.find('.pagos-content');
+                var icon = $(this).find('.toggle-icon');
+                
+                if (container.is(':visible')) {
+                    // Hide pagos
+                    container.slideUp();
+                    icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                } else {
+                    // Show pagos
+                    if (content.is(':empty')) {
+                        // Load pagos via AJAX
+                        content.html('<div class="text-center p-3"><i class="fas fa-spinner fa-spin"></i> Cargando pagos...</div>');
+                        
+                        $.get('@Url.Action("GetPagos", "Contratos")', { id: contratoId })
+                            .done(function(data) {
+                                content.html('<table class="table table-sm mb-0">' + data + '</table>');
+                                container.slideDown();
+                                icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+                            })
+                            .fail(function() {
+                                content.html('<div class="text-center p-3 text-danger"><i class="fas fa-exclamation-triangle"></i> Error al cargar pagos</div>');
+                                container.slideDown();
+                                icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+                            });
+                    } else {
+                        container.slideDown();
+                        icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+                    }
+                }
+            });
+        });
+    </script>
+}

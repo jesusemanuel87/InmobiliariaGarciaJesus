@@ -10,14 +10,17 @@ namespace InmobiliariaGarciaJesus.Controllers
         private readonly IContratoService _contratoService;
         private readonly IRepository<Inquilino> _inquilinoRepository;
         private readonly IRepository<Inmueble> _inmuebleRepository;
+        private readonly IPagoService _pagoService;
 
         public ContratosController(IContratoService contratoService,
                                   IRepository<Inquilino> inquilinoRepository,
-                                  IRepository<Inmueble> inmuebleRepository)
+                                  IRepository<Inmueble> inmuebleRepository,
+                                  IPagoService pagoService)
         {
             _contratoService = contratoService;
             _inquilinoRepository = inquilinoRepository;
             _inmuebleRepository = inmuebleRepository;
+            _pagoService = pagoService;
         }
 
         // GET: Contratos
@@ -101,7 +104,11 @@ namespace InmobiliariaGarciaJesus.Controllers
                     else
                     {
                         await _contratoService.CreateContratoAsync(contrato);
-                        TempData["Success"] = "Contrato creado exitosamente.";
+                        
+                        // Generar plan de pagos automáticamente
+                        await _pagoService.GenerarPlanPagosAsync(contrato.Id);
+                        
+                        TempData["Success"] = "Contrato creado exitosamente y plan de pagos generado.";
                         return RedirectToAction(nameof(Index));
                     }
                 }

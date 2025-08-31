@@ -1,0 +1,71 @@
+@model Configuracion
+@{
+    ViewData["Title"] = "Editar Configuración";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fas fa-edit"></i> Editar Configuración</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="FechaCreacion" />
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Clave" class="form-label">Clave</label>
+                                    <input asp-for="Clave" class="form-control" />
+                                    <span asp-validation-for="Clave" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Tipo" class="form-label">Tipo</label>
+                                    <select asp-for="Tipo" class="form-select">
+                                        <option value="1">Meses Mínimos</option>
+                                        <option value="2">Multa Terminación Temprana</option>
+                                        <option value="3">Multa Terminación Tardía</option>
+                                        <option value="4">Interés Vencimiento (10-20 días)</option>
+                                        <option value="5">Interés Vencimiento (20+ días)</option>
+                                        <option value="6">Interés Vencimiento Mensual</option>
+                                    </select>
+                                    <span asp-validation-for="Tipo" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Valor" class="form-label">Valor</label>
+                            <input asp-for="Valor" class="form-control" />
+                            <span asp-validation-for="Valor" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label asp-for="Descripcion" class="form-label">Descripción</label>
+                            <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Descripcion" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save"></i> Actualizar Configuración
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

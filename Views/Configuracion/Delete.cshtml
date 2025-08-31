@@ -1,0 +1,100 @@
+@model Configuracion
+@{
+    ViewData["Title"] = "Eliminar Configuración";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-warning"></i>
+                        <strong>¿Está seguro que desea eliminar esta configuración?</strong>
+                        <br>Esta acción no se puede deshacer.
+                    </div>
+
+                    <dl class="row">
+                        <dt class="col-sm-3">Clave:</dt>
+                        <dd class="col-sm-9">
+                            <code>@Model.Clave</code>
+                        </dd>
+
+                        <dt class="col-sm-3">Valor:</dt>
+                        <dd class="col-sm-9">
+                            <strong>@Model.Valor</strong>
+                            @if (Model.Tipo == TipoConfiguracion.InteresVencimiento || 
+                                 Model.Tipo == TipoConfiguracion.InteresVencimientoExtendido || 
+                                 Model.Tipo == TipoConfiguracion.InteresVencimientoMensual)
+                            {
+                                <span class="text-muted">%</span>
+                            }
+                            else if (Model.Tipo == TipoConfiguracion.MultaTerminacionTemprana || 
+                                     Model.Tipo == TipoConfiguracion.MultaTerminacionTardia)
+                            {
+                                <span class="text-muted">meses</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Tipo:</dt>
+                        <dd class="col-sm-9">
+                            @switch (Model.Tipo)
+                            {
+                                case TipoConfiguracion.MesesMinimos:
+                                    <span class="badge bg-primary">Meses Mínimos</span>
+                                    break;
+                                case TipoConfiguracion.MultaTerminacionTemprana:
+                                    <span class="badge bg-warning text-dark">Multa Terminación Temprana</span>
+                                    break;
+                                case TipoConfiguracion.MultaTerminacionTardia:
+                                    <span class="badge bg-info">Multa Terminación Tardía</span>
+                                    break;
+                                case TipoConfiguracion.InteresVencimiento:
+                                    <span class="badge bg-danger">Interés Vencimiento (10-20 días)</span>
+                                    break;
+                                case TipoConfiguracion.InteresVencimientoExtendido:
+                                    <span class="badge bg-danger">Interés Vencimiento (20+ días)</span>
+                                    break;
+                                case TipoConfiguracion.InteresVencimientoMensual:
+                                    <span class="badge bg-danger">Interés Vencimiento Mensual</span>
+                                    break;
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Descripción:</dt>
+                        <dd class="col-sm-9">
+                            @if (!string.IsNullOrEmpty(Model.Descripcion))
+                            {
+                                @Model.Descripcion
+                            }
+                            else
+                            {
+                                <em class="text-muted">Sin descripción</em>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Fecha Creación:</dt>
+                        <dd class="col-sm-9">
+                            <small class="text-muted">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm:ss")</small>
+                        </dd>
+                    </dl>
+
+                    <form asp-action="Delete" method="post" class="mt-4">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Confirmar Eliminación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

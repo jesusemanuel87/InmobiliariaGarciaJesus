@@ -116,7 +116,8 @@ namespace InmobiliariaGarciaJesus.Services
                 contrato.Estado = EstadoContrato.Activo;
             }
 
-            await _contratoRepository.CreateAsync(contrato);
+            var contratoId = await _contratoRepository.CreateAsync(contrato);
+            contrato.Id = contratoId;
             return contrato;
         }
 

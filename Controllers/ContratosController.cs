@@ -103,10 +103,10 @@ namespace InmobiliariaGarciaJesus.Controllers
                     }
                     else
                     {
-                        await _contratoService.CreateContratoAsync(contrato);
+                        var contratoCreado = await _contratoService.CreateContratoAsync(contrato);
                         
                         // Generar plan de pagos automáticamente
-                        await _pagoService.GenerarPlanPagosAsync(contrato.Id);
+                        await _pagoService.GenerarPlanPagosAsync(contratoCreado.Id);
                         
                         TempData["Success"] = "Contrato creado exitosamente y plan de pagos generado.";
                         return RedirectToAction(nameof(Index));

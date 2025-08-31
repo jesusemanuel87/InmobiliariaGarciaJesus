@@ -90,6 +90,12 @@
                                                     case InmobiliariaGarciaJesus.Models.EstadoContrato.Cancelado:
                                                         <span class="badge bg-danger">Cancelado</span>
                                                         break;
+                                                    case InmobiliariaGarciaJesus.Models.EstadoContrato.Reservado:
+                                                        <span class="badge bg-warning text-dark">Reservado</span>
+                                                        break;
+                                                    default:
+                                                        <span class="badge bg-secondary">Sin Estado</span>
+                                                        break;
                                                 }
                                             </td>
                                             <td>
@@ -97,15 +103,18 @@
                                                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm me-1" title="Ver detalles">
                                                         <i class="fas fa-eye me-1"></i>
                                                     </a>
-                                                    @if (item.Estado == InmobiliariaGarciaJesus.Models.EstadoContrato.Activo)
+                                                    @if (item.Estado == InmobiliariaGarciaJesus.Models.EstadoContrato.Activo || item.Estado == InmobiliariaGarciaJesus.Models.EstadoContrato.Reservado)
                                                     {
                                                         <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm me-1" title="Editar">
                                                             <i class="fas fa-edit me-1"></i>
                                                         </a>
-                                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm" title="Cancelar">
+                                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm me-1" title="Cancelar">
                                                             <i class="fas fa-ban me-1"></i>
                                                         </a>
                                                     }
+                                                    <a asp-controller="Pagos" asp-action="ByContrato" asp-route-contratoId="@item.Id" class="btn btn-outline-success btn-sm" title="Ver Pagos">
+                                                        <i class="fas fa-money-bill-wave me-1"></i>
+                                                    </a>
                                                 </div>
                                             </td>
                                         </tr>

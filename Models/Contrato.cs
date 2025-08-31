@@ -39,7 +39,7 @@ namespace InmobiliariaGarciaJesus.Models
         public int InmuebleId { get; set; }
 
         [Display(Name = "Estado")]
-        public EstadoContrato Estado { get; set; } = EstadoContrato.Activo;
+        public EstadoContrato Estado { get; set; } = EstadoContrato.Reservado;
 
         [Display(Name = "Fecha de Creación")]
         public DateTime FechaCreacion { get; set; } = DateTime.Now;

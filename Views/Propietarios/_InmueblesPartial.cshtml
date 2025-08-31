@@ -1,0 +1,61 @@
+@model IEnumerable<InmobiliariaGarciaJesus.Models.InmuebleConContrato>
+
+@if (Model.Any())
+{
+    <tr class="inmuebles-header bg-light">
+        <td colspan="6" class="fw-bold text-primary">
+            <i class="fas fa-home me-2"></i>Inmuebles del Propietario
+        </td>
+    </tr>
+    <tr class="inmuebles-subheader bg-light">
+        <td class="fw-bold">Dirección</td>
+        <td class="fw-bold">Tipo</td>
+        <td class="fw-bold">Uso</td>
+        <td class="fw-bold">Estado</td>
+        <td class="fw-bold">Estado Contrato</td>
+        <td class="fw-bold">Precio</td>
+    </tr>
+    @foreach (var inmueble in Model)
+    {
+        <tr class="inmueble-row bg-light">
+            <td class="ps-4">@inmueble.Direccion</td>
+            <td>
+                <span class="badge bg-info">@inmueble.Tipo</span>
+            </td>
+            <td>
+                <span class="badge bg-secondary">@inmueble.Uso</span>
+            </td>
+            <td>
+                @if (inmueble.Estado == InmobiliariaGarciaJesus.Models.EstadoInmueble.Activo)
+                {
+                    <span class="badge bg-success">Activo</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">Inactivo</span>
+                }
+            </td>
+            <td>
+                <span class="badge @inmueble.EstadoContratoCssClass">@inmueble.EstadoContratoTexto</span>
+            </td>
+            <td>
+                @if (inmueble.Precio.HasValue)
+                {
+                    <span class="fw-bold text-success">$@inmueble.Precio.Value.ToString("N2")</span>
+                }
+                else
+                {
+                    <span class="text-muted">No especificado</span>
+                }
+            </td>
+        </tr>
+    }
+}
+else
+{
+    <tr class="inmuebles-empty bg-light">
+        <td colspan="6" class="text-center text-muted py-3">
+            <i class="fas fa-home me-2"></i>Este propietario no tiene inmuebles registrados
+        </td>
+    </tr>
+}

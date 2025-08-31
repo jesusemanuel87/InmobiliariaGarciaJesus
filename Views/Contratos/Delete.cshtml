@@ -1,0 +1,76 @@
+@model InmobiliariaGarciaJesus.Models.Contrato
+
+@{
+    ViewData["Title"] = "Cancelar Contrato";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-ban text-danger"></i> Cancelar Contrato</h2>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Confirmar Cancelación</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-warning"></i> ¿Está seguro que desea cancelar este contrato?
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Contrato #</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.Id)</dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.InquilinoId)</dt>
+                                <dd class="col-sm-8">ID: @Html.DisplayFor(model => model.InquilinoId)</dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.InmuebleId)</dt>
+                                <dd class="col-sm-8">ID: @Html.DisplayFor(model => model.InmuebleId)</dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FechaInicio)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.FechaInicio)</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FechaFin)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.FechaFin)</dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Precio)</dt>
+                                <dd class="col-sm-8">
+                                    <span class="text-success fw-bold fs-5">$@Model.Precio.ToString("N0")</span>
+                                </dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Estado)</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-success">@Html.DisplayFor(model => model.Estado)</span>
+                                </dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FechaCreacion)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.FechaCreacion)</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <form asp-action="Delete" class="mt-4">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex justify-content-end gap-2">
+                            <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-ban"></i> Confirmar Cancelación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

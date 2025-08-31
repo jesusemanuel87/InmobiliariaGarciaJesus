@@ -1,0 +1,132 @@
+@model IEnumerable<InmobiliariaGarciaJesus.Models.Contrato>
+
+@{
+    ViewData["Title"] = "Contratos";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-file-contract"></i> Contratos</h2>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nuevo Contrato
+                </a>
+            </div>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Inquilino</th>
+                                        <th>Inmueble</th>
+                                        <th>@Html.DisplayNameFor(model => model.FechaInicio)</th>
+                                        <th>@Html.DisplayNameFor(model => model.FechaFin)</th>
+                                        <th>@Html.DisplayNameFor(model => model.Precio)</th>
+                                        <th>@Html.DisplayNameFor(model => model.Estado)</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                @if (item.Inquilino != null)
+                                                {
+                                                    <span class="fw-bold">@item.Inquilino.Nombre @item.Inquilino.Apellido</span><br>
+                                                    <small class="text-muted">DNI: @item.Inquilino.Dni</small>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">ID: @item.InquilinoId</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (item.Inmueble != null)
+                                                {
+                                                    <span class="fw-bold">@item.Inmueble.Direccion</span><br>
+                                                    <small class="text-muted">@item.Inmueble.Tipo - @item.Inmueble.Ambientes amb.</small>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">ID: @item.InmuebleId</span>
+                                                }
+                                            </td>
+                                            <td>@Html.DisplayFor(modelItem => item.FechaInicio)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.FechaFin)</td>
+                                            <td>
+                                                <span class="text-success fw-bold">$@item.Precio.ToString("N0")</span>
+                                            </td>
+                                            <td>
+                                                @switch (item.Estado)
+                                                {
+                                                    case InmobiliariaGarciaJesus.Models.EstadoContrato.Activo:
+                                                        <span class="badge bg-success">Activo</span>
+                                                        break;
+                                                    case InmobiliariaGarciaJesus.Models.EstadoContrato.Finalizado:
+                                                        <span class="badge bg-secondary">Finalizado</span>
+                                                        break;
+                                                    case InmobiliariaGarciaJesus.Models.EstadoContrato.Cancelado:
+                                                        <span class="badge bg-danger">Cancelado</span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm me-1" title="Ver detalles">
+                                                        <i class="fas fa-eye me-1"></i>
+                                                    </a>
+                                                    @if (item.Estado == InmobiliariaGarciaJesus.Models.EstadoContrato.Activo)
+                                                    {
+                                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm me-1" title="Editar">
+                                                            <i class="fas fa-edit me-1"></i>
+                                                        </a>
+                                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm" title="Cancelar">
+                                                            <i class="fas fa-ban me-1"></i>
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-file-contract fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">No hay contratos registrados</h4>
+                            <p class="text-muted">Comienza agregando tu primer contrato</p>
+                            <a asp-action="Create" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Crear Contrato
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

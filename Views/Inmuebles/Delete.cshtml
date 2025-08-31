@@ -1,0 +1,82 @@
+@model InmobiliariaGarciaJesus.Models.Inmueble
+
+@{
+    ViewData["Title"] = "Eliminar Inmueble";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-trash text-danger"></i> Eliminar Inmueble</h2>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-warning"></i> ¿Está seguro que desea eliminar este inmueble?
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Direccion)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.Direccion)</dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Tipo)</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-info">@Html.DisplayFor(model => model.Tipo)</span>
+                                </dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Ambientes)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.Ambientes)</dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Superficie)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.Superficie) m²</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Precio)</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Precio.HasValue)
+                                    {
+                                        <span class="text-success fw-bold">$@Model.Precio.Value.ToString("N0")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No especificado</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Uso)</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-secondary">@Html.DisplayFor(model => model.Uso)</span>
+                                </dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FechaCreacion)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.FechaCreacion)</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <form asp-action="Delete" class="mt-4">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex justify-content-end gap-2">
+                            <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Confirmar Eliminación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

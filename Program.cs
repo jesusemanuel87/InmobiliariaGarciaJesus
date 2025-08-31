@@ -1,12 +1,27 @@
 using InmobiliariaGarciaJesus.Data;
+using InmobiliariaGarciaJesus.Models;
+using InmobiliariaGarciaJesus.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Add MySQL connection manager
-builder.Services.AddScoped<MySqlConnectionManager>();
+// Registrar MySqlConnectionManager
+builder.Services.AddSingleton<MySqlConnectionManager>();
+
+// Registrar repositorios
+builder.Services.AddScoped<IRepository<Inquilino>, InquilinoRepository>();
+builder.Services.AddScoped<IRepository<Inmueble>, InmuebleRepository>();
+builder.Services.AddScoped<IRepository<Contrato>, ContratoRepository>();
+builder.Services.AddScoped<IRepository<Propietario>, PropietarioRepository>();
+
+
+// Registrar servicios de negocio
+builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IContratoService, InmobiliariaGarciaJesus.Services.ContratoService>();
+
+// Registrar servicio de actualización de estados de contratos
+builder.Services.AddHostedService<InmobiliariaGarciaJesus.Services.ContratoStateService>();
 
 var app = builder.Build();
 

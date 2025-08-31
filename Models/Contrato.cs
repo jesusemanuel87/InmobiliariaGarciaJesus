@@ -4,6 +4,7 @@ namespace InmobiliariaGarciaJesus.Models
 {
     public enum EstadoContrato
     {
+        Reservado,
         Activo,
         Finalizado,
         Cancelado
@@ -42,6 +43,13 @@ namespace InmobiliariaGarciaJesus.Models
 
         [Display(Name = "Fecha de Creación")]
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
+
+        [Display(Name = "Motivo de Cancelación")]
+        public string? MotivoCancelacion { get; set; }
+
+        // Navigation properties
+        public Inquilino? Inquilino { get; set; }
+        public Inmueble? Inmueble { get; set; }
 
     }
 }

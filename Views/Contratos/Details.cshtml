@@ -1,0 +1,127 @@
+@model InmobiliariaGarciaJesus.Models.Contrato
+
+@{
+    ViewData["Title"] = "Detalles del Contrato";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-info-circle"></i> Detalles del Contrato</h2>
+                <div>
+                    @if (Model.Estado == InmobiliariaGarciaJesus.Models.EstadoContrato.Activo)
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                    }
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-contract"></i> Contrato #@Model.Id
+                        @switch (Model.Estado)
+                        {
+                            case InmobiliariaGarciaJesus.Models.EstadoContrato.Activo:
+                                <span class="badge bg-success ms-2">Activo</span>
+                                break;
+                            case InmobiliariaGarciaJesus.Models.EstadoContrato.Finalizado:
+                                <span class="badge bg-secondary ms-2">Finalizado</span>
+                                break;
+                            case InmobiliariaGarciaJesus.Models.EstadoContrato.Cancelado:
+                                <span class="badge bg-danger ms-2">Cancelado</span>
+                                break;
+                        }
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Inquilino</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Inquilino != null)
+                                    {
+                                        <span class="fw-bold">@Model.Inquilino.Nombre @Model.Inquilino.Apellido</span><br>
+                                        <small class="text-muted">DNI: @Model.Inquilino.Dni</small><br>
+                                        <small class="text-muted">Email: @Model.Inquilino.Email</small>
+                                        @if (!string.IsNullOrEmpty(Model.Inquilino.Telefono))
+                                        {
+                                            <br><small class="text-muted">Tel: @Model.Inquilino.Telefono</small>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">ID: @Model.InquilinoId</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">Inmueble</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Inmueble != null)
+                                    {
+                                        <span class="fw-bold">@Model.Inmueble.Direccion</span><br>
+                                        <small class="text-muted">Tipo: @Model.Inmueble.Tipo</small><br>
+                                        <small class="text-muted">Ambientes: @Model.Inmueble.Ambientes</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">ID: @Model.InmuebleId</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FechaInicio)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.FechaInicio)</dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FechaFin)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.FechaFin)</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Precio)</dt>
+                                <dd class="col-sm-8">
+                                    <span class="text-success fw-bold fs-5">$@Model.Precio.ToString("N0")</span>
+                                </dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Estado)</dt>
+                                <dd class="col-sm-8">
+                                    @switch (Model.Estado)
+                                    {
+                                        case InmobiliariaGarciaJesus.Models.EstadoContrato.Activo:
+                                            <span class="badge bg-success">Activo</span>
+                                            break;
+                                        case InmobiliariaGarciaJesus.Models.EstadoContrato.Finalizado:
+                                            <span class="badge bg-secondary">Finalizado</span>
+                                            break;
+                                        case InmobiliariaGarciaJesus.Models.EstadoContrato.Cancelado:
+                                            <span class="badge bg-danger">Cancelado</span>
+                                            break;
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FechaCreacion)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.FechaCreacion)</dd>
+
+                                <dt class="col-sm-4">Duración</dt>
+                                <dd class="col-sm-8">
+                                    @{
+                                        var duracion = (Model.FechaFin - Model.FechaInicio).Days;
+                                        var meses = duracion / 30;
+                                    }
+                                    <span class="badge bg-info">@meses meses (@duracion días)</span>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

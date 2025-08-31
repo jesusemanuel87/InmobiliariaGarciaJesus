@@ -18,6 +18,12 @@ namespace InmobiliariaGarciaJesus.Models
         Industrial
     }
 
+    public enum EstadoInmueble
+    {
+        Activo,
+        Inactivo
+    }
+
     public class Inmueble
     {
         [Key]
@@ -57,7 +63,7 @@ namespace InmobiliariaGarciaJesus.Models
         public decimal? Precio { get; set; }
 
         [Display(Name = "Estado")]
-        public bool Estado { get; set; } = true;
+        public EstadoInmueble Estado { get; set; } = EstadoInmueble.Activo;
 
         [Required(ErrorMessage = "El uso del inmueble es obligatorio")]
         [Display(Name = "Uso")]
@@ -65,6 +71,9 @@ namespace InmobiliariaGarciaJesus.Models
 
         [Display(Name = "Fecha de Creación")]
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
+
+        // Navigation property
+        public Propietario? Propietario { get; set; }
 
     }
 }

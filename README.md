@@ -18,9 +18,16 @@ Sistema web desarrollado en ASP.NET Core MVC para la gestión de una inmobiliari
 - ✅ **Validaciones**: Validación de datos en cliente y servidor
 - ✅ **Interfaz Responsive**: Diseño adaptable con Bootstrap
 
+### Segunda Entrega - CRUD Inmuebles y Contratos
+- ✅ **Gestión de Inmuebles**: CRUD completo con estados (Activo/Inactivo)
+- ✅ **Gestión de Contratos**: CRUD completo con estados (Activo/Finalizado/Cancelado)
+- ✅ **Arquitectura Repository**: Implementación del patrón Repository con inyección de dependencias
+- ✅ **Herencia de Modelos**: Clase base Person para Propietario e Inquilino
+- ✅ **Vista Expandible**: Inmuebles del propietario con carga AJAX inline
+- ✅ **Estados Dinámicos**: Badges coloridos para estados de inmuebles y contratos
+- ✅ **Servicio de Estados**: ContratoStateService para actualización automática de contratos vencidos
+
 ### Funcionalidades Futuras
-- 🔄 Gestión de Inmuebles
-- 🔄 Gestión de Contratos
 - 🔄 Gestión de Pagos
 - 🔄 Sistema de Usuarios y Autenticación
 - 🔄 Reportes y Dashboard
@@ -125,21 +132,44 @@ InmobiliariaGarciaJesus/
 ├── Controllers/
 │   ├── HomeController.cs
 │   ├── PropietariosController.cs
-│   └── InquilinosController.cs
+│   ├── InquilinosController.cs
+│   ├── InmueblesController.cs
+│   ├── ContratosController.cs
+│   └── ContratoApiController.cs
 ├── Data/
-│   └── MySqlConnectionManager.cs
+│   └── InmobiliariaContext.cs
 ├── Models/
+│   ├── Person.cs (clase base)
 │   ├── Propietario.cs
 │   ├── Inquilino.cs
 │   ├── Inmueble.cs
 │   ├── Contrato.cs
-│   └── Pago.cs
+│   ├── Pago.cs
+│   ├── InmuebleConContrato.cs (DTO)
+│   └── ErrorViewModel.cs
+├── Repositories/
+│   ├── IRepository.cs (interfaz genérica)
+│   ├── PropietarioRepository.cs
+│   ├── InquilinoRepository.cs
+│   ├── InmuebleRepository.cs
+│   └── ContratoRepository.cs
+├── Services/
+│   ├── ContratoService.cs
+│   └── ContratoStateService.cs
 ├── Views/
 │   ├── Home/
 │   ├── Propietarios/
+│   │   ├── Index.cshtml (con vista expandible)
+│   │   ├── Inmuebles.cshtml
+│   │   └── _InmueblesPartial.cshtml
 │   ├── Inquilinos/
+│   ├── Inmuebles/
+│   ├── Contratos/
 │   └── Shared/
 ├── wwwroot/
+│   ├── css/
+│   ├── js/
+│   └── lib/
 ├── appsettings.json
 ├── Program.cs
 ├── Inmobiliaria_db.sql

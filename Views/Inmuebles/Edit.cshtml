@@ -1,0 +1,135 @@
+@model InmobiliariaGarciaJesus.Models.Inmueble
+@using System.Linq
+
+@{
+    ViewData["Title"] = "Editar Inmueble";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-edit"></i> Editar Inmueble</h2>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="FechaCreacion" />
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Direccion" class="form-label"></label>
+                                    <input asp-for="Direccion" class="form-control" />
+                                    <span asp-validation-for="Direccion" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label asp-for="Ambientes" class="form-label"></label>
+                                    <input asp-for="Ambientes" class="form-control" type="number" min="1" max="50" />
+                                    <span asp-validation-for="Ambientes" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label asp-for="Superficie" class="form-label"></label>
+                                    <input asp-for="Superficie" class="form-control" type="number" step="0.01" min="1" max="10000" />
+                                    <span asp-validation-for="Superficie" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Tipo" class="form-label"></label>
+                                    <select asp-for="Tipo" class="form-select" asp-items="Html.GetEnumSelectList<InmobiliariaGarciaJesus.Models.TipoInmueble>()">
+                                        <option value="">Seleccionar tipo...</option>
+                                    </select>
+                                    <span asp-validation-for="Tipo" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Uso" class="form-label"></label>
+                                    <select asp-for="Uso" class="form-select" asp-items="Html.GetEnumSelectList<InmobiliariaGarciaJesus.Models.UsoInmueble>()">
+                                        <option value="">Seleccionar uso...</option>
+                                    </select>
+                                    <span asp-validation-for="Uso" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="PropietarioId" class="form-label"></label>
+                                    <select asp-for="PropietarioId" class="form-select">
+                                        <option value="">Seleccionar propietario...</option>
+                                        @foreach (var propietario in (ViewBag.Propietarios as IEnumerable<InmobiliariaGarciaJesus.Models.Propietario>) ?? Enumerable.Empty<InmobiliariaGarciaJesus.Models.Propietario>())
+                                        {
+                                            <option value="@propietario.Id">@propietario.Nombre @propietario.Apellido</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="PropietarioId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Estado" class="form-label"></label>
+                                    <select asp-for="Estado" class="form-select" asp-items="Html.GetEnumSelectList<InmobiliariaGarciaJesus.Models.EstadoInmueble>()">
+                                        <option value="">Seleccionar estado...</option>
+                                    </select>
+                                    <span asp-validation-for="Estado" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Precio" class="form-label"></label>
+                                    <input asp-for="Precio" class="form-control" type="number" step="0.01" min="0" />
+                                    <span asp-validation-for="Precio" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Latitud" class="form-label"></label>
+                                    <input asp-for="Latitud" class="form-control" type="number" step="any" />
+                                    <span asp-validation-for="Latitud" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Longitud" class="form-label"></label>
+                                    <input asp-for="Longitud" class="form-control" type="number" step="any" />
+                                    <span asp-validation-for="Longitud" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save"></i> Actualizar Inmueble
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

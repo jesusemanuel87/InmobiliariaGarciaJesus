@@ -1,0 +1,96 @@
+@model InmobiliariaGarciaJesus.Models.Contrato
+
+@{
+    ViewData["Title"] = "Crear Contrato";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-plus"></i> Crear Contrato</h2>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="InquilinoId" class="form-label"></label>
+                                    <select asp-for="InquilinoId" class="form-select">
+                                        <option value="">Seleccionar inquilino...</option>
+                                        @foreach (var inquilino in ViewBag.Inquilinos as IEnumerable<InmobiliariaGarciaJesus.Models.Inquilino>)
+                                        {
+                                            <option value="@inquilino.Id">@inquilino.Nombre @inquilino.Apellido - DNI: @inquilino.Dni</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="InquilinoId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="InmuebleId" class="form-label"></label>
+                                    <select asp-for="InmuebleId" class="form-select">
+                                        <option value="">Seleccionar inmueble...</option>
+                                        @foreach (var inmueble in ViewBag.Inmuebles as IEnumerable<InmobiliariaGarciaJesus.Models.Inmueble>)
+                                        {
+                                            <option value="@inmueble.Id">@inmueble.Direccion - @inmueble.Tipo</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="InmuebleId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Date suggestion and validation messages -->
+                        <div id="fecha-suggestion" class="mb-2"></div>
+                        <div id="date-validation-message" class="mb-3"></div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="FechaInicio" class="form-label"></label>
+                                    <input asp-for="FechaInicio" class="form-control" type="date" />
+                                    <span asp-validation-for="FechaInicio" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="FechaFin" class="form-label"></label>
+                                    <input asp-for="FechaFin" class="form-control" type="date" />
+                                    <span asp-validation-for="FechaFin" class="text-danger"></span>
+                                    <small class="form-text text-muted">Debe ser posterior a la fecha de inicio</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Precio" class="form-label"></label>
+                                    <input asp-for="Precio" class="form-control" type="number" step="0.01" min="0.01" />
+                                    <span asp-validation-for="Precio" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Crear Contrato
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="~/js/Contrato/contrato-validation.js"></script>
+}

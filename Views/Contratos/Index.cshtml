@@ -116,9 +116,18 @@
                                                         <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm me-1" title="Editar">
                                                             <i class="fas fa-edit me-1"></i>
                                                         </a>
-                                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm" title="Cancelar">
-                                                            <i class="fas fa-ban me-1"></i>
-                                                        </a>
+                                                        @if (item.Estado == InmobiliariaGarciaJesus.Models.EstadoContrato.Activo)
+                                                        {
+                                                            <a asp-action="Finalizar" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm" title="Finalizar">
+                                                                <i class="fas fa-flag-checkered me-1"></i>
+                                                            </a>
+                                                        }
+                                                        else if (item.Estado == InmobiliariaGarciaJesus.Models.EstadoContrato.Reservado)
+                                                        {
+                                                            <a asp-action="Cancelar" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm" title="Cancelar">
+                                                                <i class="fas fa-ban me-1"></i>
+                                                            </a>
+                                                        }
                                                     }
                                                 </div>
                                             </td>
@@ -171,7 +180,7 @@
                         
                         $.get('@Url.Action("GetPagos", "Contratos")', { id: contratoId })
                             .done(function(data) {
-                                content.html('<table class="table table-sm mb-0">' + data + '</table>');
+                                content.html('<tbody>' + data + '</tbody>');
                                 container.slideDown();
                                 icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
                             })

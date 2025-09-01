@@ -47,6 +47,19 @@ namespace InmobiliariaGarciaJesus.Models
         [Display(Name = "Motivo de Cancelación")]
         public string? MotivoCancelacion { get; set; }
 
+        [Display(Name = "Fecha de Finalización Real")]
+        [DataType(DataType.Date)]
+        public DateTime? FechaFinalizacionReal { get; set; }
+
+        [Display(Name = "Multa por Finalización")]
+        public decimal? MultaFinalizacion { get; set; }
+
+        [Display(Name = "Meses Adeudados")]
+        public int? MesesAdeudados { get; set; }
+
+        [Display(Name = "Importe Adeudado")]
+        public decimal? ImporteAdeudado { get; set; }
+
         // Navigation properties
         public Inquilino? Inquilino { get; set; }
         public Inmueble? Inmueble { get; set; }

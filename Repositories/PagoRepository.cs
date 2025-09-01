@@ -18,7 +18,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = _connectionManager.GetConnection();
             await connection.OpenAsync();
 
-            var query = @"SELECT Id, Numero, FechaPago, ContratoId, Importe, Estado, FechaCreacion 
+            var query = @"SELECT Id, Numero, FechaPago, ContratoId, Importe, Estado, FechaCreacion, metodo_pago, observaciones 
                          FROM pagos 
                          ORDER BY FechaCreacion DESC";
 
@@ -37,7 +37,9 @@ namespace InmobiliariaGarciaJesus.Repositories
                     ContratoId = Convert.ToInt32(reader["ContratoId"]),
                     Importe = Convert.ToDecimal(reader["Importe"]),
                     Estado = Enum.TryParse<EstadoPago>(reader["Estado"]?.ToString(), out var estado) ? estado : EstadoPago.Pendiente,
-                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"])
+                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                    MetodoPago = reader["metodo_pago"] == DBNull.Value ? null : Enum.TryParse<MetodoPago>(reader["metodo_pago"]?.ToString(), out var metodo) ? metodo : null,
+                    Observaciones = reader["observaciones"] == DBNull.Value ? null : reader["observaciones"]?.ToString()
                 };
 
                 pagos.Add(pago);
@@ -51,7 +53,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = _connectionManager.GetConnection();
             await connection.OpenAsync();
 
-            var query = @"SELECT Id, Numero, FechaPago, ContratoId, Importe, Estado, FechaCreacion 
+            var query = @"SELECT Id, Numero, FechaPago, ContratoId, Importe, Estado, FechaCreacion, metodo_pago, observaciones 
                          FROM pagos 
                          WHERE Id = @Id";
 
@@ -70,7 +72,9 @@ namespace InmobiliariaGarciaJesus.Repositories
                     ContratoId = Convert.ToInt32(reader["ContratoId"]),
                     Importe = Convert.ToDecimal(reader["Importe"]),
                     Estado = Enum.TryParse<EstadoPago>(reader["Estado"]?.ToString(), out var estado) ? estado : EstadoPago.Pendiente,
-                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"])
+                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                    MetodoPago = reader["metodo_pago"] == DBNull.Value ? null : Enum.TryParse<MetodoPago>(reader["metodo_pago"]?.ToString(), out var metodo) ? metodo : null,
+                    Observaciones = reader["observaciones"] == DBNull.Value ? null : reader["observaciones"]?.ToString()
                 };
             }
 
@@ -105,7 +109,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
             var query = @"UPDATE pagos 
                          SET Numero = @Numero, FechaPago = @FechaPago, ContratoId = @ContratoId, 
-                             Importe = @Importe, Estado = @Estado
+                             Importe = @Importe, Estado = @Estado, metodo_pago = @MetodoPago, observaciones = @Observaciones
                          WHERE Id = @Id";
 
             using var command = new MySqlCommand(query, connection);
@@ -115,6 +119,8 @@ namespace InmobiliariaGarciaJesus.Repositories
             command.Parameters.AddWithValue("@ContratoId", pago.ContratoId);
             command.Parameters.AddWithValue("@Importe", pago.Importe);
             command.Parameters.AddWithValue("@Estado", pago.Estado.ToString());
+            command.Parameters.AddWithValue("@MetodoPago", pago.MetodoPago.HasValue ? pago.MetodoPago.Value.ToString() : DBNull.Value);
+            command.Parameters.AddWithValue("@Observaciones", !string.IsNullOrEmpty(pago.Observaciones) ? pago.Observaciones : DBNull.Value);
 
             var rowsAffected = await command.ExecuteNonQueryAsync();
             return rowsAffected > 0;
@@ -139,7 +145,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = _connectionManager.GetConnection();
             await connection.OpenAsync();
 
-            var query = @"SELECT Id, Numero, FechaPago, ContratoId, Importe, Estado, FechaCreacion 
+            var query = @"SELECT Id, Numero, FechaPago, ContratoId, Importe, Estado, FechaCreacion, metodo_pago, observaciones 
                          FROM pagos 
                          WHERE ContratoId = @ContratoId
                          ORDER BY Numero";
@@ -161,7 +167,9 @@ namespace InmobiliariaGarciaJesus.Repositories
                     ContratoId = Convert.ToInt32(reader["ContratoId"]),
                     Importe = Convert.ToDecimal(reader["Importe"]),
                     Estado = Enum.TryParse<EstadoPago>(reader["Estado"]?.ToString(), out var estado) ? estado : EstadoPago.Pendiente,
-                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"])
+                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                    MetodoPago = reader["metodo_pago"] == DBNull.Value ? null : Enum.TryParse<MetodoPago>(reader["metodo_pago"]?.ToString(), out var metodo) ? metodo : null,
+                    Observaciones = reader["observaciones"] == DBNull.Value ? null : reader["observaciones"]?.ToString()
                 };
 
                 pagos.Add(pago);

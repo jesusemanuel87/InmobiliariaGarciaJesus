@@ -20,7 +20,12 @@ builder.Services.AddScoped<IRepository<Configuracion>, ConfiguracionRepository>(
 
 
 // Registrar servicios de negocio
-builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IContratoService, InmobiliariaGarciaJesus.Services.ContratoService>();
+builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IContratoService>(provider =>
+    new InmobiliariaGarciaJesus.Services.ContratoService(
+        provider.GetRequiredService<IRepository<Contrato>>(),
+        provider.GetRequiredService<IRepository<Pago>>(),
+        provider.GetRequiredService<IRepository<Configuracion>>()
+    ));
 builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IPagoService, InmobiliariaGarciaJesus.Services.PagoService>();
 builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IConfiguracionService, InmobiliariaGarciaJesus.Services.ConfiguracionService>();
 

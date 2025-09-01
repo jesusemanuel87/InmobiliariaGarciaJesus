@@ -65,6 +65,39 @@
                                             break;
                                     }
                                 </dd>
+
+                                <dt class="col-sm-4">
+                                    <i class="fas fa-credit-card"></i> Método de Pago:
+                                </dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.MetodoPago.HasValue)
+                                    {
+                                        @switch (Model.MetodoPago.Value)
+                                        {
+                                            case InmobiliariaGarciaJesus.Models.MetodoPago.MercadoPago:
+                                                <span class="badge bg-primary fs-6">💳 MercadoPago</span>
+                                                break;
+                                            case InmobiliariaGarciaJesus.Models.MetodoPago.Transferencia:
+                                                <span class="badge bg-info fs-6">🏦 Transferencia</span>
+                                                break;
+                                            case InmobiliariaGarciaJesus.Models.MetodoPago.Efectivo:
+                                                <span class="badge bg-success fs-6">💵 Efectivo</span>
+                                                break;
+                                            case InmobiliariaGarciaJesus.Models.MetodoPago.Cheque:
+                                                <span class="badge bg-warning text-dark fs-6">📄 Cheque</span>
+                                                break;
+                                            case InmobiliariaGarciaJesus.Models.MetodoPago.Otro:
+                                                <span class="badge bg-secondary fs-6">🔧 Otro</span>
+                                                break;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">
+                                            <i class="fas fa-question-circle"></i> Sin método especificado
+                                        </span>
+                                    }
+                                </dd>
                             </dl>
                         </div>
 
@@ -113,6 +146,21 @@
                             </dl>
                         </div>
                     </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Observaciones))
+                    {
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h5 class="card-title mb-3">
+                                    <i class="fas fa-sticky-note text-warning"></i> Observaciones
+                                </h5>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    @Model.Observaciones
+                                </div>
+                            </div>
+                        </div>
+                    }
 
                     <div class="d-flex justify-content-between mt-4">
                         <a asp-action="Index" class="btn btn-secondary">

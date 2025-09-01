@@ -103,8 +103,27 @@ namespace InmobiliariaGarciaJesus.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                await LoadContratosViewBag();
-                return View(pago);
+                // Obtener información del contrato para mostrar
+                var contrato = await _contratoRepository.GetByIdAsync(pago.ContratoId);
+                var contratoInfo = contrato != null ? 
+                    $"Contrato #{contrato.Id} - {contrato.Inquilino?.NombreCompleto}" : 
+                    $"Contrato #{pago.ContratoId}";
+
+                var viewModel = new PagoEditViewModel
+                {
+                    Id = pago.Id,
+                    Numero = pago.Numero,
+                    ContratoId = pago.ContratoId,
+                    Importe = pago.Importe,
+                    FechaPago = pago.FechaPago,
+                    Estado = pago.Estado,
+                    MetodoPago = pago.MetodoPago,
+                    Observaciones = pago.Observaciones,
+                    FechaCreacion = pago.FechaCreacion,
+                    ContratoInfo = contratoInfo
+                };
+
+                return View(viewModel);
             }
             catch (Exception ex)
             {
@@ -116,9 +135,9 @@ namespace InmobiliariaGarciaJesus.Controllers
         // POST: Pagos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Pago pago)
+        public async Task<IActionResult> Edit(int id, PagoEditViewModel viewModel)
         {
-            if (id != pago.Id)
+            if (id != viewModel.Id)
             {
                 TempData["Error"] = "ID de pago no válido";
                 return RedirectToAction(nameof(Index));
@@ -128,7 +147,26 @@ namespace InmobiliariaGarciaJesus.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    var success = await _pagoRepository.UpdateAsync(pago);
+                    // Obtener el pago original para preservar campos no editables
+                    var pagoOriginal = await _pagoRepository.GetByIdAsync(id);
+                    if (pagoOriginal == null)
+                    {
+                        TempData["Error"] = "Pago no encontrado";
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    // Solo actualizar campos editables
+                    pagoOriginal.Estado = viewModel.Estado;
+                    pagoOriginal.MetodoPago = viewModel.MetodoPago;
+                    pagoOriginal.Observaciones = viewModel.Observaciones;
+
+                    // Si se marca como pagado, establecer fecha de pago
+                    if (viewModel.Estado == EstadoPago.Pagado && !pagoOriginal.FechaPago.HasValue)
+                    {
+                        pagoOriginal.FechaPago = DateTime.Today;
+                    }
+
+                    var success = await _pagoRepository.UpdateAsync(pagoOriginal);
                     if (success)
                     {
                         TempData["Success"] = "Pago actualizado exitosamente";
@@ -140,14 +178,18 @@ namespace InmobiliariaGarciaJesus.Controllers
                     }
                 }
 
-                await LoadContratosViewBag();
-                return View(pago);
+                // Recalcular información del contrato para la vista
+                var contrato = await _contratoRepository.GetByIdAsync(viewModel.ContratoId);
+                viewModel.ContratoInfo = contrato != null ? 
+                    $"Contrato #{contrato.Id} - {contrato.Inquilino?.NombreCompleto}" : 
+                    $"Contrato #{viewModel.ContratoId}";
+
+                return View(viewModel);
             }
             catch (Exception ex)
             {
                 TempData["Error"] = $"Error al actualizar el pago: {ex.Message}";
-                await LoadContratosViewBag();
-                return View(pago);
+                return View(viewModel);
             }
         }
 

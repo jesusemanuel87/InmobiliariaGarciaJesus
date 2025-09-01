@@ -13,15 +13,24 @@ namespace InmobiliariaGarciaJesus.Services
         Task<bool> DeleteContratoAsync(int id);
         Task<List<(DateTime FechaInicio, DateTime FechaFin)>> GetUnavailableDatesAsync(int inmuebleId);
         Task<DateTime?> GetNextAvailableDateAsync(int inmuebleId);
+        Task<ContratoFinalizacionViewModel> CalcularFinalizacionAsync(int contratoId, DateTime fechaFinalizacion);
+        Task<Contrato> FinalizarContratoAsync(ContratoFinalizacionViewModel modelo);
+        Task<Contrato> CancelarContratoAsync(int contratoId, string motivo);
     }
 
     public class ContratoService : IContratoService
     {
         private readonly IRepository<Contrato> _contratoRepository;
+        private readonly IRepository<Pago> _pagoRepository;
+        private readonly IRepository<Configuracion> _configuracionRepository;
 
-        public ContratoService(IRepository<Contrato> contratoRepository)
+        public ContratoService(IRepository<Contrato> contratoRepository,
+                              IRepository<Pago> pagoRepository,
+                              IRepository<Configuracion> configuracionRepository)
         {
             _contratoRepository = contratoRepository;
+            _pagoRepository = pagoRepository;
+            _configuracionRepository = configuracionRepository;
         }
 
         public async Task<IEnumerable<Contrato>> GetAllAsync()
@@ -148,6 +157,124 @@ namespace InmobiliariaGarciaJesus.Services
         {
             var contratoRepository = (ContratoRepository)_contratoRepository;
             return await contratoRepository.GetNextAvailableDateAsync(inmuebleId);
+        }
+
+        public async Task<ContratoFinalizacionViewModel> CalcularFinalizacionAsync(int contratoId, DateTime fechaFinalizacion)
+        {
+            var contrato = await _contratoRepository.GetByIdAsync(contratoId);
+            if (contrato == null) throw new ArgumentException("Contrato no encontrado");
+
+            // Obtener configuración de multas
+            var configuraciones = await _configuracionRepository.GetAllAsync();
+            var multaMenorMitad = configuraciones.FirstOrDefault(c => c.Clave == "MULTA_MENOR_MITAD");
+            var multaMayorMitad = configuraciones.FirstOrDefault(c => c.Clave == "MULTA_MAYOR_MITAD");
+        
+            if (multaMenorMitad == null || multaMayorMitad == null)
+            {
+                throw new InvalidOperationException("No se encontró configuración de multas");
+            }
+
+            // Calcular porcentaje de tiempo cumplido
+            var tiempoTotal = (contrato.FechaFin - contrato.FechaInicio).Days;
+            var tiempoCumplido = (fechaFinalizacion - contrato.FechaInicio).Days;
+            var porcentajeCumplido = (double)tiempoCumplido / tiempoTotal;
+
+            // Aplicar multa según porcentaje cumplido
+            decimal porcentajeMulta;
+            if (porcentajeCumplido < 0.5) // Menos del 50%
+            {
+                porcentajeMulta = decimal.Parse(multaMenorMitad.Valor);
+            }
+            else // 50% o más
+            {
+                porcentajeMulta = decimal.Parse(multaMayorMitad.Valor);
+            }
+
+            var modelo = new ContratoFinalizacionViewModel
+            {
+                ContratoId = contratoId,
+                Contrato = contrato,
+                FechaFinalizacion = fechaFinalizacion
+            };
+
+            // Calcular meses totales y cumplidos
+            var mesesTotales = ((contrato.FechaFin.Year - contrato.FechaInicio.Year) * 12) + 
+                              contrato.FechaFin.Month - contrato.FechaInicio.Month;
+            var mesesCumplidos = ((fechaFinalizacion.Year - contrato.FechaInicio.Year) * 12) + 
+                                fechaFinalizacion.Month - contrato.FechaInicio.Month;
+
+            modelo.MesesTotales = mesesTotales;
+            modelo.MesesCumplidos = mesesCumplidos;
+            modelo.EsFinalizacionTemprana = mesesCumplidos < mesesTotales;
+
+            // Obtener pagos atrasados
+            var allPagos = await _pagoRepository.GetAllAsync();
+            var pagosContrato = allPagos.Where(p => p.ContratoId == contratoId).ToList();
+            modelo.PagosAtrasados = pagosContrato.Where(p => p.Estado == EstadoPago.Pendiente || p.Estado == EstadoPago.Vencido).ToList();
+
+            modelo.MesesAdeudados = modelo.PagosAtrasados.Count;
+            modelo.ImporteAdeudado = modelo.PagosAtrasados.Sum(p => p.Importe);
+
+            // Calcular multa si es finalización temprana
+            if (modelo.EsFinalizacionTemprana)
+            {
+                // Usar el porcentaje de multa ya calculado anteriormente
+                modelo.MultaCalculada = contrato.Precio * (porcentajeMulta / 100m);
+                
+                // Agregar multa adicional por pagos atrasados si los hay
+                if (modelo.MesesAdeudados > 0)
+                {
+                    modelo.MultaCalculada += modelo.ImporteAdeudado * 0.1m; // 10% adicional por pagos atrasados
+                }
+            }
+
+            return modelo;
+        }
+
+        public async Task<Contrato> FinalizarContratoAsync(ContratoFinalizacionViewModel modelo)
+        {
+            var contrato = await _contratoRepository.GetByIdAsync(modelo.ContratoId);
+            if (contrato == null) throw new ArgumentException("Contrato no encontrado");
+
+            contrato.Estado = EstadoContrato.Finalizado;
+            contrato.FechaFinalizacionReal = modelo.FechaFinalizacion;
+            contrato.MultaFinalizacion = modelo.MultaCalculada;
+            contrato.MesesAdeudados = modelo.MesesAdeudados;
+            contrato.ImporteAdeudado = modelo.ImporteAdeudado;
+            contrato.MotivoCancelacion = modelo.Motivo;
+
+            await _contratoRepository.UpdateAsync(contrato);
+
+            // Crear pago de multa si corresponde
+            if (modelo.MultaCalculada.HasValue && modelo.MultaCalculada > 0)
+            {
+                var pagoMulta = new Pago
+                {
+                    Numero = 999, // Número especial para multas
+                    ContratoId = contrato.Id,
+                    Importe = modelo.MultaCalculada.Value,
+                    FechaPago = modelo.FechaFinalizacion,
+                    Estado = EstadoPago.Pendiente,
+                    FechaCreacion = DateTime.Now,
+                    Observaciones = "Multa por finalización temprana del contrato"
+                };
+                await _pagoRepository.CreateAsync(pagoMulta);
+            }
+
+            return contrato;
+        }
+
+        public async Task<Contrato> CancelarContratoAsync(int contratoId, string motivo)
+        {
+            var contrato = await _contratoRepository.GetByIdAsync(contratoId);
+            if (contrato == null) throw new ArgumentException("Contrato no encontrado");
+
+            contrato.Estado = EstadoContrato.Cancelado;
+            contrato.MotivoCancelacion = motivo;
+            contrato.FechaFinalizacionReal = DateTime.Today;
+
+            await _contratoRepository.UpdateAsync(contrato);
+            return contrato;
         }
     }
 }

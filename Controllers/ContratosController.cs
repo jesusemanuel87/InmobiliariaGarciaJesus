@@ -260,5 +260,93 @@ namespace InmobiliariaGarciaJesus.Controllers
                 return PartialView("_PagosError");
             }
         }
+
+        // GET: Contratos/Finalizar/5
+        public async Task<IActionResult> Finalizar(int? id)
+        {
+            if (id == null) return NotFound();
+
+            try
+            {
+                var modelo = await _contratoService.CalcularFinalizacionAsync(id.Value, DateTime.Today);
+                return View(modelo);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error al calcular la finalización: " + ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // POST: Contratos/Finalizar/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Finalizar(ContratoFinalizacionViewModel modelo)
+        {
+            if (!ModelState.IsValid)
+            {
+                // Recalcular datos para mostrar la vista
+                modelo = await _contratoService.CalcularFinalizacionAsync(modelo.ContratoId, modelo.FechaFinalizacion);
+                return View(modelo);
+            }
+
+            try
+            {
+                await _contratoService.FinalizarContratoAsync(modelo);
+                TempData["Success"] = "Contrato finalizado exitosamente.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error al finalizar el contrato: " + ex.Message;
+                modelo = await _contratoService.CalcularFinalizacionAsync(modelo.ContratoId, modelo.FechaFinalizacion);
+                return View(modelo);
+            }
+        }
+
+        // GET: Contratos/Cancelar/5
+        public async Task<IActionResult> Cancelar(int? id)
+        {
+            if (id == null) return NotFound();
+
+            try
+            {
+                var contrato = await _contratoService.GetByIdAsync(id.Value);
+                if (contrato == null) return NotFound();
+
+                return View(contrato);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error al cargar el contrato: " + ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // POST: Contratos/Cancelar/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancelar(int id, string motivo)
+        {
+            if (string.IsNullOrWhiteSpace(motivo))
+            {
+                ModelState.AddModelError("MotivoCancelacion", "El motivo de cancelación es obligatorio");
+                var contrato = await _contratoService.GetByIdAsync(id);
+                return View(contrato);
+            }
+
+            try
+            {
+                await _contratoService.CancelarContratoAsync(id, motivo);
+                TempData["Success"] = "Contrato cancelado exitosamente.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error al cancelar el contrato: " + ex.Message;
+                var contrato = await _contratoService.GetByIdAsync(id);
+                return View(contrato);
+            }
+        }
     }
 }

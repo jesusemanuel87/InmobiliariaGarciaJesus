@@ -9,6 +9,15 @@ namespace InmobiliariaGarciaJesus.Models
         Vencido
     }
 
+    public enum MetodoPago
+    {
+        MercadoPago,
+        Transferencia,
+        Efectivo,
+        Cheque,
+        Otro
+    }
+
     public class Pago
     {
         [Key]
@@ -33,6 +42,13 @@ namespace InmobiliariaGarciaJesus.Models
 
         [Display(Name = "Estado")]
         public EstadoPago Estado { get; set; } = EstadoPago.Pendiente;
+
+        [Display(Name = "Método de Pago")]
+        public MetodoPago? MetodoPago { get; set; }
+
+        [Display(Name = "Observaciones")]
+        [StringLength(500, ErrorMessage = "Las observaciones no pueden exceder 500 caracteres")]
+        public string? Observaciones { get; set; }
 
         [Display(Name = "Fecha de Creación")]
         public DateTime FechaCreacion { get; set; } = DateTime.Now;

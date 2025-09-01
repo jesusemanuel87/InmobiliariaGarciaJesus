@@ -1,27 +1,31 @@
 @model IEnumerable<InmobiliariaGarciaJesus.Models.Pago>
 
-<tr class="pagos-header bg-light">
-    <td colspan="6" class="fw-bold text-primary py-3 ps-5">
-        <i class="fas fa-money-bill-wave me-2"></i>Pagos del Contrato
-    </td>
-</tr>
+<table class="table table-bordered mb-0">
+    <thead class="bg-light">
+        <tr class="pagos-header">
+            <th colspan="6" class="fw-bold text-primary ps-5 py-3">
+                <i class="fas fa-money-bill-wave me-2"></i>Pagos del Contrato
+            </th>
+        </tr>
 <tr class="pagos-subheader bg-light">
-    <td class="fw-bold py-2 ps-5" style="width: 10%;">Número</td>
-    <td class="fw-bold py-2" style="width: 15%;">Importe</td>
-    <td class="fw-bold py-2" style="width: 15%;">Fecha de Pago</td>
-    <td class="fw-bold py-2" style="width: 15%;">Estado</td>
-    <td class="fw-bold py-2" style="width: 20%;">Método de Pago</td>
-    <td class="fw-bold py-2" style="width: 25%;">Acciones</td>
+    <th class="fw-bold py-2 ps-5" style="width: 10%;">Número</th>
+    <th class="fw-bold py-2" style="width: 15%;">Importe</th>
+    <th class="fw-bold py-2" style="width: 15%;">Fecha de Pago</th>
+    <th class="fw-bold py-2" style="width: 15%;">Estado</th>
+    <th class="fw-bold py-2" style="width: 20%;">Método de Pago</th>
+    <th class="fw-bold py-2" style="width: 25%;">Acciones</th>
 </tr>
+</thead>
+<tbody>
 @foreach (var pago in Model)
 {
     <tr class="pago-row bg-light">
-        <td class="ps-5 py-2"><strong>#@pago.Numero</strong></td>
-        <td class="py-2">
+        <th class="ps-5 py-2"><strong>#@pago.Numero</strong></th>
+        <th class="py-2">
             <strong class="text-success">
                 $@pago.Importe.ToString("N0")
             </strong>
-        </td>
+        </th>
         <td class="py-2">
             @if (pago.FechaPago.HasValue)
             {
@@ -98,3 +102,5 @@
         </td>
     </tr>
 }
+</tbody>
+</table>

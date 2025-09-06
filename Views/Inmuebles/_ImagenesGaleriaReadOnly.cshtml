@@ -1,0 +1,36 @@
+@model IEnumerable<InmuebleImagen>
+
+@if (Model != null && Model.Any())
+{
+    <div class="row">
+        @foreach (var imagen in Model)
+        {
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="card">
+                    <div class="position-relative">
+                        <img src="@imagen.RutaCompleta" class="card-img-top" alt="@imagen.Descripcion" style="height: 200px; object-fit: cover;">
+                        @if (imagen.EsPortada)
+                        {
+                            <span class="badge bg-primary position-absolute top-0 start-0 m-2">
+                                <i class="fas fa-star"></i> Portada
+                            </span>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(imagen.Descripcion))
+                    {
+                        <div class="card-body p-2">
+                            <p class="card-text small mb-0">@imagen.Descripcion</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="col-12 text-center text-muted">
+        <i class="fas fa-images fa-3x mb-3"></i>
+        <p>No hay imágenes disponibles para este inmueble.</p>
+    </div>
+}

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Repositories;
+using InmobiliariaGarciaJesus.Services;
 
 namespace InmobiliariaGarciaJesus.Controllers
 {
@@ -8,11 +9,19 @@ namespace InmobiliariaGarciaJesus.Controllers
     {
         private readonly IRepository<Inmueble> _inmuebleRepository;
         private readonly IRepository<Propietario> _propietarioRepository;
+        private readonly IInmuebleImagenService _imagenService;
+        private readonly InmuebleImagenRepository _imagenRepository;
 
-        public InmueblesController(IRepository<Inmueble> inmuebleRepository, IRepository<Propietario> propietarioRepository)
+        public InmueblesController(
+            IRepository<Inmueble> inmuebleRepository, 
+            IRepository<Propietario> propietarioRepository,
+            IInmuebleImagenService imagenService,
+            InmuebleImagenRepository imagenRepository)
         {
             _inmuebleRepository = inmuebleRepository;
             _propietarioRepository = propietarioRepository;
+            _imagenService = imagenService;
+            _imagenRepository = imagenRepository;
         }
 
         // GET: Inmuebles
@@ -21,6 +30,14 @@ namespace InmobiliariaGarciaJesus.Controllers
             try
             {
                 var inmuebles = await _inmuebleRepository.GetAllAsync();
+                
+                // Cargar imágenes de portada para cada inmueble
+                foreach (var inmueble in inmuebles)
+                {
+                    var imagenes = await _imagenRepository.GetByInmuebleIdAsync(inmueble.Id);
+                    inmueble.Imagenes = imagenes.ToList();
+                }
+                
                 return View(inmuebles);
             }
             catch (Exception ex)
@@ -215,9 +232,110 @@ namespace InmobiliariaGarciaJesus.Controllers
                 
                 return Json(inmueblesConPrecios);
             }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+
+        // POST: Inmuebles/UploadImages/5
+        [HttpPost]
+        public async Task<IActionResult> UploadImages(int id, List<IFormFile> imagenes, List<string> descripciones)
+        {
+            try
+            {
+                if (imagenes == null || !imagenes.Any())
+                {
+                    TempData["Error"] = "Debe seleccionar al menos una imagen";
+                    return RedirectToAction(nameof(Edit), new { id });
+                }
+
+                var inmueble = await _inmuebleRepository.GetByIdAsync(id);
+                if (inmueble == null)
+                {
+                    TempData["Error"] = "Inmueble no encontrado";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                int imagenesSubidas = 0;
+                for (int i = 0; i < imagenes.Count; i++)
+                {
+                    if (imagenes[i] != null && imagenes[i].Length > 0)
+                    {
+                        var descripcion = descripciones != null && i < descripciones.Count ? descripciones[i] : null;
+                        await _imagenService.GuardarImagenAsync(id, imagenes[i], descripcion);
+                        imagenesSubidas++;
+                    }
+                }
+
+                TempData["Success"] = $"Se subieron {imagenesSubidas} imagen(es) exitosamente";
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al subir imágenes: {ex.Message}";
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+        }
+
+        // POST: Inmuebles/DeleteImage/5
+        [HttpPost]
+        public async Task<IActionResult> DeleteImage(int id, int inmuebleId)
+        {
+            try
+            {
+                var eliminado = await _imagenService.EliminarImagenAsync(id);
+                if (eliminado)
+                {
+                    return Json(new { success = true, message = "Imagen eliminada exitosamente" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "No se pudo eliminar la imagen" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al eliminar imagen: {ex.Message}" });
+            }
+        }
+
+        // POST: Inmuebles/SetPortada/5
+        [HttpPost]
+        public async Task<IActionResult> SetPortada(int id, int inmuebleId)
+        {
+            try
+            {
+                var actualizado = await _imagenService.EstablecerPortadaAsync(id, inmuebleId);
+                if (actualizado)
+                {
+                    return Json(new { success = true, message = "Imagen de portada actualizada" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "No se pudo actualizar la imagen de portada" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al actualizar portada: {ex.Message}" });
+            }
+        }
+
+        // GET: Inmuebles/GetImagenes/5
+        [HttpGet]
+        public async Task<IActionResult> GetImagenes(int id, bool readOnly = false)
+        {
+            try
+            {
+                var imagenes = await _imagenRepository.GetByInmuebleIdAsync(id);
+                var viewName = readOnly ? "_ImagenesGaleriaReadOnly" : "_ImagenesGaleria";
+                return PartialView(viewName, imagenes);
+            }
             catch (Exception)
             {
-                return Json(new List<object>());
+                var viewName = readOnly ? "_ImagenesGaleriaReadOnly" : "_ImagenesGaleria";
+                return PartialView(viewName, new List<InmuebleImagen>());
             }
         }
     }

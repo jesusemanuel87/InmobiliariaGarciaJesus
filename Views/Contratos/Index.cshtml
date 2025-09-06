@@ -38,6 +38,7 @@
                             <table class="table table-striped table-hover">
                                 <thead class="table-dark">
                                     <tr>
+                                        <th>Nº Contrato</th>
                                         <th>Inquilino</th>
                                         <th>Inmueble</th>
                                         <th>@Html.DisplayNameFor(model => model.FechaInicio)</th>
@@ -51,6 +52,9 @@
                                     @foreach (var item in Model)
                                     {
                                         <tr>
+                                            <td>
+                                                <span class="badge bg-primary fs-6">#@item.Id</span>
+                                            </td>
                                             <td>
                                                 @if (item.Inquilino != null)
                                                 {
@@ -133,7 +137,7 @@
                                             </td>
                                         </tr>
                                         <tr class="pagos-container" data-contrato-id="@item.Id" style="display: none;">
-                                            <td colspan="7" class="p-0">
+                                            <td colspan="8" class="p-0">
                                                 <div class="table-responsive">
                                                     <table class="table table-bordered mb-0">
                                                         <tbody class="pagos-content"></tbody>

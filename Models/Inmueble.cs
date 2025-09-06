@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InmobiliariaGarciaJesus.Models
 {
@@ -29,20 +30,21 @@ namespace InmobiliariaGarciaJesus.Models
         [Key]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "La dirección es obligatoria")]
-        [StringLength(200, ErrorMessage = "La dirección no puede exceder 200 caracteres")]
+        [Required]
+        [StringLength(200)]
         [Display(Name = "Dirección")]
-        public string Direccion { get; set; } = "";
+        public string Direccion { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "El número de ambientes es obligatorio")]
-        [Range(1, 50, ErrorMessage = "Los ambientes deben estar entre 1 y 50")]
+        [Required]
+        [Display(Name = "Tipo")]
+        public TipoInmueble Tipo { get; set; } = TipoInmueble.Casa;
+
+        [Required]
         [Display(Name = "Ambientes")]
         public int Ambientes { get; set; }
 
-        [Required(ErrorMessage = "La superficie es obligatoria")]
-        [Range(1, 10000, ErrorMessage = "La superficie debe estar entre 1 y 10000 m²")]
-        [Display(Name = "Superficie (m²)")]
-        public decimal Superficie { get; set; }
+        [Display(Name = "Superficie")]
+        public decimal? Superficie { get; set; }
 
         [Display(Name = "Latitud")]
         public decimal? Latitud { get; set; }
@@ -50,16 +52,16 @@ namespace InmobiliariaGarciaJesus.Models
         [Display(Name = "Longitud")]
         public decimal? Longitud { get; set; }
 
-        [Required(ErrorMessage = "El propietario es obligatorio")]
+        [Required]
         [Display(Name = "Propietario")]
         public int PropietarioId { get; set; }
 
-        [Required(ErrorMessage = "El tipo de inmueble es obligatorio")]
-        [Display(Name = "Tipo")]
-        public TipoInmueble Tipo { get; set; }
+        [Display(Name = "Disponible")]
+        public bool Disponible { get; set; } = true;
 
         [Display(Name = "Precio")]
         [Range(0, 999999999, ErrorMessage = "El precio debe ser mayor a 0")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? Precio { get; set; }
 
         [Display(Name = "Estado")]
@@ -72,8 +74,21 @@ namespace InmobiliariaGarciaJesus.Models
         [Display(Name = "Fecha de Creación")]
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
-        // Navigation property
-        public Propietario? Propietario { get; set; }
+        // Navigation properties
+        [ForeignKey("PropietarioId")]
+        public virtual Propietario? Propietario { get; set; }
+
+        public virtual ICollection<Contrato>? Contratos { get; set; }
+        
+        public virtual ICollection<InmuebleImagen>? Imagenes { get; set; }
+
+        // Propiedad calculada para obtener la imagen de portada
+        [NotMapped]
+        public InmuebleImagen? ImagenPortada => Imagenes?.FirstOrDefault(i => i.EsPortada);
+
+        // Propiedad calculada para obtener la URL de la imagen de portada
+        [NotMapped]
+        public string? ImagenPortadaUrl => ImagenPortada?.RutaCompleta;
 
     }
 }

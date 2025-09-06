@@ -117,13 +117,54 @@
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-end gap-2">
-                            <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-warning">
-                                <i class="fas fa-save"></i> Actualizar Inmueble
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sección de Gestión de Imágenes -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-images"></i> Gestión de Imágenes</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Formulario para subir nuevas imágenes -->
+                    <form asp-action="UploadImages" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <label class="form-label">Seleccionar Imágenes</label>
+                                <input type="file" name="imagenes" class="form-control" multiple accept="image/*" required />
+                                <div class="form-text">Formatos permitidos: JPG, PNG, GIF, WEBP. Tamaño máximo: 5MB por imagen.</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Descripción (opcional)</label>
+                                <input type="text" name="descripciones" class="form-control" placeholder="Descripción de las imágenes" />
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-upload"></i> Subir Imágenes
                             </button>
                         </div>
                     </form>
+
+                    <!-- Galería de imágenes existentes -->
+                    <div id="imagenes-galeria">
+                        <h6>Imágenes del Inmueble</h6>
+                        <div class="row" id="imagenes-container">
+                            <!-- Las imágenes se cargarán aquí via AJAX -->
+                            <div class="col-12 text-center py-3">
+                                <i class="fas fa-spinner fa-spin"></i> Cargando imágenes...
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -132,4 +173,76 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            cargarImagenes();
+        });
+
+        function cargarImagenes() {
+            $.get('@Url.Action("GetImagenes", "Inmuebles")', { id: @Model.Id })
+                .done(function(data) {
+                    $('#imagenes-container').html(data);
+                })
+                .fail(function() {
+                    $('#imagenes-container').html('<div class="col-12 text-center text-danger"><i class="fas fa-exclamation-triangle"></i> Error al cargar imágenes</div>');
+                });
+        }
+
+        function eliminarImagen(imagenId) {
+            if (confirm('¿Está seguro de que desea eliminar esta imagen?')) {
+                $.post('@Url.Action("DeleteImage", "Inmuebles")', { 
+                    id: imagenId, 
+                    inmuebleId: @Model.Id 
+                })
+                .done(function(response) {
+                    cargarImagenes();
+                    mostrarMensaje('Imagen eliminada correctamente', 'success');
+                })
+                .fail(function() {
+                    mostrarMensaje('Error al eliminar la imagen', 'danger');
+                });
+            }
+        }
+
+        function establecerPortada(imagenId) {
+            console.log('Estableciendo portada para imagen ID:', imagenId, 'Inmueble ID:', @Model.Id);
+            
+            $.post('@Url.Action("SetPortada", "Inmuebles")', { 
+                id: imagenId, 
+                inmuebleId: @Model.Id 
+            })
+            .done(function(response) {
+                console.log('Respuesta del servidor:', response);
+                if (response.success) {
+                    cargarImagenes();
+                    mostrarMensaje(response.message || 'Imagen de portada actualizada', 'success');
+                } else {
+                    mostrarMensaje(response.message || 'Error al establecer imagen de portada', 'danger');
+                }
+            })
+            .fail(function(xhr, status, error) {
+                console.error('Error en la petición:', xhr, status, error);
+                mostrarMensaje('Error al establecer imagen de portada: ' + error, 'danger');
+            });
+        }
+
+        function mostrarMensaje(mensaje, tipo) {
+            // Remover mensajes anteriores
+            $('.alert-temp').remove();
+            
+            // Crear nuevo mensaje
+            var alertHtml = '<div class="alert alert-' + tipo + ' alert-dismissible fade show alert-temp" role="alert">' +
+                           mensaje +
+                           '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                           '</div>';
+            
+            // Insertar al inicio del contenedor de imágenes
+            $('#imagenes-container').prepend(alertHtml);
+            
+            // Auto-ocultar después de 3 segundos
+            setTimeout(function() {
+                $('.alert-temp').fadeOut();
+            }, 3000);
+        }
+    </script>
 }

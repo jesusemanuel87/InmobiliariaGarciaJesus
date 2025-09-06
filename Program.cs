@@ -18,6 +18,7 @@ builder.Services.AddScoped<IRepository<Contrato>, ContratoRepository>();
 builder.Services.AddScoped<IRepository<Propietario>, PropietarioRepository>();
 builder.Services.AddScoped<IRepository<Pago>, PagoRepository>();
 builder.Services.AddScoped<IRepository<Configuracion>, ConfiguracionRepository>();
+builder.Services.AddScoped<InmuebleImagenRepository>();
 
 
 // Registrar servicios de negocio
@@ -34,6 +35,7 @@ builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IPagoService>(provid
         provider.GetRequiredService<IRepository<Configuracion>>()
     ));
 builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IConfiguracionService, InmobiliariaGarciaJesus.Services.ConfiguracionService>();
+builder.Services.AddScoped<IInmuebleImagenService, InmuebleImagenService>();
 
 // Servicio en segundo plano para actualización automática de pagos
 builder.Services.AddHostedService<PaymentBackgroundService>();
@@ -49,6 +51,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles(); // Para servir archivos estáticos subidos dinámicamente
 app.UseRouting();
 
 app.UseAuthorization();

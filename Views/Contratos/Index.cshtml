@@ -135,7 +135,9 @@
                                         <tr class="pagos-container" data-contrato-id="@item.Id" style="display: none;">
                                             <td colspan="7" class="p-0">
                                                 <div class="table-responsive">
-                                                    <div class="pagos-content"></div>
+                                                    <table class="table table-bordered mb-0">
+                                                        <tbody class="pagos-content"></tbody>
+                                                    </table>
                                                 </div>
                                             </td>
                                         </tr>
@@ -182,7 +184,7 @@
                         
                         $.get('@Url.Action("GetPagos", "Contratos")', { id: contratoId })
                             .done(function(data) {
-                                content.html('<tbody>' + data + '</tbody>');
+                                content.html(data);
                                 container.slideDown();
                                 icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
                             })

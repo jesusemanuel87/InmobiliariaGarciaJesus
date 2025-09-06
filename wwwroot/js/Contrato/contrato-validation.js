@@ -7,8 +7,8 @@ class ContratoDateValidator {
 
     init() {
         const inmuebleSelect = document.getElementById('InmuebleId');
-        const fechaInicioInput = document.getElementById('FechaInicio');
-        const fechaFinInput = document.getElementById('FechaFin');
+        const fechaInicioInput = document.getElementById('fechaInicio');
+        const fechaFinInput = document.getElementById('fechaFin');
 
         if (inmuebleSelect && fechaInicioInput && fechaFinInput) {
             // Set minimum date to today (only for create, not edit)
@@ -72,12 +72,15 @@ class ContratoDateValidator {
             }
 
             if (data.date) {
-                const fechaInicioInput = document.getElementById('FechaInicio');
+                const fechaInicioInput = document.getElementById('fechaInicio');
                 const suggestionDiv = document.getElementById('fecha-suggestion');
                 
                 if (fechaInicioInput && !fechaInicioInput.value) {
                     fechaInicioInput.value = data.date;
                     this.updateEndDateMin();
+                    
+                    // Disparar evento change para activar cálculo automático
+                    fechaInicioInput.dispatchEvent(new Event('change'));
                 }
 
                 if (suggestionDiv) {
@@ -90,8 +93,8 @@ class ContratoDateValidator {
     }
 
     validateDateSelection() {
-        const fechaInicioInput = document.getElementById('FechaInicio');
-        const fechaFinInput = document.getElementById('FechaFin');
+        const fechaInicioInput = document.getElementById('fechaInicio');
+        const fechaFinInput = document.getElementById('fechaFin');
 
         // Always validate start date when it's selected
         if (fechaInicioInput.value) {
@@ -107,7 +110,7 @@ class ContratoDateValidator {
     }
 
     validateStartDate() {
-        const fechaInicioInput = document.getElementById('FechaInicio');
+        const fechaInicioInput = document.getElementById('fechaInicio');
         const startDate = new Date(fechaInicioInput.value);
         
         // Check if start date is in the past
@@ -136,8 +139,8 @@ class ContratoDateValidator {
     }
 
     validateDateRange() {
-        const fechaInicioInput = document.getElementById('FechaInicio');
-        const fechaFinInput = document.getElementById('FechaFin');
+        const fechaInicioInput = document.getElementById('fechaInicio');
+        const fechaFinInput = document.getElementById('fechaFin');
         const startDate = new Date(fechaInicioInput.value);
         const endDate = new Date(fechaFinInput.value);
 
@@ -182,8 +185,8 @@ class ContratoDateValidator {
     }
 
     updateEndDateMin() {
-        const fechaInicioInput = document.getElementById('FechaInicio');
-        const fechaFinInput = document.getElementById('FechaFin');
+        const fechaInicioInput = document.getElementById('fechaInicio');
+        const fechaFinInput = document.getElementById('fechaFin');
         
         if (fechaInicioInput.value) {
             const startDate = new Date(fechaInicioInput.value);
@@ -208,7 +211,7 @@ class ContratoDateValidator {
     }
 
     showStartDateMessage(message, type) {
-        const fechaInicioInput = document.getElementById('FechaInicio');
+        const fechaInicioInput = document.getElementById('fechaInicio');
         const existingMessage = fechaInicioInput.parentNode.querySelector('.start-date-message');
         
         // Remove existing message
@@ -242,7 +245,7 @@ class ContratoDateValidator {
         }
 
         // Clear start date message
-        const fechaInicioInput = document.getElementById('FechaInicio');
+        const fechaInicioInput = document.getElementById('fechaInicio');
         if (fechaInicioInput) {
             const existingMessage = fechaInicioInput.parentNode.querySelector('.start-date-message');
             if (existingMessage) {

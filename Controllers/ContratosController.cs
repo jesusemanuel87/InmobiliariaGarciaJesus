@@ -11,16 +11,19 @@ namespace InmobiliariaGarciaJesus.Controllers
         private readonly IRepository<Inquilino> _inquilinoRepository;
         private readonly IRepository<Inmueble> _inmuebleRepository;
         private readonly IPagoService _pagoService;
+        private readonly IRepository<Configuracion> _configuracionRepository;
 
         public ContratosController(IContratoService contratoService,
                                   IRepository<Inquilino> inquilinoRepository,
                                   IRepository<Inmueble> inmuebleRepository,
-                                  IPagoService pagoService)
+                                  IPagoService pagoService,
+                                  IRepository<Configuracion> configuracionRepository)
         {
             _contratoService = contratoService;
             _inquilinoRepository = inquilinoRepository;
             _inmuebleRepository = inmuebleRepository;
             _pagoService = pagoService;
+            _configuracionRepository = configuracionRepository;
         }
 
         // GET: Contratos
@@ -71,8 +74,13 @@ namespace InmobiliariaGarciaJesus.Controllers
                 var inquilinos = await _inquilinoRepository.GetAllAsync();
                 var inmuebles = await _inmuebleRepository.GetAllAsync();
                 
+                // Obtener configuraciones de meses mínimos
+                var configuraciones = await _configuracionRepository.GetAllAsync();
+                var mesesMinimos = configuraciones.Where(c => c.Tipo == TipoConfiguracion.MesesMinimos).ToList();
+                
                 ViewBag.Inquilinos = inquilinos;
                 ViewBag.Inmuebles = inmuebles;
+                ViewBag.MesesMinimos = mesesMinimos;
                 
                 return View();
             }

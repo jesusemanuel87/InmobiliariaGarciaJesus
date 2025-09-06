@@ -40,6 +40,21 @@ namespace InmobiliariaGarciaJesus.Models
         [Range(0.01, 999999999, ErrorMessage = "El importe debe ser mayor a 0")]
         public decimal Importe { get; set; }
 
+        [Display(Name = "Intereses")]
+        [Range(0, 999999999, ErrorMessage = "Los intereses no pueden ser negativos")]
+        public decimal Intereses { get; set; } = 0;
+
+        [Display(Name = "Multas")]
+        [Range(0, 999999999, ErrorMessage = "Las multas no pueden ser negativas")]
+        public decimal Multas { get; set; } = 0;
+
+        [Display(Name = "Total a Pagar")]
+        public decimal TotalAPagar => Importe + Intereses + Multas;
+
+        [Display(Name = "Fecha de Vencimiento")]
+        [DataType(DataType.Date)]
+        public DateTime FechaVencimiento { get; set; }
+
         [Display(Name = "Estado")]
         public EstadoPago Estado { get; set; } = EstadoPago.Pendiente;
 

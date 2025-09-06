@@ -188,13 +188,37 @@ namespace InmobiliariaGarciaJesus.Controllers
             {
                 await _inmuebleRepository.DeleteAsync(id);
                 TempData["Success"] = "Inmueble eliminado exitosamente.";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 TempData["Error"] = "Error al eliminar el inmueble: " + ex.Message;
+                return RedirectToAction(nameof(Index));
             }
+        }
 
-            return RedirectToAction(nameof(Index));
+        // API endpoint para obtener inmuebles con precios
+        [HttpGet]
+        public async Task<IActionResult> GetInmueblesConPrecios()
+        {
+            try
+            {
+                var inmuebles = await _inmuebleRepository.GetAllAsync();
+                var inmueblesConPrecios = inmuebles
+                    .Where(i => i.Precio.HasValue && i.Estado == EstadoInmueble.Activo)
+                    .Select(i => new { 
+                        id = i.Id, 
+                        direccion = i.Direccion,
+                        precio = i.Precio.Value 
+                    })
+                    .ToList();
+                
+                return Json(inmueblesConPrecios);
+            }
+            catch (Exception)
+            {
+                return Json(new List<object>());
+            }
         }
     }
 }

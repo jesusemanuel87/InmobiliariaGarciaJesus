@@ -256,15 +256,35 @@ namespace InmobiliariaGarciaJesus.Controllers
             try
             {
                 await _configuracionRepository.DeleteAsync(id);
-                TempData["Success"] = "Configuración eliminada exitosamente";
-                return RedirectToAction(nameof(Index));
+                TempData["Success"] = "Configuración eliminada exitosamente.";
+                return RedirectToAction(nameof(AdminPanel));
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error al eliminar configuración: {ex.Message}";
-                return RedirectToAction(nameof(Index));
+                TempData["Error"] = "Error al eliminar la configuración: " + ex.Message;
+                return RedirectToAction(nameof(AdminPanel));
+            }
+        }
+
+        // API endpoint para obtener meses mínimos
+        [HttpGet]
+        public async Task<IActionResult> GetMesesMinimos()
+        {
+            try
+            {
+                var configuraciones = await _configuracionRepository.GetAllAsync();
+                var mesesMinimos = configuraciones
+                    .Where(c => c.Tipo == TipoConfiguracion.MesesMinimos)
+                    .OrderBy(c => c.Valor)
+                    .Select(c => new { valor = c.Valor })
+                    .ToList();
+                
+                return Json(mesesMinimos);
+            }
+            catch (Exception)
+            {
+                return Json(new List<object>());
             }
         }
     }
-
 }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Repositories;
+using InmobiliariaGarciaJesus.Services;
 
 namespace InmobiliariaGarciaJesus.Controllers
 {
@@ -8,11 +9,13 @@ namespace InmobiliariaGarciaJesus.Controllers
     {
         private readonly IRepository<Pago> _pagoRepository;
         private readonly IRepository<Contrato> _contratoRepository;
+        private readonly IPagoService _pagoService;
 
-        public PagosController(IRepository<Pago> pagoRepository, IRepository<Contrato> contratoRepository)
+        public PagosController(IRepository<Pago> pagoRepository, IRepository<Contrato> contratoRepository, IPagoService pagoService)
         {
             _pagoRepository = pagoRepository;
             _contratoRepository = contratoRepository;
+            _pagoService = pagoService;
         }
 
         // GET: Pagos
@@ -20,8 +23,19 @@ namespace InmobiliariaGarciaJesus.Controllers
         {
             try
             {
+                // Actualizar estados automáticamente antes de mostrar
+                await _pagoService.ActualizarEstadosPagosAsync();
+                
+                // Esperar un momento para asegurar que los cambios se persistan
+                await Task.Delay(100);
+                
+                // Forzar recarga desde la base de datos después de actualizar
                 var pagos = await _pagoRepository.GetAllAsync();
-                return View(pagos);
+                
+                // Ordenar por fecha de vencimiento para consistencia
+                var pagosOrdenados = pagos.OrderBy(p => p.FechaVencimiento).ToList();
+                
+                return View(pagosOrdenados);
             }
             catch (Exception ex)
             {
@@ -160,10 +174,12 @@ namespace InmobiliariaGarciaJesus.Controllers
                     pagoOriginal.MetodoPago = viewModel.MetodoPago;
                     pagoOriginal.Observaciones = viewModel.Observaciones;
 
-                    // Si se marca como pagado, establecer fecha de pago
+                    // Si se marca como pagado, establecer fecha de pago y calcular intereses/multas
                     if (viewModel.Estado == EstadoPago.Pagado && !pagoOriginal.FechaPago.HasValue)
                     {
                         pagoOriginal.FechaPago = DateTime.Today;
+                        // Calcular intereses y multas basados en la fecha actual
+                        await _pagoService.CalcularInteresesYMultasAsync(pagoOriginal.Id);
                     }
 
                     var success = await _pagoRepository.UpdateAsync(pagoOriginal);
@@ -257,6 +273,112 @@ namespace InmobiliariaGarciaJesus.Controllers
             {
                 TempData["Error"] = $"Error al cargar los pagos del contrato: {ex.Message}";
                 return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // GET: Pagos/RegistrarPago/5
+        public async Task<IActionResult> RegistrarPago(int id)
+        {
+            try
+            {
+                var pago = await _pagoRepository.GetByIdAsync(id);
+                if (pago == null)
+                {
+                    return Json(new { success = false, message = "Pago no encontrado" });
+                }
+
+                if (pago.Estado == EstadoPago.Pagado)
+                {
+                    return Json(new { success = false, message = "El pago ya está registrado" });
+                }
+
+                // Calcular intereses y multas antes de mostrar el modal
+                await _pagoService.CalcularInteresesYMultasAsync(id);
+                
+                // Recargar el pago para obtener los valores actualizados
+                pago = await _pagoRepository.GetByIdAsync(id);
+                if (pago == null)
+                {
+                    return Json(new { success = false, message = "Pago no encontrado después de actualizar" });
+                }
+
+                // Obtener información del contrato para mostrar
+                var contrato = await _contratoRepository.GetByIdAsync(pago.ContratoId);
+                var contratoInfo = contrato != null ? 
+                    $"Contrato #{contrato.Id} - {contrato.Inquilino?.NombreCompleto ?? "Sin inquilino"}" : 
+                    $"Contrato #{pago.ContratoId}";
+
+                var viewModel = new PagoRegistroViewModel
+                {
+                    Id = pago.Id,
+                    Numero = pago.Numero,
+                    ContratoId = pago.ContratoId,
+                    Importe = pago.Importe,
+                    Intereses = pago.Intereses,
+                    Multas = pago.Multas,
+                    TotalAPagar = pago.TotalAPagar,
+                    FechaVencimiento = pago.FechaVencimiento,
+                    Estado = pago.Estado,
+                    FechaCreacion = pago.FechaCreacion,
+                    ContratoInfo = contratoInfo
+                };
+
+                return PartialView("_RegistrarPagoModal", viewModel);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al cargar el pago: {ex.Message}" });
+            }
+        }
+
+        // POST: Pagos/RegistrarPago/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegistrarPago(int id, PagoRegistroViewModel viewModel)
+        {
+            try
+            {
+                if (id != viewModel.Id)
+                {
+                    return Json(new { success = false, message = "ID de pago no válido" });
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                    return Json(new { success = false, message = string.Join(", ", errors) });
+                }
+
+                var pago = await _pagoRepository.GetByIdAsync(id);
+                if (pago == null)
+                {
+                    return Json(new { success = false, message = "Pago no encontrado" });
+                }
+
+                if (pago.Estado == EstadoPago.Pagado)
+                {
+                    return Json(new { success = false, message = "El pago ya está registrado" });
+                }
+
+                // Actualizar el pago con los datos del formulario
+                pago.FechaPago = DateTime.Today;
+                pago.Estado = EstadoPago.Pagado;
+                pago.MetodoPago = viewModel.MetodoPago;
+                pago.Observaciones = viewModel.Observaciones;
+                
+                await _pagoRepository.UpdateAsync(pago);
+
+                return Json(new { 
+                    success = true, 
+                    message = "Pago registrado exitosamente",
+                    intereses = pago.Intereses,
+                    multas = pago.Multas,
+                    totalAPagar = pago.TotalAPagar
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al registrar el pago: {ex.Message}" });
             }
         }
 

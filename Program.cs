@@ -1,6 +1,7 @@
 using InmobiliariaGarciaJesus.Data;
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Repositories;
+using InmobiliariaGarciaJesus.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,11 +27,16 @@ builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IContratoService>(pr
         provider.GetRequiredService<IRepository<Pago>>(),
         provider.GetRequiredService<IRepository<Configuracion>>()
     ));
-builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IPagoService, InmobiliariaGarciaJesus.Services.PagoService>();
+builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IPagoService>(provider =>
+    new InmobiliariaGarciaJesus.Services.PagoService(
+        provider.GetRequiredService<IRepository<Pago>>(),
+        provider.GetRequiredService<IRepository<Contrato>>(),
+        provider.GetRequiredService<IRepository<Configuracion>>()
+    ));
 builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IConfiguracionService, InmobiliariaGarciaJesus.Services.ConfiguracionService>();
 
-// Registrar servicio de actualización de estados de contratos
-builder.Services.AddHostedService<InmobiliariaGarciaJesus.Services.ContratoStateService>();
+// Servicio en segundo plano para actualización automática de pagos
+builder.Services.AddHostedService<PaymentBackgroundService>();
 
 var app = builder.Build();
 

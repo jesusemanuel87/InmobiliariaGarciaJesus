@@ -56,16 +56,16 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="FechaInicio" class="form-label"></label>
-                                    <input asp-for="FechaInicio" class="form-control" type="date" />
+                                    <input asp-for="FechaInicio" class="form-control" type="date" id="fechaInicio" />
                                     <span asp-validation-for="FechaInicio" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="FechaFin" class="form-label"></label>
-                                    <input asp-for="FechaFin" class="form-control" type="date" />
+                                    <input asp-for="FechaFin" class="form-control" type="date" id="fechaFin" />
                                     <span asp-validation-for="FechaFin" class="text-danger"></span>
-                                    <small class="form-text text-muted">Debe ser posterior a la fecha de inicio</small>
+                                    <small class="form-text text-muted">Se calcula automáticamente según la fecha de inicio</small>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -74,6 +74,72 @@
                                     <input asp-for="Precio" class="form-control" type="number" step="0.01" min="0.01" />
                                     <span asp-validation-for="Precio" class="text-danger"></span>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de duración rápida -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-calendar-alt me-2"></i>Duración del Contrato
+                                </label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @{
+                                        var mesesConfig = ViewBag.MesesMinimos as IEnumerable<InmobiliariaGarciaJesus.Models.Configuracion>;
+                                        if (mesesConfig != null && mesesConfig.Any())
+                                        {
+                                            var mesesDisponibles = new List<int>();
+                                            foreach (var config in mesesConfig)
+                                            {
+                                                if (config.Valor == "true")
+                                                {
+                                                    var match = System.Text.RegularExpressions.Regex.Match(config.Clave, @"MESES_MINIMOS_(\d+)");
+                                                    if (match.Success)
+                                                    {
+                                                        mesesDisponibles.Add(int.Parse(match.Groups[1].Value));
+                                                    }
+                                                }
+                                            }
+                                            
+                                            mesesDisponibles.Sort();
+                                            var isFirst = true;
+                                            foreach (var meses in mesesDisponibles)
+                                            {
+                                                var btnClass = isFirst ? "btn btn-primary duration-btn" : "btn btn-outline-primary duration-btn";
+                                                <button type="button" class="@btnClass" 
+                                                        data-months="@meses" 
+                                                        title="Establecer duración de @meses meses">
+                                                    <i class="fas fa-calendar me-1"></i>@meses meses
+                                                </button>
+                                                isFirst = false;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-primary duration-btn" data-months="6" title="Establecer duración de 6 meses">
+                                                <i class="fas fa-calendar me-1"></i>6 meses
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary duration-btn" data-months="12" title="Establecer duración de 12 meses">
+                                                <i class="fas fa-calendar me-1"></i>12 meses
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary duration-btn" data-months="18" title="Establecer duración de 18 meses">
+                                                <i class="fas fa-calendar me-1"></i>18 meses
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary duration-btn" data-months="24" title="Establecer duración de 24 meses">
+                                                <i class="fas fa-calendar me-1"></i>24 meses
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary duration-btn" data-months="30" title="Establecer duración de 30 meses">
+                                                <i class="fas fa-calendar me-1"></i>30 meses
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary duration-btn" data-months="36" title="Establecer duración de 36 meses">
+                                                <i class="fas fa-calendar me-1"></i>36 meses
+                                            </button>
+                                        }
+                                    }
+                                </div>
+                                <small class="form-text text-muted">
+                                    Haga clic en un botón para establecer automáticamente la fecha de fin al último día del mes correspondiente
+                                </small>
                             </div>
                         </div>
 
@@ -93,4 +159,192 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script src="~/js/Contrato/contrato-validation.js"></script>
+    <script>
+        // Extender la funcionalidad del validador existente
+        document.addEventListener('DOMContentLoaded', function() {
+            // Obtener configuraciones desde ViewBag
+            var configuraciones = @Html.Raw(Json.Serialize(ViewBag.MesesMinimos ?? new List<object>()));
+            var inmuebles = @Html.Raw(Json.Serialize(ViewBag.Inmuebles ?? new List<object>()));
+            
+            console.log('Configuraciones:', configuraciones);
+            console.log('Inmuebles:', inmuebles);
+            
+            // Extraer valores de meses desde las claves de configuración
+            var mesesDisponibles = [];
+            var mesesMinimos = 6; // Valor por defecto
+            
+            if (configuraciones && configuraciones.length > 0) {
+                configuraciones.forEach(function(config) {
+                    // Extraer número de meses desde la clave (ej: MESES_MINIMOS_12 -> 12)
+                    var match = config.clave.match(/MESES_MINIMOS_(\d+)/);
+                    if (match && config.valor === 'true') {
+                        mesesDisponibles.push(parseInt(match[1]));
+                    }
+                });
+                
+                // Ordenar y usar el menor como mínimo
+                mesesDisponibles.sort((a, b) => a - b);
+                if (mesesDisponibles.length > 0) {
+                    mesesMinimos = mesesDisponibles[0];
+                }
+            }
+            
+            console.log('Meses disponibles:', mesesDisponibles);
+            console.log('Meses mínimos:', mesesMinimos);
+            
+            // Función para formatear precio como pesos argentinos
+            function formatearPrecio(precio) {
+                if (!precio) return '';
+                return new Intl.NumberFormat('es-AR', {
+                    style: 'currency',
+                    currency: 'ARS',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(precio);
+            }
+            
+            // Función para calcular el último día del mes
+            function getLastDayOfMonth(year, month) {
+                return new Date(year, month, 0).getDate();
+            }
+            
+            // Función para calcular fecha de fin
+            function calcularFechaFin(fechaInicio, meses) {
+                if (!fechaInicio || !meses) {
+                    console.log('Datos insuficientes para calcular fecha:', fechaInicio, meses);
+                    return '';
+                }
+                
+                try {
+                    var fecha = new Date(fechaInicio + 'T00:00:00');
+                    if (isNaN(fecha.getTime())) {
+                        console.log('Fecha de inicio inválida:', fechaInicio);
+                        return '';
+                    }
+                    
+                    fecha.setMonth(fecha.getMonth() + parseInt(meses));
+                    
+                    // Obtener el último día del mes de destino
+                    var ultimoDia = getLastDayOfMonth(fecha.getFullYear(), fecha.getMonth() + 1);
+                    fecha.setDate(ultimoDia);
+                    
+                    // Formatear fecha para input type="date" (YYYY-MM-DD)
+                    var result = fecha.getFullYear() + '-' + 
+                           String(fecha.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(fecha.getDate()).padStart(2, '0');
+                    
+                    console.log('Fecha calculada:', result);
+                    return result;
+                } catch (error) {
+                    console.error('Error calculando fecha:', error);
+                    return '';
+                }
+            }
+            
+            // Esperar a que el validador se inicialice, luego agregar nuestros eventos
+            setTimeout(function() {
+                var fechaInicioEl = document.getElementById('fechaInicio');
+                var fechaFinEl = document.getElementById('fechaFin');
+                var inmuebleEl = document.getElementById('InmuebleId');
+                var precioEl = document.querySelector('input[name="Precio"]');
+                
+                // Verificar que los elementos existen
+                if (!fechaInicioEl || !fechaFinEl || !inmuebleEl || !precioEl) {
+                    console.error('Elementos no encontrados:', {
+                        fechaInicio: !!fechaInicioEl,
+                        fechaFin: !!fechaFinEl,
+                        inmueble: !!inmuebleEl,
+                        precio: !!precioEl
+                    });
+                    return;
+                }
+                
+                // Evento personalizado cuando cambia la fecha de inicio (después de la validación)
+                fechaInicioEl.addEventListener('change', function() {
+                    var fechaInicio = this.value;
+                    console.log('Fecha de inicio cambiada:', fechaInicio);
+                    if (fechaInicio) {
+                        var fechaFin = calcularFechaFin(fechaInicio, mesesMinimos);
+                        if (fechaFin) {
+                            fechaFinEl.value = fechaFin;
+                            console.log('Fecha de fin establecida:', fechaFin);
+                            
+                            // Disparar evento change para que el validador revise la nueva fecha
+                            fechaFinEl.dispatchEvent(new Event('change'));
+                        }
+                    }
+                });
+                
+                // Evento cuando cambia el inmueble seleccionado
+                inmuebleEl.addEventListener('change', function() {
+                    var inmuebleId = parseInt(this.value);
+                    console.log('Inmueble seleccionado:', inmuebleId);
+                    
+                    if (inmuebleId && inmuebles && inmuebles.length > 0) {
+                        var inmueble = inmuebles.find(function(i) { 
+                            return (i.id || i.Id) === inmuebleId; 
+                        });
+                        console.log('Inmueble encontrado:', inmueble);
+                        
+                        if (inmueble && (inmueble.precio || inmueble.Precio)) {
+                            var precio = inmueble.precio || inmueble.Precio;
+                            precioEl.value = precio;
+                            
+                            // Mostrar precio formateado visualmente
+                            var precioFormateado = formatearPrecio(precio);
+                            
+                            // Crear o actualizar elemento de precio formateado
+                            var existingFormatted = precioEl.parentNode.querySelector('.precio-formateado');
+                            if (existingFormatted) {
+                                existingFormatted.remove();
+                            }
+                            
+                            var formatElement = document.createElement('small');
+                            formatElement.className = 'form-text text-muted precio-formateado';
+                            formatElement.innerHTML = '<i class="fas fa-dollar-sign me-1"></i>' + precioFormateado;
+                            precioEl.parentNode.appendChild(formatElement);
+                            
+                            console.log('Precio establecido:', precio, 'Formateado:', precioFormateado);
+                        }
+                    }
+                });
+                
+                // Eventos para botones de duración
+                document.querySelectorAll('.duration-btn').forEach(function(button) {
+                    button.addEventListener('click', function() {
+                        var meses = parseInt(this.getAttribute('data-months'));
+                        var fechaInicio = fechaInicioEl.value;
+                        
+                        console.log('Botón clickeado, meses:', meses, 'fecha inicio:', fechaInicio);
+                        
+                        // Remover clase activa de otros botones
+                        document.querySelectorAll('.duration-btn').forEach(function(btn) {
+                            btn.classList.remove('btn-primary');
+                            btn.classList.add('btn-outline-primary');
+                        });
+                        
+                        // Agregar clase activa al botón clickeado
+                        this.classList.remove('btn-outline-primary');
+                        this.classList.add('btn-primary');
+                        
+                        if (fechaInicio) {
+                            var fechaFin = calcularFechaFin(fechaInicio, meses);
+                            if (fechaFin) {
+                                fechaFinEl.value = fechaFin;
+                                console.log('Nueva fecha de fin:', fechaFin);
+                                
+                                // Disparar evento change para validación
+                                fechaFinEl.dispatchEvent(new Event('change'));
+                            }
+                        } else {
+                            alert('Por favor, seleccione primero la fecha de inicio');
+                            fechaInicioEl.focus();
+                        }
+                    });
+                });
+                
+                console.log('Eventos adicionales configurados');
+            }, 500); // Esperar 500ms para que el validador se inicialice
+        });
+    </script>
 }

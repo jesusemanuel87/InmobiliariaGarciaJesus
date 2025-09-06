@@ -41,9 +41,12 @@
                                         <th>Número</th>
                                         <th>Contrato</th>
                                         <th>Importe</th>
+                                        <th>Intereses</th>
+                                        <th>Multas</th>
+                                        <th>Total a Pagar</th>
+                                        <th>Fecha Vencimiento</th>
                                         <th>Fecha de Pago</th>
                                         <th>Estado</th>
-                                        <th>Fecha de Creación</th>
                                         <th class="text-center">Acciones</th>
                                     </tr>
                                 </thead>
@@ -61,6 +64,51 @@
                                                 <strong class="text-success">
                                                     $@pago.Importe.ToString("N0")
                                                 </strong>
+                                            </td>
+                                            <td>
+                                                @if (pago.Intereses > 0)
+                                                {
+                                                    <span class="text-warning">
+                                                        $@pago.Intereses.ToString("N0")
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">$0</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (pago.Multas > 0)
+                                                {
+                                                    <span class="text-danger">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        $@pago.Multas.ToString("N0")
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">$0</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <strong class="text-primary">
+                                                    $@pago.TotalAPagar.ToString("N0")
+                                                </strong>
+                                            </td>
+                                            <td>
+                                                @if (pago.FechaVencimiento != DateTime.MinValue && pago.FechaVencimiento.Year > 1900)
+                                                {
+                                                    <span class="text-info">
+                                                        <i class="fas fa-calendar-alt"></i>
+                                                        @pago.FechaVencimiento.ToString("dd/MM/yyyy")
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">
+                                                        <i class="fas fa-calendar-times"></i> Sin fecha
+                                                    </span>
+                                                }
                                             </td>
                                             <td>
                                                 @if (pago.FechaPago.HasValue)
@@ -97,24 +145,26 @@
                                                         break;
                                                 }
                                             </td>
-                                            <td>
-                                                <small class="text-muted">
-                                                    @pago.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
-                                                </small>
-                                            </td>
                                             <td class="text-center">
                                                 <div class="btn-group" role="group">
+                                                    @if (pago.Estado != InmobiliariaGarciaJesus.Models.EstadoPago.Pagado)
+                                                    {
+                                                        <button type="button" class="btn btn-success btn-sm me-1 registrar-pago-btn" 
+                                                                data-pago-id="@pago.Id" title="Registrar Pago">
+                                                            <i class="fas fa-dollar-sign"></i>
+                                                        </button>
+                                                    }
                                                     <a asp-action="Details" asp-route-id="@pago.Id" 
                                                        class="btn btn-outline-info btn-sm me-1" title="Ver detalles">
-                                                        <i class="fas fa-eye me-1"></i>
+                                                        <i class="fas fa-eye"></i>
                                                     </a>
                                                     <a asp-action="Edit" asp-route-id="@pago.Id" 
                                                        class="btn btn-outline-warning btn-sm me-1" title="Editar">
-                                                        <i class="fas fa-edit me-1"></i>
+                                                        <i class="fas fa-edit"></i>
                                                     </a>
                                                     <a asp-action="Delete" asp-route-id="@pago.Id" 
                                                        class="btn btn-outline-danger btn-sm" title="Eliminar">
-                                                        <i class="fas fa-trash me-1"></i>
+                                                        <i class="fas fa-trash"></i>
                                                     </a>
                                                 </div>
                                             </td>
@@ -140,3 +190,22 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Container -->
+<div id="modalContainer"></div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-success text-white">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong class="me-auto">Éxito</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastMessage">
+            Pago registrado exitosamente
+        </div>
+    </div>
+</div>
+
+<script src="~/js/pagos.js"></script>

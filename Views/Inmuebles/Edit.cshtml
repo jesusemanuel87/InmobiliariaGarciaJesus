@@ -33,16 +33,44 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="mb-3">
+                                    <label asp-for="Provincia" class="form-label"></label>
+                                    <select asp-for="Provincia" id="provinciaSelect" class="form-select">
+                                        <option value="">Cargando provincias...</option>
+                                    </select>
+                                    <span asp-validation-for="Provincia" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label asp-for="Localidad" class="form-label"></label>
+                                    <select asp-for="Localidad" id="localidadSelect" class="form-select">
+                                        <option value="">Seleccione primero una provincia</option>
+                                    </select>
+                                    <span asp-validation-for="Localidad" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
                                     <label asp-for="Ambientes" class="form-label"></label>
                                     <input asp-for="Ambientes" class="form-control" type="number" min="1" max="50" />
                                     <span asp-validation-for="Ambientes" class="text-danger"></span>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Superficie" class="form-label"></label>
                                     <input asp-for="Superficie" class="form-control" type="number" step="0.01" min="1" max="10000" />
                                     <span asp-validation-for="Superficie" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Precio" class="form-label"></label>
+                                    <input asp-for="Precio" class="form-control" type="number" step="0.01" min="0" />
+                                    <span asp-validation-for="Precio" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>
@@ -94,28 +122,50 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label asp-for="Precio" class="form-label"></label>
-                                    <input asp-for="Precio" class="form-control" type="number" step="0.01" min="0" />
-                                    <span asp-validation-for="Precio" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="Latitud" class="form-label"></label>
-                                    <input asp-for="Latitud" class="form-control" type="number" step="any" />
+                                    <div class="input-group">
+                                        <input asp-for="Latitud" class="form-control" type="number" step="any" placeholder="Ej: -33.4489" />
+                                        @if (Model.GoogleMapsUrl != null)
+                                        {
+                                            <a href="@Model.GoogleMapsUrl" target="_blank" class="btn btn-outline-primary" title="Ver en Google Maps">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                            </a>
+                                        }
+                                    </div>
                                     <span asp-validation-for="Latitud" class="text-danger"></span>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="Longitud" class="form-label"></label>
-                                    <input asp-for="Longitud" class="form-control" type="number" step="any" />
+                                    <input asp-for="Longitud" class="form-control" type="number" step="any" placeholder="Ej: -70.6693" />
                                     <span asp-validation-for="Longitud" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>
+
+                        @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
+                        {
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Ubicación en el Mapa</label>
+                                        <div class="card">
+                                            <div class="card-body p-0">
+                                                <div id="map" style="height: 300px; width: 100%;"></div>
+                                            </div>
+                                            <div class="card-footer text-center">
+                                                <a href="@Model.GoogleMapsUrl" target="_blank" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-external-link-alt"></i> Ver en Google Maps
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
 
                         <div class="d-flex justify-content-between">
                             <button type="submit" class="btn btn-primary">
@@ -173,9 +223,17 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="~/js/georef-api.js"></script>
     <script>
         $(document).ready(function() {
             cargarImagenes();
+            
+            // Inicializar dropdowns de provincia y localidad
+            // Si el modelo tiene valores, usarlos; sino usar San Luis por defecto
+            var provinciaActual = '@Model.Provincia' || 'San Luis';
+            var localidadActual = '@Model.Localidad' || 'San Luis';
+            
+            georefService.inicializarDropdowns('provinciaSelect', 'localidadSelect', provinciaActual, localidadActual);
         });
 
         function cargarImagenes() {
@@ -230,7 +288,6 @@
             // Remover mensajes anteriores
             $('.alert-temp').remove();
             
-            // Crear nuevo mensaje
             var alertHtml = '<div class="alert alert-' + tipo + ' alert-dismissible fade show alert-temp" role="alert">' +
                            mensaje +
                            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
@@ -243,6 +300,39 @@
             setTimeout(function() {
                 $('.alert-temp').fadeOut();
             }, 3000);
+        }
+
+        // Google Maps functionality
+        @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
+        {
+            <text>
+        function initMap() {
+            var location = { lat: @Model.Latitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture), lng: @Model.Longitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 15,
+                center: location
+            });
+            var marker = new google.maps.Marker({
+                position: location,
+                map: map,
+                title: '@Html.Raw(Model.Direccion?.Replace("'", "\\'"))'
+            });
+        }
+
+        // Cargar Google Maps cuando el documento esté listo
+        $(document).ready(function() {
+            if (typeof google !== 'undefined' && google.maps) {
+                initMap();
+            } else {
+                // Cargar Google Maps API si no está disponible
+                var script = document.createElement('script');
+                script.src = 'https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap';
+                script.async = true;
+                script.defer = true;
+                document.head.appendChild(script);
+            }
+        });
+            </text>
         }
     </script>
 }

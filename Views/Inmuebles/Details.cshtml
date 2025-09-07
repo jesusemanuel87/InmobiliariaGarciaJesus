@@ -36,6 +36,30 @@
                                 <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Direccion)</dt>
                                 <dd class="col-sm-8">@Html.DisplayFor(model => model.Direccion)</dd>
 
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Localidad)</dt>
+                                <dd class="col-sm-8">
+                                    @if (!string.IsNullOrEmpty(Model.Localidad))
+                                    {
+                                        @Model.Localidad
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No especificado</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Provincia)</dt>
+                                <dd class="col-sm-8">
+                                    @if (!string.IsNullOrEmpty(Model.Provincia))
+                                    {
+                                        @Model.Provincia
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No especificado</span>
+                                    }
+                                </dd>
+
                                 <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Tipo)</dt>
                                 <dd class="col-sm-8">
                                     <span class="badge bg-info">@Html.DisplayFor(model => model.Tipo)</span>
@@ -104,23 +128,19 @@
                                     }
                                 </dd>
 
-                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Latitud)</dt>
+                                <dt class="col-sm-4">Coordenadas</dt>
                                 <dd class="col-sm-8">
-                                    @if (Model.Latitud.HasValue)
+                                    @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
                                     {
-                                        @Model.Latitud.Value.ToString("F6")
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">No especificado</span>
-                                    }
-                                </dd>
-
-                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Longitud)</dt>
-                                <dd class="col-sm-8">
-                                    @if (Model.Longitud.HasValue)
-                                    {
-                                        @Model.Longitud.Value.ToString("F6")
+                                        <div>
+                                            <strong>Lat:</strong> @Model.Latitud.Value.ToString("F6")<br>
+                                            <strong>Lng:</strong> @Model.Longitud.Value.ToString("F6")
+                                        </div>
+                                        <div class="mt-2">
+                                            <a href="@Model.GoogleMapsUrl" target="_blank" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-map-marker-alt"></i> Ver en Google Maps
+                                            </a>
+                                        </div>
                                     }
                                     else
                                     {
@@ -133,6 +153,28 @@
                             </dl>
                         </div>
                     </div>
+
+                    @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
+                    {
+                        <!-- Sección del Mapa -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-map-marked-alt"></i> Ubicación del Inmueble</h5>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div id="map" style="height: 400px; width: 100%;"></div>
+                                    </div>
+                                    <div class="card-footer text-center">
+                                        <a href="@Model.GoogleMapsUrl" target="_blank" class="btn btn-primary">
+                                            <i class="fas fa-external-link-alt"></i> Abrir en Google Maps
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -153,6 +195,55 @@
                 .fail(function() {
                     $('#imagenes-container').html('<div class="col-12 text-center text-danger"><i class="fas fa-exclamation-triangle"></i> Error al cargar imágenes</div>');
                 });
+        }
+
+        // Google Maps functionality
+        @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
+        {
+            <text>
+        function initMap() {
+            var location = { lat: @Model.Latitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture), lng: @Model.Longitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 16,
+                center: location,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            });
+            
+            var marker = new google.maps.Marker({
+                position: location,
+                map: map,
+                title: '@Html.Raw(Model.Direccion?.Replace("'", "\\'"))',
+                animation: google.maps.Animation.DROP
+            });
+
+            var infoWindow = new google.maps.InfoWindow({
+                content: '<div><strong>@Html.Raw(Model.Direccion?.Replace("'", "\\'"))</strong><br>' +
+                        '@if (!string.IsNullOrEmpty(Model.Localidad)) { <text>@Html.Raw(Model.Localidad?.Replace("'", "\\'"))</text> }' +
+                        '@if (!string.IsNullOrEmpty(Model.Provincia)) { <text>, @Html.Raw(Model.Provincia?.Replace("'", "\\'"))</text> }</div>'
+            });
+
+            marker.addListener('click', function() {
+                infoWindow.open(map, marker);
+            });
+
+            // Mostrar info window por defecto
+            infoWindow.open(map, marker);
+        }
+
+        // Cargar Google Maps cuando el documento esté listo
+        $(document).ready(function() {
+            if (typeof google !== 'undefined' && google.maps) {
+                initMap();
+            } else {
+                // Cargar Google Maps API si no está disponible
+                var script = document.createElement('script');
+                script.src = 'https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap';
+                script.async = true;
+                script.defer = true;
+                document.head.appendChild(script);
+            }
+        });
+            </text>
         }
     </script>
 }

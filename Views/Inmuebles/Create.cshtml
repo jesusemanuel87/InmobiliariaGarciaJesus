@@ -30,16 +30,44 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="mb-3">
+                                    <label asp-for="Provincia" class="form-label"></label>
+                                    <select asp-for="Provincia" id="provinciaSelect" class="form-select">
+                                        <option value="">Cargando provincias...</option>
+                                    </select>
+                                    <span asp-validation-for="Provincia" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label asp-for="Localidad" class="form-label"></label>
+                                    <select asp-for="Localidad" id="localidadSelect" class="form-select">
+                                        <option value="">Seleccione primero una provincia</option>
+                                    </select>
+                                    <span asp-validation-for="Localidad" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
                                     <label asp-for="Ambientes" class="form-label"></label>
                                     <input asp-for="Ambientes" class="form-control" type="number" min="1" max="50" />
                                     <span asp-validation-for="Ambientes" class="text-danger"></span>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Superficie" class="form-label"></label>
                                     <input asp-for="Superficie" class="form-control" type="number" step="0.01" min="1" max="10000" />
                                     <span asp-validation-for="Superficie" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Precio" class="form-label"></label>
+                                    <input asp-for="Precio" class="form-control" type="number" step="0.01" min="0" />
+                                    <span asp-validation-for="Precio" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>
@@ -79,24 +107,17 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label asp-for="Precio" class="form-label"></label>
-                                    <input asp-for="Precio" class="form-control" type="number" step="0.01" min="0" />
-                                    <span asp-validation-for="Precio" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="Latitud" class="form-label"></label>
-                                    <input asp-for="Latitud" class="form-control" type="number" step="any" />
+                                    <input asp-for="Latitud" class="form-control" type="number" step="any" placeholder="Ej: -33.4489" />
                                     <span asp-validation-for="Latitud" class="text-danger"></span>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="Longitud" class="form-label"></label>
-                                    <input asp-for="Longitud" class="form-control" type="number" step="any" />
+                                    <input asp-for="Longitud" class="form-control" type="number" step="any" placeholder="Ej: -70.6693" />
                                     <span asp-validation-for="Longitud" class="text-danger"></span>
                                 </div>
                             </div>
@@ -129,4 +150,11 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="~/js/georef-api.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Inicializar dropdowns de provincia y localidad con San Luis por defecto
+            georefService.inicializarDropdowns('provinciaSelect', 'localidadSelect', 'San Luis', 'San Luis');
+        });
+    </script>
 }

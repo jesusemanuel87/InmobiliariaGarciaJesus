@@ -83,15 +83,20 @@
                                 <label class="form-label fw-bold">
                                     <i class="fas fa-calendar-alt me-2"></i>Duración del Contrato
                                 </label>
+                                
+                                @{
+                                    var mesesConfig = ViewBag.MesesMinimos as IEnumerable<InmobiliariaGarciaJesus.Models.Configuracion>;
+                                }
+                                
+                                                            
                                 <div class="d-flex flex-wrap gap-2">
                                     @{
-                                        var mesesConfig = ViewBag.MesesMinimos as IEnumerable<InmobiliariaGarciaJesus.Models.Configuracion>;
                                         if (mesesConfig != null && mesesConfig.Any())
                                         {
                                             var mesesDisponibles = new List<int>();
                                             foreach (var config in mesesConfig)
                                             {
-                                                if (config.Valor == "true")
+                                                if (!string.IsNullOrEmpty(config.Clave) && config.Valor.ToLower() == "true")
                                                 {
                                                     var match = System.Text.RegularExpressions.Regex.Match(config.Clave, @"MESES_MINIMOS_(\d+)");
                                                     if (match.Success)
@@ -116,6 +121,9 @@
                                         }
                                         else
                                         {
+                                            <div class="alert alert-warning mb-2">
+                                                <small>No se encontraron configuraciones válidas. Usando botones por defecto.</small>
+                                            </div>
                                             <button type="button" class="btn btn-primary duration-btn" data-months="6" title="Establecer duración de 6 meses">
                                                 <i class="fas fa-calendar me-1"></i>6 meses
                                             </button>
@@ -171,26 +179,26 @@
             
             // Extraer valores de meses desde las claves de configuración
             var mesesDisponibles = [];
-            var mesesMinimos = 6; // Valor por defecto
+            var mesesSeleccionados = 12; // Valor por defecto (primer botón activo)
             
             if (configuraciones && configuraciones.length > 0) {
                 configuraciones.forEach(function(config) {
                     // Extraer número de meses desde la clave (ej: MESES_MINIMOS_12 -> 12)
                     var match = config.clave.match(/MESES_MINIMOS_(\d+)/);
-                    if (match && config.valor === 'true') {
+                    if (match && config.valor.toLowerCase() === 'true') {
                         mesesDisponibles.push(parseInt(match[1]));
                     }
                 });
                 
-                // Ordenar y usar el menor como mínimo
+                // Ordenar y usar el menor como valor inicial
                 mesesDisponibles.sort((a, b) => a - b);
                 if (mesesDisponibles.length > 0) {
-                    mesesMinimos = mesesDisponibles[0];
+                    mesesSeleccionados = mesesDisponibles[0];
                 }
             }
             
             console.log('Meses disponibles:', mesesDisponibles);
-            console.log('Meses mínimos:', mesesMinimos);
+            console.log('Meses seleccionados:', mesesSeleccionados);
             
             // Función para formatear precio como pesos argentinos
             function formatearPrecio(precio) {
@@ -259,15 +267,25 @@
                     return;
                 }
                 
+                // Función para obtener los meses del botón activo
+                function getMesesDelBotonActivo() {
+                    var botonActivo = document.querySelector('.duration-btn.btn-primary');
+                    if (botonActivo) {
+                        return parseInt(botonActivo.getAttribute('data-months'));
+                    }
+                    return mesesSeleccionados; // Fallback al valor inicial
+                }
+                
                 // Evento personalizado cuando cambia la fecha de inicio (después de la validación)
                 fechaInicioEl.addEventListener('change', function() {
                     var fechaInicio = this.value;
                     console.log('Fecha de inicio cambiada:', fechaInicio);
                     if (fechaInicio) {
-                        var fechaFin = calcularFechaFin(fechaInicio, mesesMinimos);
+                        var mesesActivos = getMesesDelBotonActivo();
+                        var fechaFin = calcularFechaFin(fechaInicio, mesesActivos);
                         if (fechaFin) {
                             fechaFinEl.value = fechaFin;
-                            console.log('Fecha de fin establecida:', fechaFin);
+                            console.log('Fecha de fin establecida:', fechaFin, 'con', mesesActivos, 'meses');
                             
                             // Disparar evento change para que el validador revise la nueva fecha
                             fechaFinEl.dispatchEvent(new Event('change'));

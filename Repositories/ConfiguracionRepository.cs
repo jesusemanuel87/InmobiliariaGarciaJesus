@@ -20,7 +20,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = _connectionManager.GetConnection();
             await connection.OpenAsync();
             
-            var query = "SELECT Id, Tipo, Valor, Descripcion FROM Configuraciones";
+            var query = "SELECT Id, Clave, Tipo, Valor, Descripcion, FechaCreacion, FechaModificacion FROM configuraciones";
             
             using var command = new MySqlCommand(query, connection);
             using var reader = await command.ExecuteReaderAsync();
@@ -30,9 +30,12 @@ namespace InmobiliariaGarciaJesus.Repositories
                 configuraciones.Add(new Configuracion
                 {
                     Id = Convert.ToInt32(reader["Id"]),
+                    Clave = reader["Clave"]?.ToString() ?? string.Empty,
                     Tipo = Enum.TryParse<TipoConfiguracion>(reader["Tipo"]?.ToString(), out var tipo) ? tipo : TipoConfiguracion.MesesMinimos,
                     Valor = reader["Valor"]?.ToString() ?? string.Empty,
-                    Descripcion = reader["Descripcion"]?.ToString() ?? string.Empty
+                    Descripcion = reader["Descripcion"]?.ToString() ?? string.Empty,
+                    FechaCreacion = reader["FechaCreacion"] != DBNull.Value ? Convert.ToDateTime(reader["FechaCreacion"]) : DateTime.Now,
+                    FechaModificacion = reader["FechaModificacion"] != DBNull.Value ? Convert.ToDateTime(reader["FechaModificacion"]) : DateTime.Now
                 });
             }
             

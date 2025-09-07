@@ -38,7 +38,8 @@
                                 <p>El contrato se está finalizando antes de tiempo (@Model.MesesCumplidos de @Model.MesesTotales meses).</p>
                                 @if (Model.MultaCalculada.HasValue && Model.MultaCalculada > 0)
                                 {
-                                    <p><strong>Multa calculada:</strong> <span class="text-danger">$@Model.MultaCalculada.Value.ToString("N0")</span></p>
+                                    var multaSoloTerminacion = Model.MultaCalculada.Value - Model.ImporteAdeudado;
+                                    <p><strong>Multa calculada:</strong> <span class="text-danger">$@multaSoloTerminacion.ToString("N0")</span></p>
                                 }
                             </div>
                         }
@@ -49,12 +50,24 @@
                                 <h6><i class="fas fa-exclamation-circle me-2"></i>Pagos Atrasados</h6>
                                 <p><strong>Meses adeudados:</strong> @Model.MesesAdeudados</p>
                                 <p><strong>Importe adeudado:</strong> <span class="text-danger">$@Model.ImporteAdeudado.ToString("N0")</span></p>
-                                <ul class="mb-0">
+                                <ul class="mb-2">
                                     @foreach (var pago in Model.PagosAtrasados)
                                     {
-                                        <li>Pago #@pago.Numero - $@pago.Importe.ToString("N0") (@pago.Estado)</li>
+                                        <li>
+                                            Pago #@pago.Numero - $@pago.Importe.ToString("N0") (@pago.Estado)
+                                            @if (pago.Intereses > 0)
+                                            {
+                                                <span class="text-dark fw-bold"> + Interés $@pago.Intereses.ToString("N0")</span>
+                                            }
+                                        </li>
                                     }
                                 </ul>
+                                @if (Model.MultaCalculada.HasValue && Model.MultaCalculada > 0)
+                                {
+                                    <div class="border-top pt-2">
+                                        <p class="mb-0"><strong class="text-primary fs-5">Monto Total a Pagar: <span class="text-danger">$@Model.MultaCalculada.Value.ToString("N0")</span></strong></p>
+                                    </div>
+                                }
                             </div>
                         }
 
@@ -81,7 +94,7 @@
                                 <a asp-action="Index" class="btn btn-secondary">
                                     <i class="fas fa-arrow-left me-1"></i>Volver
                                 </a>
-                                <button type="submit" class="btn btn-danger">
+                                <button type="submit" class="btn btn-danger" id="btnFinalizar">
                                     <i class="fas fa-flag-checkered me-1"></i>Finalizar Contrato
                                 </button>
                             </div>
@@ -93,6 +106,99 @@
     </div>
 </div>
 
+<!-- Modal de Confirmación de Pago -->
+<div class="modal fade" id="modalConfirmacionPago" tabindex="-1" aria-labelledby="modalConfirmacionPagoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalConfirmacionPagoLabel">
+                    <i class="fas fa-check-circle me-2"></i>Contrato Finalizado
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle me-2"></i>Finalización Exitosa</h6>
+                    <p>El contrato ha sido finalizado correctamente.</p>
+                    <div id="resumenPago"></div>
+                </div>
+                <p class="mb-0"><strong>¿Desea procesar el pago de la multa y deudas pendientes ahora?</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="procesarPago(false)">
+                    <i class="fas fa-clock me-1"></i>Pagar Después
+                </button>
+                <button type="button" class="btn btn-success" onclick="procesarPago(true)">
+                    <i class="fas fa-credit-card me-1"></i>Pagar Ahora
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        let contratoIdActual = 0;
+
+        $(document).ready(function() {
+            $('form').on('submit', function(e) {
+                e.preventDefault();
+                
+                var formData = $(this).serialize();
+                
+                $.ajax({
+                    url: '@Url.Action("Finalizar", "Contratos")',
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        // Log para consola del navegador
+                        if (response.logData) {
+                            console.log('[FINALIZAR CONTRATO]', response.logData);
+                        }
+                        
+                        if (response.success) {
+                            contratoIdActual = response.contratoId;
+                            
+                            // Mostrar resumen en el modal
+                            var resumen = '<ul class="mb-2">';
+                            if (response.multaTerminacion > 0) {
+                                resumen += '<li><strong>Multa por Terminación:</strong> <span class="text-danger">$' + response.multaTerminacion.toLocaleString() + '</span></li>';
+                            }
+                            if (response.importeAdeudado > 0) {
+                                resumen += '<li><strong>Deuda Pendiente:</strong> <span class="text-warning">$' + response.importeAdeudado.toLocaleString() + '</span></li>';
+                            }
+                            resumen += '<li><strong>Total a Pagar:</strong> <span class="text-primary fs-5">$' + response.multaTotal.toLocaleString() + '</span></li>';
+                            resumen += '</ul>';
+                            
+                            $('#resumenPago').html(resumen);
+                            $('#modalConfirmacionPago').modal('show');
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Error al procesar la solicitud');
+                    }
+                });
+            });
+        });
+
+        function procesarPago(pagar) {
+            $.ajax({
+                url: '@Url.Action("ProcesarPagoFinalizacion", "Contratos")',
+                type: 'POST',
+                data: {
+                    contratoId: contratoIdActual,
+                    procesarPago: pagar
+                },
+                success: function() {
+                    window.location.href = '@Url.Action("Index", "Contratos")';
+                },
+                error: function() {
+                    alert('Error al procesar el pago');
+                }
+            });
+        }
+    </script>
 }

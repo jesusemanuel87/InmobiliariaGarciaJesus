@@ -15,32 +15,34 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<IEnumerable<Configuracion>> GetAllAsync()
         {
+            var configuraciones = new List<Configuracion>();
+            
             using var connection = _connectionManager.GetConnection();
             await connection.OpenAsync();
-
-            var query = @"SELECT Id, Clave, Valor, Descripcion, Tipo, FechaCreacion, FechaModificacion 
-                         FROM configuraciones 
-                         ORDER BY Tipo, Clave";
-
+            
+            var query = "SELECT Id, Tipo, Valor, Descripcion FROM Configuraciones";
+            
             using var command = new MySqlCommand(query, connection);
             using var reader = await command.ExecuteReaderAsync();
-
-            var configuraciones = new List<Configuracion>();
+            
             while (await reader.ReadAsync())
             {
                 configuraciones.Add(new Configuracion
                 {
-                    Id = reader.GetInt32(0),
-                    Clave = reader.GetString(1),
-                    Valor = reader.GetString(2),
-                    Descripcion = reader.IsDBNull(3) ? null : reader.GetString(3),
-                    Tipo = (TipoConfiguracion)reader.GetInt32(4),
-                    FechaCreacion = reader.GetDateTime(5),
-                    FechaModificacion = reader.GetDateTime(6)
+                    Id = Convert.ToInt32(reader["Id"]),
+                    Tipo = Enum.TryParse<TipoConfiguracion>(reader["Tipo"]?.ToString(), out var tipo) ? tipo : TipoConfiguracion.MesesMinimos,
+                    Valor = reader["Valor"]?.ToString() ?? string.Empty,
+                    Descripcion = reader["Descripcion"]?.ToString() ?? string.Empty
                 });
             }
-
+            
             return configuraciones;
+        }
+
+        public async Task<IEnumerable<Configuracion>> GetAllAsync(Func<Configuracion, bool> filter)
+        {
+            var allConfiguraciones = await GetAllAsync();
+            return allConfiguraciones.Where(filter);
         }
 
         public async Task<Configuracion?> GetByIdAsync(int id)

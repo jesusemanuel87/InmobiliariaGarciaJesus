@@ -21,19 +21,34 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = _connectionManager.GetConnection();
             await connection.OpenAsync();
             
-            var query = @"SELECT Id, InmuebleId, NombreArchivo, RutaArchivo, EsPortada, 
-                         Descripcion, TamanoBytes, TipoMime, FechaCreacion, FechaActualizacion 
-                         FROM InmuebleImagenes ORDER BY InmuebleId, EsPortada DESC, FechaCreacion";
+            var query = @"SELECT Id, InmuebleId, NombreArchivo, RutaArchivo, TamanoBytes, 
+                         TipoMime, EsPortada, FechaCreacion FROM InmuebleImagenes";
             
             using var command = new MySqlCommand(query, connection);
             using var reader = await command.ExecuteReaderAsync();
             
             while (await reader.ReadAsync())
             {
-                imagenes.Add(MapFromReader(reader));
+                imagenes.Add(new InmuebleImagen
+                {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    InmuebleId = Convert.ToInt32(reader["InmuebleId"]),
+                    NombreArchivo = reader["NombreArchivo"].ToString() ?? string.Empty,
+                    RutaArchivo = reader["RutaArchivo"].ToString() ?? string.Empty,
+                    TamanoBytes = Convert.ToInt64(reader["TamanoBytes"]),
+                    TipoMime = reader["TipoMime"].ToString() ?? string.Empty,
+                    EsPortada = Convert.ToBoolean(reader["EsPortada"]),
+                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"])
+                });
             }
             
             return imagenes;
+        }
+
+        public async Task<IEnumerable<InmuebleImagen>> GetAllAsync(Func<InmuebleImagen, bool> filter)
+        {
+            var allImagenes = await GetAllAsync();
+            return allImagenes.Where(filter);
         }
 
         public async Task<InmuebleImagen?> GetByIdAsync(int id)

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel;
 
 namespace InmobiliariaGarciaJesus.Models
 {
@@ -7,9 +8,12 @@ namespace InmobiliariaGarciaJesus.Models
     {
         Casa,
         Departamento,
+        Monoambiente,
         Local,
         Oficina,
-        Terreno
+        Terreno,
+        [Display(Name = "Galpón")]
+        Galpon
     }
 
     public enum UsoInmueble

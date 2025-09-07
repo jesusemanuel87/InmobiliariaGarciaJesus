@@ -32,6 +32,12 @@ namespace InmobiliariaGarciaJesus.Controllers
                 // Forzar recarga desde la base de datos después de actualizar
                 var pagos = await _pagoRepository.GetAllAsync();
                 
+                // Debug: Log para verificar multas en la vista
+                foreach (var pago in pagos.Where(p => p.Multas > 0))
+                {
+                    System.Diagnostics.Debug.WriteLine($"Vista Pagos - Pago {pago.Id}: Multa ${pago.Multas}");
+                }
+                
                 // Ordenar por fecha de vencimiento para consistencia
                 var pagosOrdenados = pagos.OrderBy(p => p.FechaVencimiento).ToList();
                 
@@ -129,6 +135,9 @@ namespace InmobiliariaGarciaJesus.Controllers
                     Numero = pago.Numero,
                     ContratoId = pago.ContratoId,
                     Importe = pago.Importe,
+                    Intereses = pago.Intereses,
+                    Multas = pago.Multas,
+                    TotalAPagar = pago.TotalAPagar,
                     FechaPago = pago.FechaPago,
                     Estado = pago.Estado,
                     MetodoPago = pago.MetodoPago,
@@ -174,12 +183,12 @@ namespace InmobiliariaGarciaJesus.Controllers
                     pagoOriginal.MetodoPago = viewModel.MetodoPago;
                     pagoOriginal.Observaciones = viewModel.Observaciones;
 
-                    // Si se marca como pagado, establecer fecha de pago y calcular intereses/multas
+                    // Si se marca como pagado, establecer fecha de pago
                     if (viewModel.Estado == EstadoPago.Pagado && !pagoOriginal.FechaPago.HasValue)
                     {
                         pagoOriginal.FechaPago = DateTime.Today;
-                        // Calcular intereses y multas basados en la fecha actual
-                        await _pagoService.CalcularInteresesYMultasAsync(pagoOriginal.Id);
+                        // NO calcular intereses/multas para preservar multas por finalización temprana
+                        Console.WriteLine($"[DEBUG EDIT] Pago {id} marcado como pagado, preservando multas: {pagoOriginal.Multas}");
                     }
 
                     var success = await _pagoRepository.UpdateAsync(pagoOriginal);
@@ -292,11 +301,11 @@ namespace InmobiliariaGarciaJesus.Controllers
                     return Json(new { success = false, message = "El pago ya está registrado" });
                 }
 
-                // Calcular intereses y multas antes de mostrar el modal
-                await _pagoService.CalcularInteresesYMultasAsync(id);
+                // NO calcular intereses/multas para evitar sobrescribir multas por finalización temprana
+                // await _pagoService.CalcularInteresesYMultasAsync(id);
                 
-                // Recargar el pago para obtener los valores actualizados
-                pago = await _pagoRepository.GetByIdAsync(id);
+                // Usar el pago tal como está en la base de datos
+                Console.WriteLine($"[DEBUG MODAL] Pago {id} - Importe: {pago.Importe}, Intereses: {pago.Intereses}, Multas: {pago.Multas}, Total: {pago.TotalAPagar}");
                 if (pago == null)
                 {
                     return Json(new { success = false, message = "Pago no encontrado después de actualizar" });

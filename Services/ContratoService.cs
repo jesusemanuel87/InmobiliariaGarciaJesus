@@ -16,6 +16,7 @@ namespace InmobiliariaGarciaJesus.Services
         Task<ContratoFinalizacionViewModel> CalcularFinalizacionAsync(int contratoId, DateTime fechaFinalizacion);
         Task<Contrato> FinalizarContratoAsync(ContratoFinalizacionViewModel modelo);
         Task<Contrato> CancelarContratoAsync(int contratoId, string motivo);
+        Task ProcesarPagoFinalizacionAsync(int contratoId);
     }
 
     public class ContratoService : IContratoService
@@ -166,10 +167,10 @@ namespace InmobiliariaGarciaJesus.Services
 
             // Obtener configuración de multas
             var configuraciones = await _configuracionRepository.GetAllAsync();
-            var multaMenorMitad = configuraciones.FirstOrDefault(c => c.Clave == "MULTA_MENOR_MITAD");
-            var multaMayorMitad = configuraciones.FirstOrDefault(c => c.Clave == "MULTA_MAYOR_MITAD");
+            var multaTerminacionTemprana = configuraciones.FirstOrDefault(c => c.Clave == "MULTA_TERMINACION_TEMPRANA");
+            var multaTerminacionTardia = configuraciones.FirstOrDefault(c => c.Clave == "MULTA_TERMINACION_TARDIA");
         
-            if (multaMenorMitad == null || multaMayorMitad == null)
+            if (multaTerminacionTemprana == null || multaTerminacionTardia == null)
             {
                 throw new InvalidOperationException("No se encontró configuración de multas");
             }
@@ -180,14 +181,14 @@ namespace InmobiliariaGarciaJesus.Services
             var porcentajeCumplido = (double)tiempoCumplido / tiempoTotal;
 
             // Aplicar multa según porcentaje cumplido
-            decimal porcentajeMulta;
+            decimal mesesMulta;
             if (porcentajeCumplido < 0.5) // Menos del 50%
             {
-                porcentajeMulta = decimal.Parse(multaMenorMitad.Valor);
+                mesesMulta = decimal.Parse(multaTerminacionTemprana.Valor);
             }
             else // 50% o más
             {
-                porcentajeMulta = decimal.Parse(multaMayorMitad.Valor);
+                mesesMulta = decimal.Parse(multaTerminacionTardia.Valor);
             }
 
             var modelo = new ContratoFinalizacionViewModel
@@ -207,25 +208,41 @@ namespace InmobiliariaGarciaJesus.Services
             modelo.MesesCumplidos = mesesCumplidos;
             modelo.EsFinalizacionTemprana = mesesCumplidos < mesesTotales;
 
-            // Obtener pagos atrasados
+            // Obtener pagos atrasados y del mes actual
             var allPagos = await _pagoRepository.GetAllAsync();
             var pagosContrato = allPagos.Where(p => p.ContratoId == contratoId).ToList();
-            modelo.PagosAtrasados = pagosContrato.Where(p => p.Estado == EstadoPago.Pendiente || p.Estado == EstadoPago.Vencido).ToList();
+            
+            // Incluir pagos vencidos y el pago pendiente del mes actual
+            var fechaActual = DateTime.Today;
+            modelo.PagosAtrasados = pagosContrato.Where(p => 
+                p.Estado == EstadoPago.Vencido || 
+                (p.Estado == EstadoPago.Pendiente && p.FechaPago <= fechaActual)
+            ).ToList();
 
             modelo.MesesAdeudados = modelo.PagosAtrasados.Count;
-            modelo.ImporteAdeudado = modelo.PagosAtrasados.Sum(p => p.Importe);
+            modelo.ImporteAdeudado = modelo.PagosAtrasados.Sum(p => p.TotalAPagar);
 
+            // Debug: Mostrar información del cálculo
+            Console.WriteLine($"[DEBUG CALC] Contrato {contratoId}: EsFinalizacionTemprana={modelo.EsFinalizacionTemprana}");
+            Console.WriteLine($"[DEBUG CALC] MesesMulta={mesesMulta}, Precio={contrato.Precio}, ImporteAdeudado={modelo.ImporteAdeudado}");
+            
             // Calcular multa si es finalización temprana
             if (modelo.EsFinalizacionTemprana)
             {
-                // Usar el porcentaje de multa ya calculado anteriormente
-                modelo.MultaCalculada = contrato.Precio * (porcentajeMulta / 100m);
+                // La multa es el precio mensual multiplicado por los meses de multa configurados
+                modelo.MultaCalculada = contrato.Precio * mesesMulta;
                 
-                // Agregar multa adicional por pagos atrasados si los hay
-                if (modelo.MesesAdeudados > 0)
-                {
-                    modelo.MultaCalculada += modelo.ImporteAdeudado * 0.1m; // 10% adicional por pagos atrasados
-                }
+                // Agregar deuda pendiente (pagos vencidos + mes actual)
+                modelo.MultaCalculada += modelo.ImporteAdeudado;
+                
+                Console.WriteLine($"[DEBUG CALC] Multa calculada (temprana): {modelo.MultaCalculada}");
+            }
+            else
+            {
+                // Si no es finalización temprana, solo agregar deuda pendiente
+                modelo.MultaCalculada = modelo.ImporteAdeudado;
+                
+                Console.WriteLine($"[DEBUG CALC] Multa calculada (tardía): {modelo.MultaCalculada}");
             }
 
             return modelo;
@@ -245,23 +262,114 @@ namespace InmobiliariaGarciaJesus.Services
 
             await _contratoRepository.UpdateAsync(contrato);
 
-            // Crear pago de multa si corresponde
+            // Eliminar pagos futuros pendientes (NO el mes actual)
+            var allPagos = await _pagoRepository.GetAllAsync();
+            var pagosFuturos = allPagos.Where(p => 
+                p.ContratoId == contrato.Id && 
+                p.Estado == EstadoPago.Pendiente && 
+                p.FechaVencimiento > modelo.FechaFinalizacion.AddDays(30) // Solo eliminar pagos más de 30 días en el futuro
+            ).ToList();
+
+            Console.WriteLine($"[DEBUG] Eliminando {pagosFuturos.Count} pagos futuros del contrato {contrato.Id}");
+
+            foreach (var pagoFuturo in pagosFuturos)
+            {
+                await _pagoRepository.DeleteAsync(pagoFuturo.Id);
+            }
+
+            // Actualizar el pago del mes actual con la multa si corresponde
+            Console.WriteLine($"[DEBUG] Iniciando aplicación de multa. MultaCalculada: {modelo.MultaCalculada}");
+            
             if (modelo.MultaCalculada.HasValue && modelo.MultaCalculada > 0)
             {
-                var pagoMulta = new Pago
+                // Recargar pagos después de eliminar futuros para obtener datos actualizados
+                var pagosActualizados = await _pagoRepository.GetAllAsync();
+                var pagosPendientesContrato = pagosActualizados.Where(p => 
+                    p.ContratoId == contrato.Id && 
+                    p.Estado == EstadoPago.Pendiente
+                ).ToList();
+                
+                Console.WriteLine($"[DEBUG] Pagos pendientes encontrados para contrato {contrato.Id}: {pagosPendientesContrato.Count}");
+                foreach (var p in pagosPendientesContrato)
                 {
-                    Numero = 999, // Número especial para multas
-                    ContratoId = contrato.Id,
-                    Importe = modelo.MultaCalculada.Value,
-                    FechaPago = modelo.FechaFinalizacion,
-                    Estado = EstadoPago.Pendiente,
-                    FechaCreacion = DateTime.Now,
-                    Observaciones = "Multa por finalización temprana del contrato"
-                };
-                await _pagoRepository.CreateAsync(pagoMulta);
+                    Console.WriteLine($"[DEBUG] - Pago #{p.Numero}, Vencimiento: {p.FechaVencimiento:dd/MM/yyyy}, Multa actual: {p.Multas}");
+                }
+                
+                var pagoActual = pagosPendientesContrato
+                    .Where(p => p.FechaVencimiento <= modelo.FechaFinalizacion.AddDays(30))
+                    .OrderByDescending(p => p.FechaVencimiento)
+                    .FirstOrDefault();
+
+                if (pagoActual != null)
+                {
+                    // Agregar solo la multa por terminación temprana (no incluir deuda existente)
+                    var multaSoloTerminacion = modelo.MultaCalculada.Value - modelo.ImporteAdeudado;
+                    
+                    // Debug: Mostrar información del pago encontrado
+                    Console.WriteLine($"[DEBUG] Pago encontrado - ID: {pagoActual.Id}, Número: {pagoActual.Numero}, Multa actual: {pagoActual.Multas}");
+                    Console.WriteLine($"[DEBUG] Multa a aplicar: {multaSoloTerminacion}, Multa total calculada: {modelo.MultaCalculada.Value}, Deuda: {modelo.ImporteAdeudado}");
+                    
+                    if (multaSoloTerminacion > 0)
+                    {
+                        pagoActual.Multas = multaSoloTerminacion;
+                        pagoActual.Observaciones = (pagoActual.Observaciones ?? "") + " - Incluye multa por finalización temprana ($" + multaSoloTerminacion.ToString("N0") + ")";
+                        var updateResult = await _pagoRepository.UpdateAsync(pagoActual);
+                        
+                        Console.WriteLine($"[DEBUG] Actualización de pago {pagoActual.Id}: {updateResult}, Multa asignada: {pagoActual.Multas}");
+                        
+                        // Verificar que la actualización se guardó correctamente
+                        var pagoVerificacion = await _pagoRepository.GetByIdAsync(pagoActual.Id);
+                        Console.WriteLine($"[DEBUG] Verificación - Pago {pagoActual.Id} Multa en DB: {pagoVerificacion?.Multas}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[DEBUG] No se aplica multa porque multaSoloTerminacion = {multaSoloTerminacion}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("[DEBUG] No se encontró pago actual para aplicar la multa");
+                    Console.WriteLine($"[DEBUG] Fecha finalización: {modelo.FechaFinalizacion:dd/MM/yyyy}, Fecha límite búsqueda: {modelo.FechaFinalizacion.AddDays(30):dd/MM/yyyy}");
+                    
+                    // Crear nuevo pago con la multa
+                    var pagoMulta = new Pago
+                    {
+                        Numero = 999,
+                        ContratoId = contrato.Id,
+                        Importe = modelo.ImporteAdeudado,
+                        Multas = modelo.MultaCalculada.Value - modelo.ImporteAdeudado,
+                        FechaPago = modelo.FechaFinalizacion,
+                        FechaVencimiento = modelo.FechaFinalizacion.AddDays(10),
+                        Estado = EstadoPago.Pendiente,
+                        FechaCreacion = DateTime.Now,
+                        Observaciones = "Pago final con multa por finalización temprana"
+                    };
+                    await _pagoRepository.CreateAsync(pagoMulta);
+                }
+            }
+            else
+            {
+                Console.WriteLine($"[DEBUG] No se aplica multa. MultaCalculada: {modelo.MultaCalculada}");
             }
 
             return contrato;
+        }
+
+        public async Task ProcesarPagoFinalizacionAsync(int contratoId)
+        {
+            var allPagos = await _pagoRepository.GetAllAsync();
+            var pagosPendientes = allPagos.Where(p => 
+                p.ContratoId == contratoId && 
+                p.Estado == EstadoPago.Pendiente
+            ).ToList();
+
+            foreach (var pago in pagosPendientes)
+            {
+                pago.Estado = EstadoPago.Pagado;
+                pago.FechaPago = DateTime.Today;
+                pago.MetodoPago = MetodoPago.Efectivo; // Por defecto
+                await _pagoRepository.UpdateAsync(pago);
+            }
         }
 
         public async Task<Contrato> CancelarContratoAsync(int contratoId, string motivo)

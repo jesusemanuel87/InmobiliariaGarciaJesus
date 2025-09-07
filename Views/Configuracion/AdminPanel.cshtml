@@ -44,7 +44,26 @@
                     <div class="row" id="mesesMinimosContainer">
                         @{
                             var mesesDisponibles = new[] { 6, 12, 18, 24, 30, 36 };
-                            var mesesHabilitados = Model.MesesMinimos?.ToDictionary(m => int.Parse(m.Clave.Split('_').Last()), m => bool.Parse(m.Valor)) ?? new Dictionary<int, bool>();
+                            var mesesHabilitados = new Dictionary<int, bool>();
+                            
+                            if (Model.MesesMinimos != null)
+                            {
+                                foreach (var config in Model.MesesMinimos)
+                                {
+                                    if (!string.IsNullOrEmpty(config.Clave))
+                                    {
+                                        var parts = config.Clave.Split('_');
+                                        if (parts.Length > 0)
+                                        {
+                                            var lastPart = parts.Last();
+                                            if (int.TryParse(lastPart, out int mes) && bool.TryParse(config.Valor, out bool valor))
+                                            {
+                                                mesesHabilitados[mes] = valor;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                         
                         @foreach (var mes in mesesDisponibles)

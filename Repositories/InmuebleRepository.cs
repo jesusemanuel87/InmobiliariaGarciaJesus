@@ -49,6 +49,12 @@ namespace InmobiliariaGarciaJesus.Repositories
             return inmuebles;
         }
 
+        public async Task<IEnumerable<Inmueble>> GetAllAsync(Func<Inmueble, bool> filter)
+        {
+            var allInmuebles = await GetAllAsync();
+            return allInmuebles.Where(filter);
+        }
+
         public async Task<Inmueble?> GetByIdAsync(int id)
         {
             using var connection = _connectionManager.GetConnection();

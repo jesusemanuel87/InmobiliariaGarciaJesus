@@ -72,7 +72,7 @@ namespace InmobiliariaGarciaJesus.Controllers
             try
             {
                 var inquilinos = await _inquilinoRepository.GetAllAsync();
-                var inmuebles = await _inmuebleRepository.GetAllAsync();
+                var inmuebles = await _inmuebleRepository.GetAllAsync(i => i.Estado == EstadoInmueble.Activo);
                 
                 // Obtener configuraciones de meses mínimos
                 var configuraciones = await _configuracionRepository.GetAllAsync();
@@ -298,17 +298,65 @@ namespace InmobiliariaGarciaJesus.Controllers
                 return View(modelo);
             }
 
+            // IMPORTANTE: Recalcular datos antes de finalizar para asegurar que tenemos los valores correctos
+            modelo = await _contratoService.CalcularFinalizacionAsync(modelo.ContratoId, modelo.FechaFinalizacion);
+
             try
             {
+                // Agregar logging para consola del navegador
+                var logData = new {
+                    action = "finalizar_contrato",
+                    contratoId = modelo.ContratoId,
+                    fechaFinalizacion = modelo.FechaFinalizacion,
+                    multaCalculada = modelo.MultaCalculada,
+                    importeAdeudado = modelo.ImporteAdeudado,
+                    esFinalizacionTemprana = modelo.EsFinalizacionTemprana
+                };
+                
+                Console.WriteLine($"[DEBUG JSON] {System.Text.Json.JsonSerializer.Serialize(logData)}");
+                
                 await _contratoService.FinalizarContratoAsync(modelo);
-                TempData["Success"] = "Contrato finalizado exitosamente.";
+                
+                // Retornar JSON para mostrar modal de confirmación de pago
+                var multaSoloTerminacion = modelo.MultaCalculada.HasValue ? modelo.MultaCalculada.Value - modelo.ImporteAdeudado : 0;
+                return Json(new { 
+                    success = true, 
+                    contratoId = modelo.ContratoId,
+                    multaTerminacion = multaSoloTerminacion,
+                    multaTotal = modelo.MultaCalculada,
+                    importeAdeudado = modelo.ImporteAdeudado,
+                    message = "Contrato finalizado exitosamente. ¿Desea procesar el pago ahora?",
+                    logData = logData
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al finalizar el contrato: " + ex.Message });
+            }
+        }
+
+        // POST: Contratos/ProcesarPagoFinalizacion/5
+        [HttpPost]
+        public async Task<IActionResult> ProcesarPagoFinalizacion(int contratoId, bool procesarPago)
+        {
+            try
+            {
+                if (procesarPago)
+                {
+                    await _contratoService.ProcesarPagoFinalizacionAsync(contratoId);
+                    TempData["Success"] = "Contrato finalizado y pago procesado exitosamente.";
+                }
+                else
+                {
+                    TempData["Success"] = "Contrato finalizado. El pago queda pendiente.";
+                }
+                
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "Error al finalizar el contrato: " + ex.Message;
-                modelo = await _contratoService.CalcularFinalizacionAsync(modelo.ContratoId, modelo.FechaFinalizacion);
-                return View(modelo);
+                TempData["Error"] = "Error al procesar el pago: " + ex.Message;
+                return RedirectToAction(nameof(Index));
             }
         }
 

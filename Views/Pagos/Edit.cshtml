@@ -22,7 +22,19 @@
                             <h6 class="text-muted">Información del Pago</h6>
                             <p><strong>Número:</strong> #@Model.Numero</p>
                             <p><strong>Contrato:</strong> @Model.ContratoInfo</p>
-                            <p><strong>Importe:</strong> <span class="text-success">$@Model.Importe.ToString("N0")</span></p>
+                            <p><strong>Importe Base:</strong> <span class="text-success">$@Model.Importe.ToString("N0")</span></p>
+                            
+                            @if (Model.Intereses > 0)
+                            {
+                                <p><strong>Intereses:</strong> <span class="text-warning">$@Model.Intereses.ToString("N0")</span></p>
+                            }
+                            
+                            @if (Model.Multas > 0)
+                            {
+                                <p><strong>Multas:</strong> <span class="text-danger">$@Model.Multas.ToString("N0")</span></p>
+                            }
+                            
+                            <p><strong>Total a Pagar:</strong> <span class="text-primary fw-bold fs-5">$@Model.TotalAPagar.ToString("N0")</span></p>
                         </div>
                         <div class="col-md-6">
                             <h6 class="text-muted">Fechas</h6>

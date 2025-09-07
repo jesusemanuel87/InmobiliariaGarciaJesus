@@ -20,14 +20,13 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = _connectionManager.GetConnection();
             await connection.OpenAsync();
             
-            var query = @"SELECT c.Id, c.FechaInicio, c.FechaFin, c.Precio, c.InquilinoId, c.InmuebleId, 
-                         c.Estado, c.FechaCreacion,
+            var query = @"SELECT c.Id, c.FechaInicio, c.FechaFin, c.Precio, c.InquilinoId, c.InmuebleId, c.Estado, c.FechaCreacion,
                          i.Nombre as InquilinoNombre, i.Apellido as InquilinoApellido, i.DNI as InquilinoDNI,
                          i.Telefono as InquilinoTelefono, i.Email as InquilinoEmail,
                          inm.Direccion as InmuebleDireccion, inm.Tipo as InmuebleTipo, inm.Ambientes as InmuebleAmbientes
-                         FROM contratos c
-                         INNER JOIN inquilinos i ON c.InquilinoId = i.Id
-                         INNER JOIN inmuebles inm ON c.InmuebleId = inm.Id";
+                         FROM Contratos c
+                         LEFT JOIN Inquilinos i ON c.InquilinoId = i.Id
+                         LEFT JOIN Inmuebles inm ON c.InmuebleId = inm.Id";
             
             using var command = new MySqlCommand(query, connection);
             using var reader = await command.ExecuteReaderAsync();
@@ -64,6 +63,12 @@ namespace InmobiliariaGarciaJesus.Repositories
             }
             
             return contratos;
+        }
+
+        public async Task<IEnumerable<Contrato>> GetAllAsync(Func<Contrato, bool> filter)
+        {
+            var allContratos = await GetAllAsync();
+            return allContratos.Where(filter);
         }
 
         public async Task<Contrato?> GetByIdAsync(int id)

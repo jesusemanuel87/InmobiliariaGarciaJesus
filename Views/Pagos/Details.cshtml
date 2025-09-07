@@ -42,6 +42,33 @@
                                     <strong class="text-success fs-5">$@Model.Importe.ToString("N0")</strong>
                                 </dd>
 
+                                @if (Model.Intereses > 0)
+                                {
+                                    <dt class="col-sm-4">
+                                        <i class="fas fa-percentage text-warning"></i> Intereses:
+                                    </dt>
+                                    <dd class="col-sm-8">
+                                        <strong class="text-warning fs-5">$@Model.Intereses.ToString("N0")</strong>
+                                    </dd>
+                                }
+
+                                @if (Model.Multas > 0)
+                                {
+                                    <dt class="col-sm-4">
+                                        <i class="fas fa-exclamation-triangle text-danger"></i> Multas:
+                                    </dt>
+                                    <dd class="col-sm-8">
+                                        <strong class="text-danger fs-5">$@Model.Multas.ToString("N0")</strong>
+                                    </dd>
+                                }
+
+                                <dt class="col-sm-4">
+                                    <i class="fas fa-calculator text-primary"></i> Total a Pagar:
+                                </dt>
+                                <dd class="col-sm-8">
+                                    <strong class="text-primary fs-4">$@Model.TotalAPagar.ToString("N0")</strong>
+                                </dd>
+
                                 <dt class="col-sm-4">
                                     <i class="fas fa-flag"></i> @Html.DisplayNameFor(model => model.Estado):
                                 </dt>

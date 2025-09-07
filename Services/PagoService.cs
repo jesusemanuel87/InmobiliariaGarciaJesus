@@ -51,12 +51,14 @@ namespace InmobiliariaGarciaJesus.Services
                 // Establecer vencimiento el día 10 del mes
                 fechaVencimiento = new DateTime(fechaVencimiento.Year, fechaVencimiento.Month, 10);
 
+                var fechaPagoMensual = new DateTime(fechaVencimiento.Year, fechaVencimiento.Month, 1);
+                
                 var pago = new Pago
                 {
                     Numero = numeroPago,
                     ContratoId = contratoId,
                     Importe = contrato.Precio,
-                    FechaPago = null, // Se establecerá cuando se registre el pago
+                    FechaPago = fechaPagoMensual, // Fecha del primer día del mes
                     FechaVencimiento = fechaVencimiento,
                     Estado = EstadoPago.Pendiente,
                     FechaCreacion = DateTime.Now
@@ -95,10 +97,15 @@ namespace InmobiliariaGarciaJesus.Services
                 }
                 
                 // Calcular intereses para pagos vencidos sin intereses calculados
-                if (pago.Estado == EstadoPago.Vencido && pago.Intereses == 0)
+                // SOLO si no tienen multas por finalización temprana
+                if (pago.Estado == EstadoPago.Vencido && pago.Intereses == 0 && pago.Multas == 0)
                 {
                     await CalcularInteresesYMultasAsync(pago.Id);
                     cambiosRealizados = true;
+                }
+                else if (pago.Multas > 0)
+                {
+                    Console.WriteLine($"[DEBUG BACKGROUND] Pago {pago.Id}: Saltando cálculo de intereses, tiene multas por finalización: {pago.Multas}");
                 }
             }
             
@@ -116,11 +123,22 @@ namespace InmobiliariaGarciaJesus.Services
 
             var fechaPago = pago.FechaPago ?? DateTime.Today;
             
-            // Calcular intereses y multas basados en los días de retraso
-            pago.Intereses = await CalcularInteresesPorRetrasoAsync(pago.FechaVencimiento, pago.Importe);
-            pago.Multas = await CalcularMultasPorRetrasoAsync(pago.FechaVencimiento, pago.Importe);
-
-            await _pagoRepository.UpdateAsync(pago);
+            // Calcular solo intereses por retraso, NO sobrescribir multas existentes
+            var interesesCalculados = await CalcularInteresesPorRetrasoAsync(pago.FechaVencimiento, pago.Importe);
+            var multasRetraso = await CalcularMultasPorRetrasoAsync(pago.FechaVencimiento, pago.Importe);
+            
+            // Solo actualizar si hay cambios en intereses, preservar multas existentes
+            if (pago.Intereses != interesesCalculados)
+            {
+                pago.Intereses = interesesCalculados;
+                // NO tocar pago.Multas - preservar multas por finalización temprana
+                Console.WriteLine($"[DEBUG CALC INTERESES] Pago {pagoId}: Actualizando solo intereses a {interesesCalculados}, preservando multas {pago.Multas}");
+                await _pagoRepository.UpdateAsync(pago);
+            }
+            else
+            {
+                Console.WriteLine($"[DEBUG CALC INTERESES] Pago {pagoId}: No hay cambios en intereses, multas preservadas: {pago.Multas}");
+            }
         }
 
         public async Task<decimal> CalcularInteresesPorRetrasoAsync(DateTime fechaVencimiento, decimal importe)

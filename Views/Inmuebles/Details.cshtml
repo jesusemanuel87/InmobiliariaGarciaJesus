@@ -59,6 +59,17 @@
                                         <span class="text-muted">No especificado</span>
                                     }
                                 </dd>
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Estado)</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Estado == EstadoInmueble.Activo)
+                                    {
+                                        <span class="badge bg-success">Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Inactivo</span>
+                                    }
+                                </dd>
                             </dl>
                         </div>
                         <div class="col-md-6">

@@ -15,6 +15,15 @@ namespace InmobiliariaGarciaJesus.Models
         [Display(Name = "Importe")]
         public decimal Importe { get; set; }
         
+        [Display(Name = "Intereses")]
+        public decimal Intereses { get; set; }
+        
+        [Display(Name = "Multas")]
+        public decimal Multas { get; set; }
+        
+        [Display(Name = "Total a Pagar")]
+        public decimal TotalAPagar { get; set; }
+        
         [Display(Name = "Fecha de Pago")]
         public DateTime? FechaPago { get; set; }
 

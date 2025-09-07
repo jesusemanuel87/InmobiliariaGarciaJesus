@@ -20,8 +20,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = _connectionManager.GetConnection();
             await connection.OpenAsync();
             
-            var query = @"SELECT Id, Nombre, Apellido, Dni, Telefono, Email, Direccion, FechaCreacion, Estado 
-                         FROM Inquilinos WHERE Estado = 1";
+            var query = "SELECT Id, Nombre, Apellido, DNI, Telefono, Email, Direccion, Estado FROM Inquilinos";
             
             using var command = new MySqlCommand(query, connection);
             using var reader = await command.ExecuteReaderAsync();
@@ -33,16 +32,21 @@ namespace InmobiliariaGarciaJesus.Repositories
                     Id = Convert.ToInt32(reader["Id"]),
                     Nombre = reader["Nombre"].ToString() ?? string.Empty,
                     Apellido = reader["Apellido"].ToString() ?? string.Empty,
-                    Dni = reader["Dni"].ToString() ?? string.Empty,
-                    Telefono = reader["Telefono"] == DBNull.Value ? null : reader["Telefono"].ToString(),
+                    Dni = reader["DNI"].ToString() ?? string.Empty,
+                    Telefono = reader["Telefono"].ToString() ?? string.Empty,
                     Email = reader["Email"].ToString() ?? string.Empty,
-                    Direccion = reader["Direccion"] == DBNull.Value ? null : reader["Direccion"].ToString(),
-                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
-                    Estado = Convert.ToBoolean(reader["Estado"])
+                    Direccion = reader["Direccion"].ToString() ?? string.Empty,
+                    Estado = Convert.ToInt32(reader["Estado"]) == 1
                 });
             }
             
             return inquilinos;
+        }
+
+        public async Task<IEnumerable<Inquilino>> GetAllAsync(Func<Inquilino, bool> filter)
+        {
+            var allInquilinos = await GetAllAsync();
+            return allInquilinos.Where(filter);
         }
 
         public async Task<Inquilino?> GetByIdAsync(int id)
@@ -51,7 +55,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             await connection.OpenAsync();
             
             var query = @"SELECT Id, Nombre, Apellido, Dni, Telefono, Email, Direccion, FechaCreacion, Estado 
-                         FROM Inquilinos WHERE Id = @Id AND Estado = 1";
+                         FROM Inquilinos WHERE Id = @Id";
             
             using var command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@Id", id);
@@ -70,7 +74,7 @@ namespace InmobiliariaGarciaJesus.Repositories
                     Email = reader["Email"].ToString() ?? string.Empty,
                     Direccion = reader["Direccion"] == DBNull.Value ? null : reader["Direccion"].ToString(),
                     FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
-                    Estado = Convert.ToBoolean(reader["Estado"])
+                    Estado = Convert.ToInt32(reader["Estado"]) == 1
                 };
             }
             

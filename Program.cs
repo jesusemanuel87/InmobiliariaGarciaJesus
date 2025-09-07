@@ -20,6 +20,14 @@ builder.Services.AddScoped<IRepository<Pago>, PagoRepository>();
 builder.Services.AddScoped<IRepository<Configuracion>, ConfiguracionRepository>();
 builder.Services.AddScoped<InmuebleImagenRepository>();
 
+// Registrar repositorios concretos para controladores que los necesiten directamente
+builder.Services.AddScoped<InmuebleRepository>();
+builder.Services.AddScoped<ContratoRepository>();
+builder.Services.AddScoped<PropietarioRepository>();
+builder.Services.AddScoped<InquilinoRepository>();
+builder.Services.AddScoped<PagoRepository>();
+builder.Services.AddScoped<ConfiguracionRepository>();
+
 
 // Registrar servicios de negocio
 builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IContratoService>(provider =>

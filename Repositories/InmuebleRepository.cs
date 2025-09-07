@@ -20,21 +20,22 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = _connectionManager.GetConnection();
             await connection.OpenAsync();
             
-            var query = @"SELECT Id, Direccion, Ambientes, Superficie, Latitud, Longitud, 
-                         PropietarioId, Tipo, Precio, Estado, Uso, FechaCreacion 
-                         FROM Inmuebles";
+            var query = @"SELECT i.Id, i.Direccion, i.Ambientes, i.Superficie, i.Latitud, i.Longitud, 
+                         i.PropietarioId, i.Tipo, i.Precio, i.Estado, i.Uso, i.FechaCreacion,
+                         i.Localidad, i.Provincia
+                         FROM Inmuebles i";
             
             using var command = new MySqlCommand(query, connection);
             using var reader = await command.ExecuteReaderAsync();
             
             while (await reader.ReadAsync())
             {
-                inmuebles.Add(new Inmueble
+                var inmueble = new Inmueble
                 {
                     Id = Convert.ToInt32(reader["Id"]),
                     Direccion = reader["Direccion"].ToString() ?? string.Empty,
                     Ambientes = Convert.ToInt32(reader["Ambientes"]),
-                    Superficie = Convert.ToDecimal(reader["Superficie"]),
+                    Superficie = reader["Superficie"] == DBNull.Value ? null : Convert.ToDecimal(reader["Superficie"]),
                     Latitud = reader["Latitud"] == DBNull.Value ? null : Convert.ToDecimal(reader["Latitud"]),
                     Longitud = reader["Longitud"] == DBNull.Value ? null : Convert.ToDecimal(reader["Longitud"]),
                     PropietarioId = Convert.ToInt32(reader["PropietarioId"]),
@@ -42,11 +43,53 @@ namespace InmobiliariaGarciaJesus.Repositories
                     Precio = reader["Precio"] == DBNull.Value ? null : Convert.ToDecimal(reader["Precio"]),
                     Estado = Convert.ToBoolean(reader["Estado"]) ? EstadoInmueble.Activo : EstadoInmueble.Inactivo,
                     Uso = Enum.TryParse<UsoInmueble>(reader["Uso"]?.ToString(), out var uso) ? uso : UsoInmueble.Residencial,
+                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                    Localidad = reader["Localidad"]?.ToString(),
+                    Provincia = reader["Provincia"]?.ToString(),
+                    Disponible = true // Default to available since column doesn't exist yet
+                };
+                inmuebles.Add(inmueble);
+            }
+            
+            // Load images for each inmueble using separate connections
+            foreach (var inmueble in inmuebles)
+            {
+                await LoadImagenesAsync(inmueble);
+            }
+            
+            return inmuebles;
+        }
+        
+        private async Task LoadImagenesAsync(Inmueble inmueble)
+        {
+            using var connection = _connectionManager.GetConnection();
+            await connection.OpenAsync();
+            
+            var query = @"SELECT Id, InmuebleId, NombreArchivo, RutaArchivo, EsPortada, FechaCreacion 
+                         FROM InmuebleImagenes 
+                         WHERE InmuebleId = @InmuebleId 
+                         ORDER BY EsPortada DESC, FechaCreacion ASC";
+            
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@InmuebleId", inmueble.Id);
+            
+            using var reader = await command.ExecuteReaderAsync();
+            var imagenes = new List<InmuebleImagen>();
+            
+            while (await reader.ReadAsync())
+            {
+                imagenes.Add(new InmuebleImagen
+                {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    InmuebleId = Convert.ToInt32(reader["InmuebleId"]),
+                    NombreArchivo = reader["NombreArchivo"].ToString() ?? string.Empty,
+                    RutaArchivo = reader["RutaArchivo"].ToString() ?? string.Empty,
+                    EsPortada = Convert.ToBoolean(reader["EsPortada"]),
                     FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"])
                 });
             }
             
-            return inmuebles;
+            inmueble.Imagenes = imagenes;
         }
 
         public async Task<IEnumerable<Inmueble>> GetAllAsync(Func<Inmueble, bool> filter)

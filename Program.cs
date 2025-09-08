@@ -2,11 +2,25 @@ using InmobiliariaGarciaJesus.Data;
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Repositories;
 using InmobiliariaGarciaJesus.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Configurar autenticación con cookies
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Auth/Login";
+        options.LogoutPath = "/Auth/Logout";
+        options.AccessDeniedPath = "/Auth/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    });
 
 // Registrar MySqlConnectionManager
 builder.Services.AddSingleton<MySqlConnectionManager>();
@@ -28,6 +42,10 @@ builder.Services.AddScoped<InquilinoRepository>();
 builder.Services.AddScoped<PagoRepository>();
 builder.Services.AddScoped<ConfiguracionRepository>();
 
+// Registrar repositorios de autenticación
+builder.Services.AddScoped<EmpleadoRepository>();
+builder.Services.AddScoped<UsuarioRepository>();
+
 
 // Registrar servicios de negocio
 builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IContratoService>(provider =>
@@ -45,10 +63,23 @@ builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IPagoService>(provid
 builder.Services.AddScoped<InmobiliariaGarciaJesus.Services.IConfiguracionService, InmobiliariaGarciaJesus.Services.ConfiguracionService>();
 builder.Services.AddScoped<IInmuebleImagenService, InmuebleImagenService>();
 
+// Registrar servicios de autenticación
+builder.Services.AddScoped<EmpleadoService>();
+builder.Services.AddScoped<UsuarioService>();
+builder.Services.AddScoped<AuthenticationService>();
+builder.Services.AddScoped<DatabaseSeederService>();
+
 // Servicio en segundo plano para actualización automática de pagos
 builder.Services.AddHostedService<PaymentBackgroundService>();
 
 var app = builder.Build();
+
+// Seed default admin user
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeederService>();
+    await seeder.SeedDefaultAdminUserAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -62,6 +93,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles(); // Para servir archivos estáticos subidos dinámicamente
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

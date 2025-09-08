@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Repositories;
 using InmobiliariaGarciaJesus.Services;
+using InmobiliariaGarciaJesus.Attributes;
 
 namespace InmobiliariaGarciaJesus.Controllers
 {
+    [AuthorizeMultipleRoles(RolUsuario.Empleado, RolUsuario.Administrador, RolUsuario.Propietario, RolUsuario.Inquilino)]
     public class PagosController : Controller
     {
         private readonly IRepository<Pago> _pagoRepository;

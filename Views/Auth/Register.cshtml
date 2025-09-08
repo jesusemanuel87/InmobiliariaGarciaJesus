@@ -1,0 +1,248 @@
+@model InmobiliariaGarciaJesus.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Registrarse";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white text-center">
+                    <h4><i class="fas fa-user-plus"></i> Crear Cuenta</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Register" method="post" id="registerForm">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        
+                        <!-- Tipo de Usuario -->
+                        <div class="mb-3">
+                            <label asp-for="TipoUsuario" class="form-label">
+                                <i class="fas fa-user-tag"></i> Tipo de Usuario
+                            </label>
+                            <select asp-for="TipoUsuario" class="form-select" id="tipoUsuario">
+                                <option value="">Seleccione un tipo</option>
+                                <option value="@((int)InmobiliariaGarciaJesus.Models.RolUsuario.Propietario)">Propietario</option>
+                                <option value="@((int)InmobiliariaGarciaJesus.Models.RolUsuario.Inquilino)">Inquilino</option>
+                            </select>
+                            <span asp-validation-for="TipoUsuario" class="text-danger"></span>
+                        </div>
+
+                        <!-- Información de Usuario -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="NombreUsuario" class="form-label">
+                                        <i class="fas fa-at"></i> Nombre de Usuario
+                                    </label>
+                                    <input asp-for="NombreUsuario" class="form-control" placeholder="Nombre de usuario único" />
+                                    <span asp-validation-for="NombreUsuario" class="text-danger"></span>
+                                    <div class="form-text" id="usernameHelp"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Email" class="form-label">
+                                        <i class="fas fa-envelope"></i> Email
+                                    </label>
+                                    <input asp-for="Email" class="form-control" placeholder="correo@ejemplo.com" />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                    <div class="form-text" id="emailHelp"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contraseñas -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Password" class="form-label">
+                                        <i class="fas fa-lock"></i> Contraseña
+                                    </label>
+                                    <div class="input-group">
+                                        <input asp-for="Password" class="form-control" placeholder="Mínimo 6 caracteres" />
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword1">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <span asp-validation-for="Password" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="ConfirmPassword" class="form-label">
+                                        <i class="fas fa-lock"></i> Confirmar Contraseña
+                                    </label>
+                                    <div class="input-group">
+                                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Repita la contraseña" />
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword2">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información Personal (se muestra cuando se selecciona tipo) -->
+                        <div id="personalInfo" style="display: none;">
+                            <hr>
+                            <h5 class="mb-3"><i class="fas fa-user"></i> Información Personal</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="Nombre" class="form-label">Nombre</label>
+                                        <input asp-for="Nombre" class="form-control" placeholder="Nombre" />
+                                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="Apellido" class="form-label">Apellido</label>
+                                        <input asp-for="Apellido" class="form-control" placeholder="Apellido" />
+                                        <span asp-validation-for="Apellido" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="Dni" class="form-label">DNI</label>
+                                        <input asp-for="Dni" class="form-control" placeholder="12345678" />
+                                        <span asp-validation-for="Dni" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="Telefono" class="form-label">Teléfono</label>
+                                        <input asp-for="Telefono" class="form-control" placeholder="2664123456" />
+                                        <span asp-validation-for="Telefono" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-user-plus"></i> Crear Cuenta
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr>
+                    
+                    <div class="text-center">
+                        <p class="mb-0">¿Ya tienes cuenta?</p>
+                        <a asp-action="Login" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-link">
+                    <i class="fas fa-home"></i> Volver al inicio
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Mostrar/ocultar información personal según el tipo de usuario
+            $('#tipoUsuario').change(function() {
+                const selectedValue = $(this).val();
+                if (selectedValue === '1' || selectedValue === '2') {
+                    $('#personalInfo').show();
+                    $('#Nombre, #Apellido, #Dni, #Telefono').attr('required', true);
+                } else {
+                    $('#personalInfo').hide();
+                    $('#Nombre, #Apellido, #Dni, #Telefono').attr('required', false);
+                }
+            });
+
+            // Toggle password visibility
+            $('#togglePassword1').click(function() {
+                togglePasswordVisibility('Password', this);
+            });
+
+            $('#togglePassword2').click(function() {
+                togglePasswordVisibility('ConfirmPassword', this);
+            });
+
+            function togglePasswordVisibility(fieldId, button) {
+                const field = document.getElementById(fieldId);
+                const icon = button.querySelector('i');
+                
+                if (field.type === 'password') {
+                    field.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    field.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            }
+
+            // Validación en tiempo real de email
+            let emailTimeout;
+            $('#Email').on('input', function() {
+                const email = $(this).val();
+                const helpDiv = $('#emailHelp');
+                
+                clearTimeout(emailTimeout);
+                
+                if (email.length > 0 && email.indexOf('@@') > -1) {
+                    emailTimeout = setTimeout(function() {
+                        $.post('/Auth/CheckEmailAvailability', { email: email })
+                            .done(function(data) {
+                                if (data.available) {
+                                    helpDiv.html('<i class="fas fa-check text-success"><\/i> Email disponible')
+                                           .removeClass('text-danger').addClass('text-success');
+                                } else {
+                                    helpDiv.html('<i class="fas fa-times text-danger"><\/i> Email ya está en uso')
+                                           .removeClass('text-success').addClass('text-danger');
+                                }
+                            });
+                    }, 500);
+                } else {
+                    helpDiv.html('');
+                }
+            });
+
+            // Validación en tiempo real de username
+            let usernameTimeout;
+            $('#NombreUsuario').on('input', function() {
+                const username = $(this).val();
+                const helpDiv = $('#usernameHelp');
+                
+                clearTimeout(usernameTimeout);
+                
+                if (username.length >= 3) {
+                    usernameTimeout = setTimeout(function() {
+                        $.post('/Auth/CheckUsernameAvailability', { username: username })
+                            .done(function(data) {
+                                if (data.available) {
+                                    helpDiv.html('<i class="fas fa-check text-success"><\/i> Nombre de usuario disponible')
+                                           .removeClass('text-danger').addClass('text-success');
+                                } else {
+                                    helpDiv.html('<i class="fas fa-times text-danger"><\/i> Nombre de usuario ya está en uso')
+                                           .removeClass('text-success').addClass('text-danger');
+                                }
+                            });
+                    }, 500);
+                } else {
+                    helpDiv.html('');
+                }
+            });
+        });
+    </script>
+}

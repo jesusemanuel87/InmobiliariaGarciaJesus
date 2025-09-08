@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Repositories;
+using InmobiliariaGarciaJesus.Attributes;
 
 namespace InmobiliariaGarciaJesus.Controllers
 {
+    [AuthorizeEmpleado]
     public class InquilinosController : Controller
     {
         private readonly IRepository<Inquilino> _repository;

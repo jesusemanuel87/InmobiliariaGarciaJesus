@@ -404,5 +404,26 @@ namespace InmobiliariaGarciaJesus.Services
         {
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }
+
+        public async Task<bool> UpdateProfilePhotoAsync(int usuarioId, string fotoPerfil)
+        {
+            try
+            {
+                var usuario = await _usuarioRepository.GetByIdAsync(usuarioId);
+                if (usuario == null)
+                {
+                    return false;
+                }
+
+                usuario.FotoPerfil = fotoPerfil;
+                await _usuarioRepository.UpdateAsync(usuario);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar foto de perfil para usuario: {UsuarioId}", usuarioId);
+                return false;
+            }
+        }
     }
 }

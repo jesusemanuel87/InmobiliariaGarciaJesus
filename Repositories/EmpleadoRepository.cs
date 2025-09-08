@@ -19,7 +19,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
-            const string query = @"SELECT Id, Nombre, Apellido, Dni, Telefono, Email, Rol, FechaIngreso, 
+            const string query = @"SELECT Id, Nombre, Apellido, Dni, Telefono, Email, FotoPerfil, Rol, FechaIngreso, 
                                          Observaciones, FechaCreacion, FechaModificacion, Estado 
                                          FROM Empleados WHERE Estado = 1 ORDER BY Apellido, Nombre";
             
@@ -45,7 +45,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
-            const string query = @"SELECT Id, Nombre, Apellido, Dni, Telefono, Email, Rol, FechaIngreso, 
+            const string query = @"SELECT Id, Nombre, Apellido, Dni, Telefono, Email, FotoPerfil, Rol, FechaIngreso, 
                                          Observaciones, FechaCreacion, FechaModificacion, Estado 
                                          FROM Empleados WHERE Id = @Id";
             
@@ -66,9 +66,9 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
-            const string query = @"INSERT INTO Empleados (Nombre, Apellido, Dni, Telefono, Email, Rol, 
+            const string query = @"INSERT INTO Empleados (Nombre, Apellido, Dni, Telefono, Email, FotoPerfil, Rol, 
                                                         FechaIngreso, Observaciones, FechaCreacion, Estado) 
-                                 VALUES (@Nombre, @Apellido, @Dni, @Telefono, @Email, @Rol, 
+                                 VALUES (@Nombre, @Apellido, @Dni, @Telefono, @Email, @FotoPerfil, @Rol, 
                                          @FechaIngreso, @Observaciones, @FechaCreacion, @Estado);
                                  SELECT LAST_INSERT_ID();";
             
@@ -78,6 +78,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             command.Parameters.AddWithValue("@Dni", empleado.Dni);
             command.Parameters.AddWithValue("@Telefono", empleado.Telefono);
             command.Parameters.AddWithValue("@Email", empleado.Email);
+            command.Parameters.AddWithValue("@FotoPerfil", empleado.FotoPerfil ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Rol", (int)empleado.Rol);
             command.Parameters.AddWithValue("@FechaIngreso", empleado.FechaIngreso);
             command.Parameters.AddWithValue("@Observaciones", empleado.Observaciones ?? (object)DBNull.Value);
@@ -95,7 +96,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             
             const string query = @"UPDATE Empleados SET 
                                  Nombre = @Nombre, Apellido = @Apellido, Dni = @Dni, 
-                                 Telefono = @Telefono, Email = @Email, Rol = @Rol, 
+                                 Telefono = @Telefono, Email = @Email, FotoPerfil = @FotoPerfil, Rol = @Rol, 
                                  FechaIngreso = @FechaIngreso, Observaciones = @Observaciones, 
                                  FechaModificacion = @FechaModificacion, Estado = @Estado
                                  WHERE Id = @Id";
@@ -107,6 +108,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             command.Parameters.AddWithValue("@Dni", empleado.Dni);
             command.Parameters.AddWithValue("@Telefono", empleado.Telefono);
             command.Parameters.AddWithValue("@Email", empleado.Email);
+            command.Parameters.AddWithValue("@FotoPerfil", empleado.FotoPerfil ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Rol", (int)empleado.Rol);
             command.Parameters.AddWithValue("@FechaIngreso", empleado.FechaIngreso);
             command.Parameters.AddWithValue("@Observaciones", empleado.Observaciones ?? (object)DBNull.Value);
@@ -181,7 +183,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
-            const string query = @"SELECT Id, Nombre, Apellido, Dni, Telefono, Email, Rol, FechaIngreso, 
+            const string query = @"SELECT Id, Nombre, Apellido, Dni, Telefono, Email, FotoPerfil, Rol, FechaIngreso, 
                                          Observaciones, FechaCreacion, FechaModificacion, Estado 
                                          FROM Empleados WHERE Email = @Email AND Estado = 1";
             
@@ -202,7 +204,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
-            const string query = @"SELECT Id, Nombre, Apellido, Dni, Telefono, Email, Rol, FechaIngreso, 
+            const string query = @"SELECT Id, Nombre, Apellido, Dni, Telefono, Email, FotoPerfil, Rol, FechaIngreso, 
                                          Observaciones, FechaCreacion, FechaModificacion, Estado 
                                          FROM Empleados WHERE Dni = @Dni AND Estado = 1";
             
@@ -242,6 +244,7 @@ namespace InmobiliariaGarciaJesus.Repositories
                 Dni = reader.GetString(reader.GetOrdinal("Dni")),
                 Telefono = reader.GetString(reader.GetOrdinal("Telefono")),
                 Email = reader.GetString(reader.GetOrdinal("Email")),
+                FotoPerfil = reader.IsDBNull(reader.GetOrdinal("FotoPerfil")) ? null : reader.GetString(reader.GetOrdinal("FotoPerfil")),
                 Rol = (RolEmpleado)reader.GetInt32(reader.GetOrdinal("Rol")),
                 FechaIngreso = reader.GetDateTime(reader.GetOrdinal("FechaIngreso")),
                 Observaciones = reader.IsDBNull(reader.GetOrdinal("Observaciones")) ? null : reader.GetString(reader.GetOrdinal("Observaciones")),

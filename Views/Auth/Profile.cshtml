@@ -30,23 +30,29 @@
 
                     <div class="row">
                         <div class="col-md-4 text-center">
-                            <div class="mb-3">
+                            <div class="mb-3 position-relative">
                                 @if (!string.IsNullOrEmpty(Model.FotoPerfil))
                                 {
-                                    <img src="@Model.FotoPerfil" alt="Foto de perfil" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                                    <img id="profileImage" src="@Model.FotoPerfil" alt="Foto de perfil" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
                                 }
                                 else
                                 {
-                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; margin: 0 auto;">
+                                    <div id="profileImage" class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; margin: 0 auto;">
                                         <i class="fas fa-user fa-3x text-white"></i>
                                     </div>
                                 }
+                                <button type="button" class="btn btn-sm btn-primary position-absolute" style="bottom: 0; right: 50%; transform: translateX(50%);" onclick="document.getElementById('profilePhotoInput').click();">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                                <form id="profilePhotoForm" enctype="multipart/form-data" style="display: none;">
+                                    <input type="file" id="profilePhotoInput" name="profilePhoto" accept="image/*" onchange="uploadProfilePhoto()">
+                                </form>
                             </div>
                             <h5>@Model.NombreUsuario</h5>
                             <span class="badge bg-@(Model.Rol == InmobiliariaGarciaJesus.Models.RolUsuario.Administrador ? "danger" : 
                                                    Model.Rol == InmobiliariaGarciaJesus.Models.RolUsuario.Empleado ? "warning" :
                                                    Model.Rol == InmobiliariaGarciaJesus.Models.RolUsuario.Propietario ? "primary" : "success")">
-                                @Model.Rol
+                                (@Model.Rol)
                             </span>
                         </div>
                         <div class="col-md-8">
@@ -266,5 +272,80 @@
                 this.setCustomValidity('');
             }
         });
+
+        // Función para subir foto de perfil
+        function uploadProfilePhoto() {
+            const fileInput = document.getElementById('profilePhotoInput');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+
+            // Validar tipo de archivo
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Por favor seleccione un archivo de imagen válido (JPG, PNG, GIF, WEBP)');
+                return;
+            }
+
+            // Validar tamaño (5MB máximo)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('El archivo es demasiado grande. Máximo 5MB permitido.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('profilePhoto', file);
+
+            // Mostrar indicador de carga
+            const profileImage = document.getElementById('profileImage');
+            const originalContent = profileImage.outerHTML;
+            profileImage.outerHTML = '<div id="profileImage" class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; margin: 0 auto;"><div class="spinner-border text-primary" role="status"></div></div>';
+
+            fetch('@Url.Action("UploadProfilePhoto", "Auth")', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Actualizar imagen de perfil
+                    document.getElementById('profileImage').outerHTML = 
+                        '<img id="profileImage" src="' + data.photoUrl + '?t=' + new Date().getTime() + '" alt="Foto de perfil" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">';
+                    
+                    // Mostrar mensaje de éxito
+                    showAlert('success', 'Foto de perfil actualizada exitosamente');
+                } else {
+                    // Restaurar imagen original
+                    document.getElementById('profileImage').outerHTML = originalContent;
+                    showAlert('danger', data.message || 'Error al subir la foto');
+                }
+            })
+            .catch(error => {
+                // Restaurar imagen original
+                document.getElementById('profileImage').outerHTML = originalContent;
+                showAlert('danger', 'Error de conexión al subir la foto');
+            });
+
+            // Limpiar input
+            fileInput.value = '';
+        }
+
+        function showAlert(type, message) {
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            $('.card-body').first().prepend(alertHtml);
+            
+            // Auto-dismiss después de 5 segundos
+            setTimeout(() => {
+                $('.alert').fadeOut();
+            }, 5000);
+        }
     </script>
 }

@@ -28,6 +28,12 @@ namespace InmobiliariaGarciaJesus.Services
                     new("RoleDescription", usuario.RolDescripcion)
                 };
 
+                // Agregar foto de perfil si existe
+                if (!string.IsNullOrEmpty(usuario.FotoPerfil))
+                {
+                    claims.Add(new Claim("FotoPerfil", usuario.FotoPerfil));
+                }
+
                 // Agregar claims específicos según el rol
                 switch (usuario.Rol)
                 {

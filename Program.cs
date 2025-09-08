@@ -68,6 +68,7 @@ builder.Services.AddScoped<EmpleadoService>();
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<AuthenticationService>();
 builder.Services.AddScoped<DatabaseSeederService>();
+builder.Services.AddScoped<ProfilePhotoService>();
 
 // Servicio en segundo plano para actualización automática de pagos
 builder.Services.AddHostedService<PaymentBackgroundService>();

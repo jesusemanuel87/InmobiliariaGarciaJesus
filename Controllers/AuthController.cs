@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using InmobiliariaGarciaJesus.Attributes;
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Services;
 using AuthService = InmobiliariaGarciaJesus.Services.AuthenticationService;
-using InmobiliariaGarciaJesus.Attributes;
 using System.Security.Claims;
 
 namespace InmobiliariaGarciaJesus.Controllers
@@ -13,15 +14,18 @@ namespace InmobiliariaGarciaJesus.Controllers
     {
         private readonly UsuarioService _usuarioService;
         private readonly AuthService _authenticationService;
+        private readonly ProfilePhotoService _profilePhotoService;
         private readonly ILogger<AuthController> _logger;
 
         public AuthController(
             UsuarioService usuarioService,
             AuthService authenticationService,
+            ProfilePhotoService profilePhotoService,
             ILogger<AuthController> logger)
         {
             _usuarioService = usuarioService;
             _authenticationService = authenticationService;
+            _profilePhotoService = profilePhotoService;
             _logger = logger;
         }
 
@@ -295,6 +299,82 @@ namespace InmobiliariaGarciaJesus.Controllers
         {
             var exists = await _usuarioService.GetUsuarioByUsernameAsync(username) != null;
             return Json(new { available = !exists });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AuthorizeMultipleRoles(RolUsuario.Propietario, RolUsuario.Inquilino, RolUsuario.Empleado, RolUsuario.Administrador)]
+        public async Task<IActionResult> UploadProfilePhoto(IFormFile profilePhoto)
+        {
+            var usuarioId = AuthService.GetUsuarioId(User);
+            if (!usuarioId.HasValue)
+            {
+                return Json(new { success = false, message = "Usuario no autenticado" });
+            }
+
+            if (profilePhoto == null || profilePhoto.Length == 0)
+            {
+                return Json(new { success = false, message = "No se seleccionó ningún archivo" });
+            }
+
+            var (success, message, filePath) = await _profilePhotoService.UploadProfilePhotoAsync(
+                profilePhoto, usuarioId.Value, "user");
+
+            if (success && !string.IsNullOrEmpty(filePath))
+            {
+                // Actualizar la foto de perfil en la base de datos
+                var usuario = await _usuarioService.GetUsuarioByIdAsync(usuarioId.Value);
+                if (usuario != null)
+                {
+                    // Eliminar foto anterior si existe
+                    if (!string.IsNullOrEmpty(usuario.FotoPerfil))
+                    {
+                        _profilePhotoService.DeleteProfilePhoto(usuario.FotoPerfil);
+                    }
+
+                    // Actualizar usuario con nueva foto
+                    var updateSuccess = await _usuarioService.UpdateProfilePhotoAsync(usuarioId.Value, filePath);
+                    if (updateSuccess)
+                    {
+                        // Refrescar claims para mostrar la nueva foto inmediatamente
+                        await RefreshUserClaimsAsync(usuarioId.Value);
+                        
+                        TempData["SuccessMessage"] = "Foto de perfil actualizada exitosamente";
+                        return Json(new { success = true, message = "Foto subida exitosamente", photoUrl = filePath });
+                    }
+                    else
+                    {
+                        // Si falla la actualización, eliminar el archivo subido
+                        _profilePhotoService.DeleteProfilePhoto(filePath);
+                        return Json(new { success = false, message = "Error al actualizar la foto en la base de datos" });
+                    }
+                }
+            }
+
+            return Json(new { success = false, message = message });
+        }
+
+        private async Task RefreshUserClaimsAsync(int usuarioId)
+        {
+            try
+            {
+                // Obtener usuario actualizado con la nueva foto
+                var usuario = await _usuarioService.GetUsuarioByIdAsync(usuarioId);
+                if (usuario != null)
+                {
+                    // Crear nuevos claims con la información actualizada
+                    var newClaimsPrincipal = await _authenticationService.CreateClaimsPrincipalAsync(usuario);
+                    if (newClaimsPrincipal != null)
+                    {
+                        // Actualizar la autenticación con los nuevos claims
+                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, newClaimsPrincipal);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al refrescar claims para usuario: {UsuarioId}", usuarioId);
+            }
         }
     }
 }

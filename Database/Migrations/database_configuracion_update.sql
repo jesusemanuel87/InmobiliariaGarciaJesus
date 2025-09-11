@@ -1,3 +1,5 @@
+USE `inmobiliaria`;
+
 -- Crear tabla de configuraciones del sistema
 CREATE TABLE IF NOT EXISTS configuraciones (
     Id INT AUTO_INCREMENT PRIMARY KEY,
@@ -20,11 +22,9 @@ INSERT INTO configuraciones (Clave, Valor, Descripcion, Tipo) VALUES
 ('MESES_MINIMOS_24', 'true', 'Opción de 24 meses de alquiler mínimo', 1),
 ('MESES_MINIMOS_30', 'true', 'Opción de 30 meses de alquiler mínimo', 1),
 ('MESES_MINIMOS_36', 'true', 'Opción de 36 meses de alquiler mínimo', 1),
-
 -- Multas por terminación
 ('MULTA_TERMINACION_TEMPRANA', '2', 'Meses de multa si se cumplió menos de la mitad del contrato', 2),
 ('MULTA_TERMINACION_TARDIA', '1', 'Meses de multa si se cumplió más de la mitad del contrato', 3),
-
 -- Intereses por vencimiento
 ('INTERES_VENCIMIENTO_10_20', '10', 'Porcentaje de interés para vencimientos de 10-20 días', 4),
 ('INTERES_VENCIMIENTO_20_PLUS', '15', 'Porcentaje de interés para vencimientos de más de 20 días', 5),

@@ -20,7 +20,15 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `inmobiliaria`
 --
+-- Paso 1: Eliminar completamente la base de datos
+DROP DATABASE IF EXISTS `inmobiliaria`;
 
+-- Paso 2: Crear nueva base de datos
+CREATE DATABASE `inmobiliaria` 
+DEFAULT CHARACTER SET utf8mb4 
+COLLATE utf8mb4_unicode_ci;
+
+USE `inmobiliaria`;
 -- --------------------------------------------------------
 
 --

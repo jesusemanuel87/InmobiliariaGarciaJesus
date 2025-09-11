@@ -1,6 +1,6 @@
 -- Script de migración para agregar campos de finalización de contratos y métodos de pago
 -- Ejecutar en la base de datos inmobiliaria_db
-
+USE `inmobiliaria`;
 -- Agregar campos al modelo Contrato para finalización
 ALTER TABLE contratos 
 ADD COLUMN fecha_finalizacion_real DATE NULL,

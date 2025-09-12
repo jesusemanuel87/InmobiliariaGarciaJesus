@@ -104,20 +104,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        $(document).ready(function() {
-            // Habilitar/deshabilitar botón de confirmación
-            $('#confirmBaja').change(function() {
-                $('#btnConfirmar').prop('disabled', !this.checked);
-            });
-
-            // Confirmación adicional antes del envío
-            $('form').submit(function(e) {
-                if (!confirm('¿Está seguro que desea dar de baja a este empleado? Esta acción desactivará su acceso al sistema.')) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-        });
-    </script>
+    <script src="~/js/Empleado/delete-empleado.js"></script>
 }

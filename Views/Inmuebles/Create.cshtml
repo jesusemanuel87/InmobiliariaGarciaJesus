@@ -151,10 +151,5 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script src="~/js/georef-api.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Inicializar dropdowns de provincia y localidad con San Luis por defecto
-            georefService.inicializarDropdowns('provinciaSelect', 'localidadSelect', 'San Luis', 'San Luis');
-        });
-    </script>
+    <script src="~/js/Inmueble/create-inmueble.js"></script>
 }

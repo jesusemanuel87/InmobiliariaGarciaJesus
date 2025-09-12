@@ -73,7 +73,7 @@ namespace InmobiliariaGarciaJesus.Controllers
         {
             try
             {
-                var inquilinos = await _inquilinoRepository.GetAllAsync();
+                var inquilinos = await _inquilinoRepository.GetAllAsync(i => i.Estado == true);
                 var inmuebles = await _inmuebleRepository.GetAllAsync(i => i.Estado == EstadoInmueble.Activo);
                 
                 // Obtener configuraciones de meses mínimos
@@ -151,7 +151,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                     return NotFound();
                 }
 
-                var inquilinos = await _inquilinoRepository.GetAllAsync();
+                var inquilinos = await _inquilinoRepository.GetAllAsync(i => i.Estado == true);
                 var inmuebles = await _inmuebleRepository.GetAllAsync();
                 ViewBag.Inquilinos = inquilinos;
                 ViewBag.Inmuebles = inmuebles;

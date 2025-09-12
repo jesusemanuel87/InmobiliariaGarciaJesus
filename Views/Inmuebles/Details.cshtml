@@ -182,68 +182,16 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/Inmueble/details-inmueble.js"></script>
     <script>
-        $(document).ready(function() {
-            cargarImagenes();
-        });
-
-        function cargarImagenes() {
-            $.get('@Url.Action("GetImagenes", "Inmuebles")', { id: @Model.Id, readOnly: true })
-                .done(function(data) {
-                    $('#imagenes-container').html(data);
-                })
-                .fail(function() {
-                    $('#imagenes-container').html('<div class="col-12 text-center text-danger"><i class="fas fa-exclamation-triangle"></i> Error al cargar imágenes</div>');
-                });
-        }
-
-        // Google Maps functionality
-        @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
-        {
-            <text>
-        function initMap() {
-            var location = { lat: @Model.Latitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture), lng: @Model.Longitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) };
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 16,
-                center: location,
-                mapTypeId: google.maps.MapTypeId.ROADMAP
-            });
-            
-            var marker = new google.maps.Marker({
-                position: location,
-                map: map,
-                title: '@Html.Raw(Model.Direccion?.Replace("'", "\\'"))',
-                animation: google.maps.Animation.DROP
-            });
-
-            var infoWindow = new google.maps.InfoWindow({
-                content: '<div><strong>@Html.Raw(Model.Direccion?.Replace("'", "\\'"))</strong><br>' +
-                        '@if (!string.IsNullOrEmpty(Model.Localidad)) { <text>@Html.Raw(Model.Localidad?.Replace("'", "\\'"))</text> }' +
-                        '@if (!string.IsNullOrEmpty(Model.Provincia)) { <text>, @Html.Raw(Model.Provincia?.Replace("'", "\\'"))</text> }</div>'
-            });
-
-            marker.addListener('click', function() {
-                infoWindow.open(map, marker);
-            });
-
-            // Mostrar info window por defecto
-            infoWindow.open(map, marker);
-        }
-
-        // Cargar Google Maps cuando el documento esté listo
-        $(document).ready(function() {
-            if (typeof google !== 'undefined' && google.maps) {
-                initMap();
-            } else {
-                // Cargar Google Maps API si no está disponible
-                var script = document.createElement('script');
-                script.src = 'https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap';
-                script.async = true;
-                script.defer = true;
-                document.head.appendChild(script);
-            }
-        });
-            </text>
-        }
+        // Initialize InmuebleDetailsManager with model data
+        inmuebleDetailsManager = new InmuebleDetailsManager(
+            @Model.Id,
+            @(Model.Latitud?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "null"),
+            @(Model.Longitud?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "null"),
+            '@Html.Raw(Model.Direccion?.Replace("'", "\\'"))',
+            '@Html.Raw(Model.Localidad?.Replace("'", "\\'"))',
+            '@Html.Raw(Model.Provincia?.Replace("'", "\\'"))'
+        );
     </script>
 }

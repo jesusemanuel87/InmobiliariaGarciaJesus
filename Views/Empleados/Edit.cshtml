@@ -126,63 +126,10 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    
+    <script src="~/js/Empleado/edit-empleado.js"></script>
     <script>
         $(document).ready(function() {
-            const originalDni = '@Model.Dni';
-            const originalEmail = '@Model.Email';
-
-            // Validación en tiempo real de email (solo si cambió)
-            let emailTimeout;
-            $('#Email').on('input', function() {
-                const email = $(this).val();
-                const helpDiv = $('#emailHelp');
-                
-                clearTimeout(emailTimeout);
-                
-                if (email !== originalEmail && email.length > 0 && email.indexOf('@@') > -1) {
-                    emailTimeout = setTimeout(function() {
-                        $.post('/Empleados/CheckEmailExists', { email: email })
-                            .done(function(data) {
-                                if (data.exists) {
-                                    helpDiv.html('<i class="fas fa-times text-danger"></i> Email ya está en uso')
-                                           .removeClass('text-success').addClass('text-danger');
-                                } else {
-                                    helpDiv.html('<i class="fas fa-check text-success"></i> Email disponible')
-                                           .removeClass('text-danger').addClass('text-success');
-                                }
-                            });
-                    }, 500);
-                } else {
-                    helpDiv.html('');
-                }
-            });
-
-            // Validación en tiempo real de DNI (solo si cambió)
-            let dniTimeout;
-            $('#Dni').on('input', function() {
-                const dni = $(this).val();
-                const helpDiv = $('#dniHelp');
-                
-                clearTimeout(dniTimeout);
-                
-                if (dni !== originalDni && dni.length >= 7) {
-                    dniTimeout = setTimeout(function() {
-                        $.post('/Empleados/CheckDniExists', { dni: dni })
-                            .done(function(data) {
-                                if (data.exists) {
-                                    helpDiv.html('<i class="fas fa-times text-danger"></i> DNI ya está en uso')
-                                           .removeClass('text-success').addClass('text-danger');
-                                } else {
-                                    helpDiv.html('<i class="fas fa-check text-success"></i> DNI disponible')
-                                           .removeClass('text-danger').addClass('text-success');
-                                }
-                            });
-                    }, 500);
-                } else {
-                    helpDiv.html('');
-                }
-            });
+            empleadoEditManager = new EmpleadoEditManager('@Model.Dni', '@Model.Email');
         });
     </script>
 }

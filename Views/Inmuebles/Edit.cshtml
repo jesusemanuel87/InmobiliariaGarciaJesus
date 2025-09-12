@@ -224,115 +224,16 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script src="~/js/georef-api.js"></script>
+    <script src="~/js/Inmueble/edit-inmueble.js"></script>
     <script>
-        $(document).ready(function() {
-            cargarImagenes();
-            
-            // Inicializar dropdowns de provincia y localidad
-            // Si el modelo tiene valores, usarlos; sino usar San Luis por defecto
-            var provinciaActual = '@Model.Provincia' || 'San Luis';
-            var localidadActual = '@Model.Localidad' || 'San Luis';
-            
-            georefService.inicializarDropdowns('provinciaSelect', 'localidadSelect', provinciaActual, localidadActual);
-        });
-
-        function cargarImagenes() {
-            $.get('@Url.Action("GetImagenes", "Inmuebles")', { id: @Model.Id })
-                .done(function(data) {
-                    $('#imagenes-container').html(data);
-                })
-                .fail(function() {
-                    $('#imagenes-container').html('<div class="col-12 text-center text-danger"><i class="fas fa-exclamation-triangle"></i> Error al cargar imágenes</div>');
-                });
-        }
-
-        function eliminarImagen(imagenId) {
-            if (confirm('¿Está seguro de que desea eliminar esta imagen?')) {
-                $.post('@Url.Action("DeleteImage", "Inmuebles")', { 
-                    id: imagenId, 
-                    inmuebleId: @Model.Id 
-                })
-                .done(function(response) {
-                    cargarImagenes();
-                    mostrarMensaje('Imagen eliminada correctamente', 'success');
-                })
-                .fail(function() {
-                    mostrarMensaje('Error al eliminar la imagen', 'danger');
-                });
-            }
-        }
-
-        function establecerPortada(imagenId) {
-            console.log('Estableciendo portada para imagen ID:', imagenId, 'Inmueble ID:', @Model.Id);
-            
-            $.post('@Url.Action("SetPortada", "Inmuebles")', { 
-                id: imagenId, 
-                inmuebleId: @Model.Id 
-            })
-            .done(function(response) {
-                console.log('Respuesta del servidor:', response);
-                if (response.success) {
-                    cargarImagenes();
-                    mostrarMensaje(response.message || 'Imagen de portada actualizada', 'success');
-                } else {
-                    mostrarMensaje(response.message || 'Error al establecer imagen de portada', 'danger');
-                }
-            })
-            .fail(function(xhr, status, error) {
-                console.error('Error en la petición:', xhr, status, error);
-                mostrarMensaje('Error al establecer imagen de portada: ' + error, 'danger');
-            });
-        }
-
-        function mostrarMensaje(mensaje, tipo) {
-            // Remover mensajes anteriores
-            $('.alert-temp').remove();
-            
-            var alertHtml = '<div class="alert alert-' + tipo + ' alert-dismissible fade show alert-temp" role="alert">' +
-                           mensaje +
-                           '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
-                           '</div>';
-            
-            // Insertar al inicio del contenedor de imágenes
-            $('#imagenes-container').prepend(alertHtml);
-            
-            // Auto-ocultar después de 3 segundos
-            setTimeout(function() {
-                $('.alert-temp').fadeOut();
-            }, 3000);
-        }
-
-        // Google Maps functionality
-        @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
-        {
-            <text>
-        function initMap() {
-            var location = { lat: @Model.Latitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture), lng: @Model.Longitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) };
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 15,
-                center: location
-            });
-            var marker = new google.maps.Marker({
-                position: location,
-                map: map,
-                title: '@Html.Raw(Model.Direccion?.Replace("'", "\\'"))'
-            });
-        }
-
-        // Cargar Google Maps cuando el documento esté listo
-        $(document).ready(function() {
-            if (typeof google !== 'undefined' && google.maps) {
-                initMap();
-            } else {
-                // Cargar Google Maps API si no está disponible
-                var script = document.createElement('script');
-                script.src = 'https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap';
-                script.async = true;
-                script.defer = true;
-                document.head.appendChild(script);
-            }
-        });
-            </text>
-        }
+        // Initialize InmuebleEditManager with model data
+        inmuebleEditManager = new InmuebleEditManager(
+            @Model.Id,
+            '@Model.Provincia',
+            '@Model.Localidad',
+            @(Model.Latitud?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "null"),
+            @(Model.Longitud?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "null"),
+            '@Html.Raw(Model.Direccion?.Replace("'", "\\'"))'
+        );
     </script>
 }

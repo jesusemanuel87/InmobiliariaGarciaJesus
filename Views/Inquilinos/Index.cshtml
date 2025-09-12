@@ -1,5 +1,3 @@
-@model IEnumerable<InmobiliariaGarciaJesus.Models.Inquilino>
-
 @{
     ViewData["Title"] = "Inquilinos";
 }
@@ -9,9 +7,9 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2><i class="fas fa-users"></i> Inquilinos</h2>
-                <a asp-action="Create" class="btn btn-primary">
+                <button type="button" id="btnCreateInquilino" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Nuevo Inquilino
-                </a>
+                </button>
             </div>
 
             @if (TempData["Success"] != null)
@@ -32,72 +30,54 @@
 
             <div class="card">
                 <div class="card-body">
-                    @if (Model.Any())
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>@Html.DisplayNameFor(model => model.Dni)</th>
-                                        <th>@Html.DisplayNameFor(model => model.NombreCompleto)</th>
-                                        <th>@Html.DisplayNameFor(model => model.Email)</th>
-                                        <th>@Html.DisplayNameFor(model => model.Telefono)</th>
-                                        <th>@Html.DisplayNameFor(model => model.FechaCreacion)</th>
-                                        <th>@Html.DisplayNameFor(model => model.Estado)</th>
-                                        <th class="text-center">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var item in Model)
-                                    {
-                                        <tr>
-                                            <td>@Html.DisplayFor(modelItem => item.Dni)</td>
-                                            <td>@Html.DisplayFor(modelItem => item.NombreCompleto)</td>
-                                            <td>@Html.DisplayFor(modelItem => item.Email)</td>
-                                            <td>@Html.DisplayFor(modelItem => item.Telefono)</td>
-                                            <td>@item.FechaCreacion.ToString("dd/MM/yyyy")</td>
-                                            <td>
-                                                @if (item.Estado)
-                                                {
-                                                    <span class="badge bg-success">Activo</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary">Inactivo</span>
-                                                }
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="btn-group" role="group">
-                                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm me-1" title="Ver detalles">
-                                                        <i class="fas fa-eye me-1"></i>
-                                                    </a>
-                                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm me-1" title="Editar">
-                                                        <i class="fas fa-edit me-1"></i>
-                                                    </a>
-                                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm" title="Eliminar">
-                                                        <i class="fas fa-trash me-1"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="text-center py-5">
-                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
-                            <h4 class="text-muted">No hay inquilinos registrados</h4>
-                            <p class="text-muted">Comienza agregando el primer inquilino</p>
-                            <a asp-action="Create" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Agregar Inquilino
-                            </a>
-                        </div>
-                    }
+                    <div class="table-responsive">
+                        <table id="inquilinosTable" class="table table-striped table-hover w-100">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>DNI</th>
+                                    <th>Nombre Completo</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                    <th>Dirección</th>
+                                    <th>Fecha Creación</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-center no-sort">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- DataTables will populate this -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Alert Container -->
+<div id="alertContainer"></div>
+
+<!-- Modal Container -->
+<div id="modalContainer"></div>
+
+@section Scripts {
+    <!-- DataTables CSS and JS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+    
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script src="~/js/shared/datatables-config.js"></script>
+    
+    <!-- Inquilino Module Scripts (load in order) -->
+    <script src="~/js/Inquilino/inquilino-utils.js"></script>
+    <script src="~/js/Inquilino/inquilino-datatables.js"></script>
+    <script src="~/js/Inquilino/inquilino-modals.js"></script>
+    <script src="~/js/Inquilino/inquilino-manager.js"></script>
+    <script src="~/js/Inquilino/index.js"></script>
+}

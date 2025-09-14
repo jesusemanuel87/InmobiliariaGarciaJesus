@@ -3,17 +3,18 @@ using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Repositories;
 using InmobiliariaGarciaJesus.Services;
 using InmobiliariaGarciaJesus.Attributes;
+using System.Text.Json;
 
 namespace InmobiliariaGarciaJesus.Controllers
 {
     [AuthorizeMultipleRoles(RolUsuario.Empleado, RolUsuario.Administrador, RolUsuario.Propietario, RolUsuario.Inquilino)]
     public class PagosController : Controller
     {
-        private readonly IRepository<Pago> _pagoRepository;
+        private readonly PagoRepository _pagoRepository;
         private readonly IRepository<Contrato> _contratoRepository;
         private readonly IPagoService _pagoService;
 
-        public PagosController(IRepository<Pago> pagoRepository, IRepository<Contrato> contratoRepository, IPagoService pagoService)
+        public PagosController(PagoRepository pagoRepository, IRepository<Contrato> contratoRepository, IPagoService pagoService)
         {
             _pagoRepository = pagoRepository;
             _contratoRepository = contratoRepository;
@@ -27,28 +28,149 @@ namespace InmobiliariaGarciaJesus.Controllers
             {
                 // Actualizar estados automáticamente antes de mostrar
                 await _pagoService.ActualizarEstadosPagosAsync();
-                
-                // Esperar un momento para asegurar que los cambios se persistan
-                await Task.Delay(100);
-                
-                // Forzar recarga desde la base de datos después de actualizar
-                var pagos = await _pagoRepository.GetAllAsync();
-                
-                // Debug: Log para verificar multas en la vista
-                foreach (var pago in pagos.Where(p => p.Multas > 0))
-                {
-                    System.Diagnostics.Debug.WriteLine($"Vista Pagos - Pago {pago.Id}: Multa ${pago.Multas}");
-                }
-                
-                // Ordenar por fecha de vencimiento para consistencia
-                var pagosOrdenados = pagos.OrderBy(p => p.FechaVencimiento).ToList();
-                
-                return View(pagosOrdenados);
+                return View();
             }
             catch (Exception ex)
             {
                 TempData["Error"] = $"Error al cargar los pagos: {ex.Message}";
-                return View(new List<Pago>());
+                return View();
+            }
+        }
+
+        // POST: Pagos/GetPagosData - DataTables AJAX endpoint
+        [HttpPost]
+        public async Task<IActionResult> GetPagosData([FromBody] JsonElement request)
+        {
+            try
+            {
+                // Update payment states before loading data
+                await _pagoService.ActualizarEstadosPagosAsync();
+                
+                var pagosWithRelatedData = await _pagoRepository.GetAllWithRelatedDataAsync();
+                
+                // Parse DataTables parameters
+                int draw = request.TryGetProperty("draw", out var drawProp) ? drawProp.GetInt32() : 0;
+                int start = request.TryGetProperty("start", out var startProp) ? startProp.GetInt32() : 0;
+                int length = request.TryGetProperty("length", out var lengthProp) ? lengthProp.GetInt32() : 10;
+                
+                string searchValue = "";
+                if (request.TryGetProperty("search", out var searchProp) && 
+                    searchProp.TryGetProperty("value", out var searchValueProp))
+                {
+                    searchValue = searchValueProp.GetString() ?? "";
+                }
+                
+                // Get order parameters
+                int orderColumn = 0;
+                string orderDirection = "asc";
+                if (request.TryGetProperty("order", out var orderProp) && orderProp.ValueKind == JsonValueKind.Array)
+                {
+                    var orderArray = orderProp.EnumerateArray().FirstOrDefault();
+                    if (orderArray.ValueKind != JsonValueKind.Undefined)
+                    {
+                        orderColumn = orderArray.TryGetProperty("column", out var colProp) ? colProp.GetInt32() : 0;
+                        orderDirection = orderArray.TryGetProperty("dir", out var dirProp) ? dirProp.GetString() ?? "asc" : "asc";
+                    }
+                }
+
+                var allPagos = pagosWithRelatedData.ToList();
+                var totalRecords = allPagos.Count;
+                
+                // Apply search filter
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    allPagos = allPagos.Where(p => 
+                        ((dynamic)p).ContratoId.ToString().Contains(searchValue) ||
+                        ((dynamic)p).Estado.ToString().Contains(searchValue, StringComparison.OrdinalIgnoreCase) ||
+                        (((dynamic)p).InquilinoNombre?.ToString()?.Contains(searchValue, StringComparison.OrdinalIgnoreCase) == true) ||
+                        (((dynamic)p).InmuebleDireccion?.ToString()?.Contains(searchValue, StringComparison.OrdinalIgnoreCase) == true)
+                    ).ToList();
+                }
+
+                var filteredRecords = allPagos.Count;
+
+                // Apply sorting
+                switch (orderColumn)
+                {
+                    case 0: // ContratoId
+                        allPagos = orderDirection == "asc" 
+                            ? allPagos.OrderBy(p => ((dynamic)p).ContratoId).ToList()
+                            : allPagos.OrderByDescending(p => ((dynamic)p).ContratoId).ToList();
+                        break;
+                    case 1: // Inquilino
+                        allPagos = orderDirection == "asc" 
+                            ? allPagos.OrderBy(p => ((dynamic)p).InquilinoNombre).ToList()
+                            : allPagos.OrderByDescending(p => ((dynamic)p).InquilinoNombre).ToList();
+                        break;
+                    case 2: // Inmueble
+                        allPagos = orderDirection == "asc" 
+                            ? allPagos.OrderBy(p => ((dynamic)p).InmuebleDireccion).ToList()
+                            : allPagos.OrderByDescending(p => ((dynamic)p).InmuebleDireccion).ToList();
+                        break;
+                    case 3: // FechaVencimiento
+                        allPagos = orderDirection == "asc" 
+                            ? allPagos.OrderBy(p => ((dynamic)p).FechaVencimiento).ToList()
+                            : allPagos.OrderByDescending(p => ((dynamic)p).FechaVencimiento).ToList();
+                        break;
+                    case 4: // Importe
+                        allPagos = orderDirection == "asc" 
+                            ? allPagos.OrderBy(p => ((dynamic)p).Importe).ToList()
+                            : allPagos.OrderByDescending(p => ((dynamic)p).Importe).ToList();
+                        break;
+                    case 5: // Multas
+                        allPagos = orderDirection == "asc" 
+                            ? allPagos.OrderBy(p => ((dynamic)p).Multas).ToList()
+                            : allPagos.OrderByDescending(p => ((dynamic)p).Multas).ToList();
+                        break;
+                    case 6: // Intereses
+                        allPagos = orderDirection == "asc" 
+                            ? allPagos.OrderBy(p => ((dynamic)p).Intereses).ToList()
+                            : allPagos.OrderByDescending(p => ((dynamic)p).Intereses).ToList();
+                        break;
+                    case 7: // Total (calculated)
+                        allPagos = orderDirection == "asc" 
+                            ? allPagos.OrderBy(p => ((dynamic)p).Importe + ((dynamic)p).Multas + ((dynamic)p).Intereses).ToList()
+                            : allPagos.OrderByDescending(p => ((dynamic)p).Importe + ((dynamic)p).Multas + ((dynamic)p).Intereses).ToList();
+                        break;
+                    case 8: // Estado
+                        allPagos = orderDirection == "asc" 
+                            ? allPagos.OrderBy(p => ((dynamic)p).Estado).ToList()
+                            : allPagos.OrderByDescending(p => ((dynamic)p).Estado).ToList();
+                        break;
+                    default:
+                        allPagos = allPagos.OrderBy(p => ((dynamic)p).FechaVencimiento).ToList();
+                        break;
+                }
+                
+                // Apply pagination
+                var pagedData = allPagos
+                    .Skip(start)
+                    .Take(length)
+                    .Select(p => new
+                    {
+                        id = ((dynamic)p).Id,
+                        contratoId = ((dynamic)p).ContratoId,
+                        inquilinoNombre = ((dynamic)p).InquilinoNombre ?? "Sin inquilino",
+                        inmuebleDireccion = ((dynamic)p).InmuebleDireccion ?? "Sin dirección",
+                        fechaVencimiento = ((dynamic)p).FechaVencimiento,
+                        monto = ((dynamic)p).Importe,
+                        multas = ((dynamic)p).Multas,
+                        intereses = ((dynamic)p).Intereses,
+                        estado = ((dynamic)p).Estado.ToString()
+                    })
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = filteredRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
             }
         }
 
@@ -240,30 +362,6 @@ namespace InmobiliariaGarciaJesus.Controllers
             }
         }
 
-        // POST: Pagos/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            try
-            {
-                var success = await _pagoRepository.DeleteAsync(id);
-                if (success)
-                {
-                    TempData["Success"] = "Pago eliminado exitosamente";
-                }
-                else
-                {
-                    TempData["Error"] = "No se pudo eliminar el pago";
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = $"Error al eliminar el pago: {ex.Message}";
-                return RedirectToAction(nameof(Index));
-            }
-        }
 
         // GET: Pagos/ByContrato/5
         public async Task<IActionResult> ByContrato(int contratoId)
@@ -396,10 +494,112 @@ namespace InmobiliariaGarciaJesus.Controllers
         private async Task LoadContratosViewBag()
         {
             var contratos = await _contratoRepository.GetAllAsync();
-            ViewBag.Contratos = contratos.Select(c => new { 
-                Value = c.Id, 
-                Text = $"Contrato #{c.Id} - {c.Estado}" 
+            ViewBag.Contratos = contratos.Select(c => new 
+            {
+                Id = c.Id,
+                Display = $"Contrato #{c.Id} - {c.Inquilino?.NombreCompleto ?? "Sin inquilino"}"
             }).ToList();
+        }
+
+        // Modal endpoints for AJAX
+        [HttpGet]
+        public async Task<IActionResult> DetailsModal(int id)
+        {
+            try
+            {
+                var pago = await _pagoRepository.GetByIdAsync(id);
+                if (pago == null)
+                {
+                    return NotFound();
+                }
+
+                // Get related data
+                var contrato = await _contratoRepository.GetByIdAsync(pago.ContratoId);
+                ViewBag.ContratoInfo = contrato != null ? 
+                    $"Contrato #{contrato.Id} - {contrato.Inquilino?.NombreCompleto}" : 
+                    $"Contrato #{pago.ContratoId}";
+
+                return PartialView("_DetailsModal", pago);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> FormModal(int? id)
+        {
+            try
+            {
+                Pago pago;
+                if (id.HasValue)
+                {
+                    pago = await _pagoRepository.GetByIdAsync(id.Value);
+                    if (pago == null)
+                    {
+                        return NotFound();
+                    }
+                }
+                else
+                {
+                    pago = new Pago();
+                }
+
+                await LoadContratosViewBag();
+                return PartialView("_FormModal", pago);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DeleteModal(int id)
+        {
+            try
+            {
+                var pago = await _pagoRepository.GetByIdAsync(id);
+                if (pago == null)
+                {
+                    return NotFound();
+                }
+
+                // Get related data
+                var contrato = await _contratoRepository.GetByIdAsync(pago.ContratoId);
+                ViewBag.ContratoInfo = contrato != null ? 
+                    $"Contrato #{contrato.Id} - {contrato.Inquilino?.NombreCompleto}" : 
+                    $"Contrato #{pago.ContratoId}";
+
+                return PartialView("_DeleteModal", pago);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            try
+            {
+                var success = await _pagoRepository.DeleteAsync(id);
+                if (success)
+                {
+                    return Json(new { success = true, message = "Pago eliminado exitosamente" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "No se pudo eliminar el pago" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
         }
     }
 }

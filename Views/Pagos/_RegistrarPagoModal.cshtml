@@ -1,66 +1,44 @@
-@model InmobiliariaGarciaJesus.Models.PagoRegistroViewModel
+@model PagoRegistroViewModel
 
 <div class="modal fade" id="registrarPagoModal" tabindex="-1" aria-labelledby="registrarPagoModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header bg-success text-white">
                 <h5 class="modal-title" id="registrarPagoModalLabel">
-                    <i class="fas fa-dollar-sign me-2"></i>Registrar Pago #@Model.Numero
+                    <i class="fas fa-dollar-sign me-2"></i>Registrar Pago
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
-            <form id="registrarPagoForm" method="post" action="@Url.Action("RegistrarPago", "Pagos", new { id = Model.Id })">
+            <form id="registrarPagoForm" action="/Pagos/RegistrarPago/@Model.Id" method="post">
                 @Html.AntiForgeryToken()
-                <input asp-for="Id" type="hidden" />
-                <input asp-for="Numero" type="hidden" />
-                <input asp-for="ContratoId" type="hidden" />
-                <input asp-for="Importe" type="hidden" />
-                <input asp-for="Intereses" type="hidden" />
-                <input asp-for="Multas" type="hidden" />
-                <input asp-for="TotalAPagar" type="hidden" />
-                <input asp-for="FechaVencimiento" type="hidden" />
-                <input asp-for="Estado" type="hidden" />
-                <input asp-for="FechaCreacion" type="hidden" />
+                @Html.HiddenFor(m => m.Id)
                 
                 <div class="modal-body">
                     <!-- Información del Pago -->
-                    <div class="row mb-4">
+                    <div class="row mb-3">
                         <div class="col-12">
                             <div class="card bg-light">
-                                <div class="card-header">
-                                    <h6 class="mb-0 text-primary">
-                                        <i class="fas fa-info-circle me-2"></i>Información del Pago
-                                    </h6>
-                                </div>
                                 <div class="card-body">
+                                    <h6 class="card-title"><i class="fas fa-info-circle me-2"></i>Información del Pago</h6>
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <p class="mb-2"><strong>Número:</strong> #@Model.Numero</p>
-                                            <p class="mb-2"><strong>Contrato:</strong> @Model.ContratoInfo</p>
-                                            <p class="mb-2"><strong>Importe Base:</strong> 
-                                                <span class="text-success fw-bold">$@Model.Importe.ToString("N0")</span>
-                                            </p>
+                                            <p><strong>Número de Pago:</strong> #@Model.Numero</p>
+                                            <p><strong>@Model.ContratoInfo</strong></p>
+                                            <p><strong>Fecha de Vencimiento:</strong> @Model.FechaVencimiento.ToString("dd/MM/yyyy")</p>
                                         </div>
                                         <div class="col-md-6">
-                                            <p class="mb-2"><strong>Fecha de Vencimiento:</strong> 
-                                                <span class="text-info">@Model.FechaVencimiento.ToString("dd/MM/yyyy")</span>
-                                            </p>
-                                            <p class="mb-2"><strong>Estado Actual:</strong> 
-                                                @switch (Model.Estado)
-                                                {
-                                                    case InmobiliariaGarciaJesus.Models.EstadoPago.Pendiente:
-                                                        <span class="badge bg-warning text-dark">
-                                                            <i class="fas fa-clock me-1"></i> Pendiente
-                                                        </span>
-                                                        break;
-                                                    case InmobiliariaGarciaJesus.Models.EstadoPago.Vencido:
-                                                        <span class="badge bg-danger">
-                                                            <i class="fas fa-exclamation-triangle me-1"></i> Vencido
-                                                        </span>
-                                                        break;
-                                                }
-                                            </p>
+                                            <p><strong>Importe:</strong> <span class="text-success fw-bold">$@Model.Importe.ToString("N2")</span></p>
+                                            @if (Model.Intereses > 0)
+                                            {
+                                                <p><strong>Intereses:</strong> <span class="text-warning fw-bold">$@Model.Intereses.ToString("N2")</span></p>
+                                            }
+                                            @if (Model.Multas > 0)
+                                            {
+                                                <p><strong>Multas:</strong> <span class="text-danger fw-bold">$@Model.Multas.ToString("N2")</span></p>
+                                            }
+                                            <hr>
+                                            <p><strong>Total a Pagar:</strong> <span class="text-primary fw-bold fs-5">$@Model.TotalAPagar.ToString("N2")</span></p>
                                         </div>
                                     </div>
                                 </div>
@@ -68,109 +46,52 @@
                         </div>
                     </div>
 
-                    <!-- Cálculo de Intereses y Multas -->
-                    @if (Model.Intereses > 0 || Model.Multas > 0)
-                    {
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <div class="card border-warning">
-                                    <div class="card-header bg-warning text-dark">
-                                        <h6 class="mb-0">
-                                            <i class="fas fa-calculator me-2"></i>Cálculo de Intereses y Multas
-                                        </h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-4 text-center">
-                                                <div class="border-end">
-                                                    <h6 class="text-muted">Intereses</h6>
-                                                    <h5 class="text-warning">
-                                                        $@Model.Intereses.ToString("N0")
-                                                    </h5>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4 text-center">
-                                                <div class="border-end">
-                                                    <h6 class="text-muted">Multas</h6>
-                                                    <h5 class="text-danger">
-                                                        <i class="fas fa-exclamation-circle me-1"></i>
-                                                        $@Model.Multas.ToString("N0")
-                                                    </h5>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4 text-center">
-                                                <h6 class="text-muted">Total a Pagar</h6>
-                                                <h4 class="text-primary fw-bold">
-                                                    $@Model.TotalAPagar.ToString("N0")
-                                                </h4>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <div class="card border-success">
-                                    <div class="card-body text-center">
-                                        <h5 class="text-success mb-0">
-                                            <i class="fas fa-check-circle me-2"></i>
-                                            Total a Pagar: @Model.TotalAPagar.ToString("C0")
-                                        </h5>
-                                        <small class="text-muted">Sin intereses ni multas aplicables</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
-
-                    <!-- Campos del Formulario -->
+                    <!-- Formulario de Registro -->
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label asp-for="MetodoPago" class="form-label required">
-                                    <i class="fas fa-credit-card me-1"></i>Método de Pago <span class="text-danger">*</span>
+                                <label for="MetodoPago" class="form-label">
+                                    <i class="fas fa-credit-card me-1"></i>Método de Pago *
                                 </label>
-                                <select asp-for="MetodoPago" class="form-select" required>
-                                    <option value="">Seleccionar método...</option>
-                                    <option value="MercadoPago">💳 MercadoPago</option>
-                                    <option value="Transferencia">🏦 Transferencia</option>
-                                    <option value="Efectivo">💵 Efectivo</option>
-                                    <option value="Cheque">📄 Cheque</option>
-                                    <option value="Otro">🔧 Otro</option>
+                                <select class="form-select" id="MetodoPago" name="MetodoPago" required>
+                                    <option value="">Seleccione un método</option>
+                                    <option value="Efectivo">Efectivo</option>
+                                    <option value="Transferencia">Transferencia Bancaria</option>
+                                    <option value="Cheque">Cheque</option>
+                                    <option value="TarjetaCredito">Tarjeta de Crédito</option>
+                                    <option value="TarjetaDebito">Tarjeta de Débito</option>
                                 </select>
-                                <span asp-validation-for="MetodoPago" class="text-danger"></span>
+                                <div class="invalid-feedback">
+                                    Debe seleccionar un método de pago.
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="fas fa-calendar-check me-1"></i>Fecha de Pago
+                                <label for="FechaPago" class="form-label">
+                                    <i class="fas fa-calendar me-1"></i>Fecha de Pago
                                 </label>
-                                <input type="text" class="form-control" value="@DateTime.Today.ToString("dd/MM/yyyy")" readonly>
-                                <small class="text-muted">Se registrará con la fecha de hoy</small>
+                                <input type="date" class="form-control" id="FechaPago" name="FechaPago" 
+                                       value="@DateTime.Today.ToString("yyyy-MM-dd")" readonly>
+                                <small class="form-text text-muted">Se registrará con la fecha actual</small>
                             </div>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Observaciones" class="form-label">
-                            <i class="fas fa-sticky-note me-1"></i>Observaciones
-                        </label>
-                        <textarea asp-for="Observaciones" class="form-control" rows="3" 
-                                  placeholder="Ingrese observaciones sobre el pago (opcional)..."></textarea>
-                        <span asp-validation-for="Observaciones" class="text-danger"></span>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Confirmación:</strong> Al registrar este pago se marcará como pagado con la fecha de hoy y no podrá ser modificado posteriormente.
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="Observaciones" class="form-label">
+                                    <i class="fas fa-sticky-note me-1"></i>Observaciones
+                                </label>
+                                <textarea class="form-control" id="Observaciones" name="Observaciones" 
+                                          rows="3" maxlength="500" placeholder="Observaciones adicionales (opcional)">@Model.Observaciones</textarea>
+                                <div class="form-text">Máximo 500 caracteres</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
+                
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-times me-1"></i>Cancelar
@@ -183,5 +104,3 @@
         </div>
     </div>
 </div>
-
-<!-- JavaScript is now handled in pagos.js -->

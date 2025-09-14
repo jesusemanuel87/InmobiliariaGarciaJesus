@@ -1,5 +1,3 @@
-@model IEnumerable<InmobiliariaGarciaJesus.Models.Pago>
-
 @{
     ViewData["Title"] = "Pagos";
 }
@@ -9,9 +7,6 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2><i class="fas fa-money-bill-wave"></i> Pagos</h2>
-                <a asp-action="Create" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Nuevo Pago
-                </a>
             </div>
 
             @if (TempData["Success"] != null)
@@ -30,161 +25,98 @@
                 </div>
             }
 
+            <!-- Filtros -->
+            <div class="card shadow mb-3">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="filtroEstado" class="form-label">
+                                <i class="fas fa-filter me-1"></i>Estado
+                            </label>
+                            <select id="filtroEstado" class="form-select">
+                                <option value="">Todos los estados</option>
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="Vencido">Vencido</option>
+                                <option value="Pagado">Pagado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtroMes" class="form-label">
+                                <i class="fas fa-calendar me-1"></i>Mes de Vencimiento
+                            </label>
+                            <select id="filtroMes" class="form-select">
+                                <option value="">Todos los meses</option>
+                                <option value="1">Enero</option>
+                                <option value="2">Febrero</option>
+                                <option value="3">Marzo</option>
+                                <option value="4">Abril</option>
+                                <option value="5">Mayo</option>
+                                <option value="6">Junio</option>
+                                <option value="7">Julio</option>
+                                <option value="8">Agosto</option>
+                                <option value="9">Septiembre</option>
+                                <option value="10">Octubre</option>
+                                <option value="11">Noviembre</option>
+                                <option value="12">Diciembre</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtroAnio" class="form-label">
+                                <i class="fas fa-calendar-alt me-1"></i>Año
+                            </label>
+                            <select id="filtroAnio" class="form-select">
+                                <option value="">Todos los años</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtroMonto" class="form-label">
+                                <i class="fas fa-dollar-sign me-1"></i>Rango de Monto
+                            </label>
+                            <select id="filtroMonto" class="form-select">
+                                <option value="">Todos los montos</option>
+                                <option value="0-50000">$0 - $50,000</option>
+                                <option value="50000-100000">$50,000 - $100,000</option>
+                                <option value="100000-200000">$100,000 - $200,000</option>
+                                <option value="200000-999999999">Más de $200,000</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button type="button" id="limpiarFiltros" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-eraser me-1"></i>Limpiar Filtros
+                            </button>
+                            <button type="button" id="resetearFiltros" class="btn btn-outline-primary">
+                                <i class="fas fa-undo me-1"></i>Valores por Defecto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="card shadow">
                 <div class="card-body">
-                    @if (Model.Any())
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Número</th>
-                                        <th>Contrato</th>
-                                        <th>Importe</th>
-                                        <th>Intereses</th>
-                                        <th>Multas</th>
-                                        <th>Total a Pagar</th>
-                                        <th>Fecha Vencimiento</th>
-                                        <th>Fecha de Pago</th>
-                                        <th>Estado</th>
-                                        <th class="text-center">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var pago in Model)
-                                    {
-                                        <tr>
-                                            <td><strong>#@pago.Numero</strong></td>
-                                            <td>
-                                                <span class="badge bg-info">
-                                                    <i class="fas fa-file-contract"></i> Contrato #@pago.ContratoId
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <strong class="text-success">
-                                                    $@pago.Importe.ToString("N0")
-                                                </strong>
-                                            </td>
-                                            <td>
-                                                @if (pago.Intereses > 0)
-                                                {
-                                                    <span class="text-warning">
-                                                        $@pago.Intereses.ToString("N0")
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted">$0</span>
-                                                }
-                                            </td>
-                                            <td>
-                                                @if (pago.Multas > 0)
-                                                {
-                                                    <span class="text-danger">
-                                                        <i class="fas fa-exclamation-circle"></i>
-                                                        $@pago.Multas.ToString("N0")
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted">$0</span>
-                                                }
-                                            </td>
-                                            <td>
-                                                <strong class="text-primary">
-                                                    $@pago.TotalAPagar.ToString("N0")
-                                                </strong>
-                                            </td>
-                                            <td>
-                                                @if (pago.FechaVencimiento != DateTime.MinValue && pago.FechaVencimiento.Year > 1900)
-                                                {
-                                                    <span class="text-info">
-                                                        <i class="fas fa-calendar-alt"></i>
-                                                        @pago.FechaVencimiento.ToString("dd/MM/yyyy")
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted">
-                                                        <i class="fas fa-calendar-times"></i> Sin fecha
-                                                    </span>
-                                                }
-                                            </td>
-                                            <td>
-                                                @if (pago.FechaPago.HasValue)
-                                                {
-                                                    <span class="text-success">
-                                                        <i class="fas fa-calendar-check"></i>
-                                                        @pago.FechaPago.Value.ToString("dd/MM/yyyy")
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted">
-                                                        <i class="fas fa-calendar-times"></i> Sin fecha
-                                                    </span>
-                                                }
-                                            </td>
-                                            <td>
-                                                @switch (pago.Estado)
-                                                {
-                                                    case InmobiliariaGarciaJesus.Models.EstadoPago.Pendiente:
-                                                        <span class="badge bg-warning text-dark">
-                                                            <i class="fas fa-clock"></i> Pendiente
-                                                        </span>
-                                                        break;
-                                                    case InmobiliariaGarciaJesus.Models.EstadoPago.Pagado:
-                                                        <span class="badge bg-success">
-                                                            <i class="fas fa-check"></i> Pagado
-                                                        </span>
-                                                        break;
-                                                    case InmobiliariaGarciaJesus.Models.EstadoPago.Vencido:
-                                                        <span class="badge bg-danger">
-                                                            <i class="fas fa-exclamation-triangle"></i> Vencido
-                                                        </span>
-                                                        break;
-                                                }
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="btn-group" role="group">
-                                                    @if (pago.Estado != InmobiliariaGarciaJesus.Models.EstadoPago.Pagado)
-                                                    {
-                                                        <button type="button" class="btn btn-success btn-sm me-1 registrar-pago-btn" 
-                                                                data-pago-id="@pago.Id" title="Registrar Pago">
-                                                            <i class="fas fa-dollar-sign"></i>
-                                                        </button>
-                                                    }
-                                                    <a asp-action="Details" asp-route-id="@pago.Id" 
-                                                       class="btn btn-outline-info btn-sm me-1" title="Ver detalles">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    <a asp-action="Edit" asp-route-id="@pago.Id" 
-                                                       class="btn btn-outline-warning btn-sm me-1" title="Editar">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    <a asp-action="Delete" asp-route-id="@pago.Id" 
-                                                       class="btn btn-outline-danger btn-sm" title="Eliminar">
-                                                        <i class="fas fa-trash"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="text-center py-5">
-                            <i class="fas fa-money-bill-wave fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No hay pagos registrados</h5>
-                            <p class="text-muted">Comienza creando tu primer pago</p>
-                            <a asp-action="Create" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Crear Primer Pago
-                            </a>
-                        </div>
-                    }
+                    <div class="table-responsive">
+                        <table id="pagosTable" class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Contrato</th>
+                                    <th>Inquilino</th>
+                                    <th>Inmueble</th>
+                                    <th>Vencimiento</th>
+                                    <th>Monto</th>
+                                    <th>Multas</th>
+                                    <th>Intereses</th>
+                                    <th>Total a Pagar</th>
+                                    <th>Estado</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- DataTables will populate this -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -194,18 +126,39 @@
 <!-- Modal Container -->
 <div id="modalContainer"></div>
 
-<!-- Toast Container -->
-<div class="toast-container position-fixed top-0 end-0 p-3">
+<!-- Toast Notification -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header bg-success text-white">
             <i class="fas fa-check-circle me-2"></i>
             <strong class="me-auto">Éxito</strong>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
         </div>
-        <div class="toast-body" id="toastMessage">
-            Pago registrado exitosamente
+        <div class="toast-body">
+            <span id="toastMessage"></span>
         </div>
     </div>
 </div>
 
-<script src="~/js/pagos.js"></script>
+@section Scripts {
+    <!-- DataTables CSS and JS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+    
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script src="~/js/shared/datatables-config.js"></script>
+    
+    <!-- Pagos Modular Scripts -->
+    <script src="~/js/Pagos/pagos-utilities.js"></script>
+    <script src="~/js/Pagos/pagos-datatables.js"></script>
+    <script src="~/js/Pagos/pagos-modals.js"></script>
+    <script src="~/js/Pagos/pagos-filters.js"></script>
+    <script src="~/js/Pagos/pagos-manager.js"></script>
+    <script src="~/js/Pagos/index.js"></script>
+    
+}

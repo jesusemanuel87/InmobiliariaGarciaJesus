@@ -28,6 +28,7 @@ namespace InmobiliariaGarciaJesus.Controllers
             {
                 // Actualizar estados automáticamente antes de mostrar
                 await _pagoService.ActualizarEstadosPagosAsync();
+                
                 return View();
             }
             catch (Exception ex)
@@ -60,6 +61,14 @@ namespace InmobiliariaGarciaJesus.Controllers
                     searchValue = searchValueProp.GetString() ?? "";
                 }
                 
+                // Parse custom filters
+                string filtroEstado = request.TryGetProperty("filtroEstado", out var estadoProp) ? estadoProp.GetString() ?? "" : "";
+                string filtroEstadoContrato = request.TryGetProperty("filtroEstadoContrato", out var estadoContratoProp) ? estadoContratoProp.GetString() ?? "" : "";
+                string filtroNumeroContrato = request.TryGetProperty("filtroNumeroContrato", out var numeroContratoProp) ? numeroContratoProp.GetString() ?? "" : "";
+                string filtroMes = request.TryGetProperty("filtroMes", out var mesProp) ? mesProp.GetString() ?? "" : "";
+                string filtroAnio = request.TryGetProperty("filtroAnio", out var anioProp) ? anioProp.GetString() ?? "" : "";
+                string filtroMonto = request.TryGetProperty("filtroMonto", out var montoProp) ? montoProp.GetString() ?? "" : "";
+                
                 // Get order parameters
                 int orderColumn = 0;
                 string orderDirection = "asc";
@@ -75,6 +84,56 @@ namespace InmobiliariaGarciaJesus.Controllers
 
                 var allPagos = pagosWithRelatedData.ToList();
                 var totalRecords = allPagos.Count;
+                
+                // Apply custom filters
+                if (!string.IsNullOrEmpty(filtroEstado))
+                {
+                    allPagos = allPagos.Where(p => ((dynamic)p).Estado.ToString().Equals(filtroEstado, StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+                
+                if (!string.IsNullOrEmpty(filtroEstadoContrato))
+                {
+                    allPagos = allPagos.Where(p => ((dynamic)p).EstadoContrato.ToString().Equals(filtroEstadoContrato, StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+                
+                if (!string.IsNullOrEmpty(filtroNumeroContrato) && int.TryParse(filtroNumeroContrato, out int numeroContrato))
+                {
+                    allPagos = allPagos.Where(p => ((dynamic)p).ContratoId == numeroContrato).ToList();
+                }
+                
+                if (!string.IsNullOrEmpty(filtroMes) || !string.IsNullOrEmpty(filtroAnio))
+                {
+                    allPagos = allPagos.Where(p => {
+                        var fechaVencimiento = ((dynamic)p).FechaVencimiento;
+                        if (fechaVencimiento != null)
+                        {
+                            var fecha = (DateTime)fechaVencimiento;
+                            bool mesMatch = string.IsNullOrEmpty(filtroMes) || fecha.Month == int.Parse(filtroMes);
+                            bool anioMatch = string.IsNullOrEmpty(filtroAnio) || fecha.Year == int.Parse(filtroAnio);
+                            return mesMatch && anioMatch;
+                        }
+                        return false;
+                    }).ToList();
+                }
+                
+                if (!string.IsNullOrEmpty(filtroMonto))
+                {
+                    var rangoParts = filtroMonto.Split('-');
+                    if (rangoParts.Length == 2 && 
+                        decimal.TryParse(rangoParts[0], out decimal minMonto) && 
+                        decimal.TryParse(rangoParts[1], out decimal maxMonto))
+                    {
+                        allPagos = allPagos.Where(p => {
+                            var importe = ((dynamic)p).Importe;
+                            if (importe != null)
+                            {
+                                var monto = (decimal)importe;
+                                return monto >= minMonto && monto <= maxMonto;
+                            }
+                            return false;
+                        }).ToList();
+                    }
+                }
                 
                 // Apply search filter
                 if (!string.IsNullOrEmpty(searchValue))
@@ -312,7 +371,6 @@ namespace InmobiliariaGarciaJesus.Controllers
                     {
                         pagoOriginal.FechaPago = DateTime.Today;
                         // NO calcular intereses/multas para preservar multas por finalización temprana
-                        Console.WriteLine($"[DEBUG EDIT] Pago {id} marcado como pagado, preservando multas: {pagoOriginal.Multas}");
                     }
 
                     var success = await _pagoRepository.UpdateAsync(pagoOriginal);
@@ -405,7 +463,6 @@ namespace InmobiliariaGarciaJesus.Controllers
                 // await _pagoService.CalcularInteresesYMultasAsync(id);
                 
                 // Usar el pago tal como está en la base de datos
-                Console.WriteLine($"[DEBUG MODAL] Pago {id} - Importe: {pago.Importe}, Intereses: {pago.Intereses}, Multas: {pago.Multas}, Total: {pago.TotalAPagar}");
                 if (pago == null)
                 {
                     return Json(new { success = false, message = "Pago no encontrado después de actualizar" });

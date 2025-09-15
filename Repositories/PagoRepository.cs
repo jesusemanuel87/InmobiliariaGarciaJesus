@@ -125,8 +125,6 @@ namespace InmobiliariaGarciaJesus.Repositories
                              Importe = @Importe, Intereses = @Intereses, Multas = @Multas, FechaVencimiento = @FechaVencimiento,
                              Estado = @Estado, metodo_pago = @MetodoPago, observaciones = @Observaciones
                          WHERE Id = @Id";
-            
-            Console.WriteLine($"[DEBUG SQL] Actualizando pago {pago.Id} con Multa: {pago.Multas}");
 
             using var command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@Id", pago.Id);
@@ -142,15 +140,6 @@ namespace InmobiliariaGarciaJesus.Repositories
             command.Parameters.AddWithValue("@Observaciones", !string.IsNullOrEmpty(pago.Observaciones) ? pago.Observaciones : DBNull.Value);
 
             var rowsAffected = await command.ExecuteNonQueryAsync();
-            Console.WriteLine($"[DEBUG SQL] Filas afectadas: {rowsAffected}");
-            
-            // Verificar la actualización ejecutando una consulta SELECT
-            var verifyQuery = "SELECT Multas FROM pagos WHERE Id = @Id";
-            using var verifyCommand = new MySqlCommand(verifyQuery, connection);
-            verifyCommand.Parameters.AddWithValue("@Id", pago.Id);
-            var multaEnDB = await verifyCommand.ExecuteScalarAsync();
-            Console.WriteLine($"[DEBUG SQL] Multa verificada en DB: {multaEnDB}");
-            
             return rowsAffected > 0;
         }
 
@@ -220,7 +209,8 @@ namespace InmobiliariaGarciaJesus.Repositories
                             p.Id, p.Numero, p.ContratoId, p.Importe, p.Intereses, p.Multas, 
                             p.FechaVencimiento, p.FechaPago, p.Estado, p.metodo_pago, p.observaciones, p.FechaCreacion,
                             CONCAT(i.Nombre, ' ', i.Apellido) as InquilinoNombre,
-                            inm.Direccion as InmuebleDireccion
+                            inm.Direccion as InmuebleDireccion,
+                            c.Estado as EstadoContrato
                          FROM Pagos p
                          INNER JOIN Contratos c ON p.ContratoId = c.Id
                          INNER JOIN Inquilinos i ON c.InquilinoId = i.Id
@@ -246,7 +236,8 @@ namespace InmobiliariaGarciaJesus.Repositories
                     Observaciones = reader["observaciones"]?.ToString(),
                     FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
                     InquilinoNombre = reader["InquilinoNombre"]?.ToString(),
-                    InmuebleDireccion = reader["InmuebleDireccion"]?.ToString()
+                    InmuebleDireccion = reader["InmuebleDireccion"]?.ToString(),
+                    EstadoContrato = Enum.TryParse<EstadoContrato>(reader["EstadoContrato"]?.ToString(), out var estadoContrato) ? estadoContrato : EstadoContrato.Activo
                 });
             }
             

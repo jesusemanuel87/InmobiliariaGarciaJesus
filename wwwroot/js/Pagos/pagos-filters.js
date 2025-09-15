@@ -2,6 +2,8 @@
 class PagosFilters {
     constructor() {
         this.filtroEstado = document.getElementById('filtroEstado');
+        this.filtroEstadoContrato = document.getElementById('filtroEstadoContrato');
+        this.filtroNumeroContrato = document.getElementById('filtroNumeroContrato');
         this.filtroMes = document.getElementById('filtroMes');
         this.filtroAnio = document.getElementById('filtroAnio');
         this.filtroMonto = document.getElementById('filtroMonto');
@@ -47,6 +49,8 @@ class PagosFilters {
     bindEvents() {
         // Bind filter change events
         this.filtroEstado.addEventListener('change', () => this.applyFilters());
+        this.filtroEstadoContrato.addEventListener('change', () => this.applyFilters());
+        this.filtroNumeroContrato.addEventListener('input', () => this.applyFilters());
         this.filtroMes.addEventListener('change', () => this.applyFilters());
         this.filtroAnio.addEventListener('change', () => this.applyFilters());
         this.filtroMonto.addEventListener('change', () => this.applyFilters());
@@ -60,76 +64,24 @@ class PagosFilters {
 
     applyFilters() {
         if (window.pagosManager && window.pagosManager.table) {
-            const table = window.pagosManager.table;
-            
-            // Apply filters to DataTables
-            table.columns().search(''); // Clear previous searches
-            
-            // Estado filter - column index 8 (Estado)
-            if (this.filtroEstado.value) {
-                table.column(8).search(this.filtroEstado.value);
-            }
-            
-            // Custom search function for date and amount filters
-            $.fn.dataTable.ext.search.push((settings, data, dataIndex) => {
-                if (settings.nTable.id !== 'pagosTable') return true;
-                
-                // Month/Year filter on Vencimiento column (index 3)
-                const fechaVencimiento = data[3];
-                if (this.filtroMes.value || this.filtroAnio.value) {
-                    // Extract date from badge HTML
-                    const fechaMatch = fechaVencimiento.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-                    if (fechaMatch) {
-                        const [, day, month, year] = fechaMatch;
-                        
-                        if (this.filtroMes.value && parseInt(month) !== parseInt(this.filtroMes.value)) {
-                            return false;
-                        }
-                        
-                        if (this.filtroAnio.value && parseInt(year) !== parseInt(this.filtroAnio.value)) {
-                            return false;
-                        }
-                    }
-                }
-                
-                // Amount range filter on Monto column (index 4)
-                if (this.filtroMonto.value) {
-                    const montoText = data[4];
-                    // Extract amount from formatted HTML
-                    const montoMatch = montoText.match(/\$([\d,.]+)/);
-                    if (montoMatch) {
-                        const monto = parseFloat(montoMatch[1].replace(/[,.]/g, ''));
-                        const [min, max] = this.filtroMonto.value.split('-').map(v => parseFloat(v));
-                        
-                        if (monto < min || monto > max) {
-                            return false;
-                        }
-                    }
-                }
-                
-                return true;
-            });
-            
-            table.draw();
+            // For server-side processing, just reload the table
+            // The filters will be sent automatically via the AJAX data function
+            window.pagosManager.table.ajax.reload();
         }
     }
 
     clearFilters() {
         // Reset all filter selects to empty values
         this.filtroEstado.value = '';
+        this.filtroEstadoContrato.value = '';
+        this.filtroNumeroContrato.value = '';
         this.filtroMes.value = '';
         this.filtroAnio.value = '';
         this.filtroMonto.value = '';
         
-        // Clear DataTables filters
+        // Reload table with cleared filters
         if (window.pagosManager && window.pagosManager.table) {
-            // Remove custom search functions
-            $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(fn => 
-                !fn.toString().includes('pagosTable')
-            );
-            
-            // Clear column searches and redraw
-            window.pagosManager.table.columns().search('').draw();
+            window.pagosManager.table.ajax.reload();
         }
     }
 
@@ -140,10 +92,9 @@ class PagosFilters {
 
     // Method to be called when DataTables is reinitialized
     reinitialize() {
-        // Clear any existing custom search functions for this table
-        $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(fn => 
-            !fn.toString().includes('pagosTable')
-        );
+        // No need to clear search functions for server-side processing
+        // Just ensure default filters are applied
+        this.setDefaultFilters();
     }
 }
 

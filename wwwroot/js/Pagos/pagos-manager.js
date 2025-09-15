@@ -28,12 +28,18 @@ class PagosIndexManager {
         }
 
         this.table = $('#pagosTable').DataTable({
-            ...DataTablesConfig.getDefaultConfig(),
+            processing: true,
+            serverSide: true,
+            responsive: true,
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
             columns: PagosDataTablesConfig.getColumns(),
             ajax: PagosDataTablesConfig.getAjaxConfig(),
             order: PagosDataTablesConfig.getDefaultOrder(),
-            responsive: true,
-            language: DataTablesConfig.getSpanishLanguage()
+            language: DataTablesConfig.getSpanishLanguage(),
+            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                 '<"row"<"col-sm-12"tr>>' +
+                 '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
         });
 
         // Initialize filters after DataTable is ready
@@ -128,8 +134,11 @@ class PagosIndexManager {
     }
 
     refreshTable() {
-        if (this.dataTable) {
-            this.dataTable.ajax.reload();
+        if (this.table) {
+            console.log('Refreshing DataTable...');
+            this.table.ajax.reload(null, false); // false = keep current page
+        } else {
+            console.error('DataTable not initialized');
         }
     }
 }

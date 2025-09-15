@@ -29,9 +29,9 @@
             <div class="card shadow mb-3">
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label for="filtroEstado" class="form-label">
-                                <i class="fas fa-filter me-1"></i>Estado
+                                <i class="fas fa-filter me-1"></i>Estado Pago
                             </label>
                             <select id="filtroEstado" class="form-select">
                                 <option value="">Todos los estados</option>
@@ -40,9 +40,27 @@
                                 <option value="Pagado">Pagado</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <label for="filtroEstadoContrato" class="form-label">
+                                <i class="fas fa-file-contract me-1"></i>Estado Contrato
+                            </label>
+                            <select id="filtroEstadoContrato" class="form-select">
+                                <option value="">Todos los estados</option>
+                                <option value="Reservado">Reservado</option>
+                                <option value="Activo">Activo</option>
+                                <option value="Finalizado">Finalizado</option>
+                                <option value="Cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="filtroNumeroContrato" class="form-label">
+                                <i class="fas fa-hashtag me-1"></i>N° Contrato
+                            </label>
+                            <input type="number" id="filtroNumeroContrato" class="form-control" placeholder="Número">
+                        </div>
+                        <div class="col-md-2">
                             <label for="filtroMes" class="form-label">
-                                <i class="fas fa-calendar me-1"></i>Mes de Vencimiento
+                                <i class="fas fa-calendar me-1"></i>Mes Vencimiento
                             </label>
                             <select id="filtroMes" class="form-select">
                                 <option value="">Todos los meses</option>
@@ -60,7 +78,7 @@
                                 <option value="12">Diciembre</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label for="filtroAnio" class="form-label">
                                 <i class="fas fa-calendar-alt me-1"></i>Año
                             </label>
@@ -68,16 +86,16 @@
                                 <option value="">Todos los años</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label for="filtroMonto" class="form-label">
-                                <i class="fas fa-dollar-sign me-1"></i>Rango de Monto
+                                <i class="fas fa-dollar-sign me-1"></i>Rango Monto
                             </label>
                             <select id="filtroMonto" class="form-select">
                                 <option value="">Todos los montos</option>
-                                <option value="0-50000">$0 - $50,000</option>
-                                <option value="50000-100000">$50,000 - $100,000</option>
-                                <option value="100000-200000">$100,000 - $200,000</option>
-                                <option value="200000-999999999">Más de $200,000</option>
+                                <option value="0-50000">$0 - $50K</option>
+                                <option value="50000-100000">$50K - $100K</option>
+                                <option value="100000-200000">$100K - $200K</option>
+                                <option value="200000-999999999">Más de $200K</option>
                             </select>
                         </div>
                     </div>
@@ -100,16 +118,16 @@
                         <table id="pagosTable" class="table table-hover">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>Contrato</th>
+                                    <th class="text-end" style="width: 80px;">Contrato</th>
                                     <th>Inquilino</th>
                                     <th>Inmueble</th>
                                     <th>Vencimiento</th>
-                                    <th>Monto</th>
-                                    <th>Multas</th>
-                                    <th>Intereses</th>
-                                    <th>Total a Pagar</th>
+                                    <th class="text-end">Monto</th>
+                                    <th class="text-end">Multas</th>
+                                    <th class="text-end">Intereses</th>
+                                    <th class="text-end">Total a Pagar</th>
                                     <th>Estado</th>
-                                    <th class="text-center">Acciones</th>
+                                    <th class="text-end">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -154,11 +172,11 @@
     <script src="~/js/shared/datatables-config.js"></script>
     
     <!-- Pagos Modular Scripts -->
-    <script src="~/js/Pagos/pagos-utilities.js"></script>
-    <script src="~/js/Pagos/pagos-datatables.js"></script>
-    <script src="~/js/Pagos/pagos-modals.js"></script>
-    <script src="~/js/Pagos/pagos-filters.js"></script>
-    <script src="~/js/Pagos/pagos-manager.js"></script>
-    <script src="~/js/Pagos/index.js"></script>
+    <script src="~/js/Pagos/pagos-utilities.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Pagos/pagos-datatables.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Pagos/pagos-modals.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Pagos/pagos-filters.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Pagos/pagos-manager.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Pagos/index.js?v=@DateTime.Now.Ticks"></script>
     
 }

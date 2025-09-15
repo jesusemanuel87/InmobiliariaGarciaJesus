@@ -72,10 +72,8 @@ class PagosModalHandler {
                     
                     PagosUtilities.showToast(mensaje, 'success');
                     
-                    // Refresh table
-                    setTimeout(() => {
-                        pagosManager.refreshTable();
-                    }, 1000);
+                    // Refresh table immediately
+                    pagosManager.refreshTable();
                 } else {
                     PagosUtilities.showToast(`Error: ${result.message}`, 'error');
                     submitButton.disabled = false;

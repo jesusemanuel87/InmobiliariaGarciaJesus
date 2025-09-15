@@ -5,6 +5,8 @@ class PagosDataTablesConfig {
             {
                 data: 'contratoId',
                 title: 'Contrato',
+                className: 'text-end',
+                width: '80px',
                 render: function(data, type, row) {
                     return `<span class="badge bg-primary">#${data}</span>`;
                 }
@@ -13,20 +15,14 @@ class PagosDataTablesConfig {
                 data: 'inquilinoNombre',
                 title: 'Inquilino',
                 render: function(data, type, row) {
-                    return `<div class="d-flex align-items-center">
-                        <i class="fas fa-user me-2 text-muted"></i>
-                        <span>${data}</span>
-                    </div>`;
+                    return `<span>${data}</span>`;
                 }
             },
             {
                 data: 'inmuebleDireccion',
                 title: 'Inmueble',
                 render: function(data, type, row) {
-                    return `<div class="d-flex align-items-center">
-                        <i class="fas fa-home me-2 text-muted"></i>
-                        <span>${data}</span>
-                    </div>`;
+                    return `<span>${data}</span>`;
                 }
             },
             {
@@ -36,6 +32,8 @@ class PagosDataTablesConfig {
                     const fecha = new Date(data);
                     const fechaFormateada = fecha.toLocaleDateString('es-AR');
                     const hoy = new Date();
+                    hoy.setHours(0, 0, 0, 0); // Reset time to compare only dates
+                    fecha.setHours(0, 0, 0, 0); // Reset time to compare only dates
                     const esVencido = fecha < hoy;
                     
                     return `<span class="badge ${esVencido ? 'bg-danger' : 'bg-info'}">
@@ -47,17 +45,19 @@ class PagosDataTablesConfig {
             {
                 data: 'monto',
                 title: 'Monto',
+                className: 'text-end',
                 render: function(data, type, row) {
-                    return `<span class="fw-bold text-success">$${parseFloat(data).toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>`;
+                    return `<span class="fw-bold text-success">$${parseFloat(data).toLocaleString('es-AR', {maximumFractionDigits: 0})}</span>`;
                 }
             },
             {
                 data: 'multas',
                 title: 'Multas',
+                className: 'text-end',
                 render: function(data, type, row) {
                     const multa = parseFloat(data) || 0;
                     if (multa > 0) {
-                        return `<span class="fw-bold text-danger">$${multa.toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>`;
+                        return `<span class="fw-bold text-danger">$${multa.toLocaleString('es-AR', {maximumFractionDigits: 0})}</span>`;
                     }
                     return '<span class="text-muted">-</span>';
                 }
@@ -65,10 +65,11 @@ class PagosDataTablesConfig {
             {
                 data: 'intereses',
                 title: 'Intereses',
+                className: 'text-end',
                 render: function(data, type, row) {
                     const interes = parseFloat(data) || 0;
                     if (interes > 0) {
-                        return `<span class="fw-bold text-warning">$${interes.toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>`;
+                        return `<span class="fw-bold text-warning">$${interes.toLocaleString('es-AR', {maximumFractionDigits: 0})}</span>`;
                     }
                     return '<span class="text-muted">-</span>';
                 }
@@ -76,18 +77,20 @@ class PagosDataTablesConfig {
             {
                 data: null,
                 title: 'Total a Pagar',
+                className: 'text-end',
                 render: function(data, type, row) {
                     const monto = parseFloat(row.monto) || 0;
                     const multas = parseFloat(row.multas) || 0;
                     const intereses = parseFloat(row.intereses) || 0;
                     const total = monto + multas + intereses;
-                    return `<span class="fw-bold text-primary">$${total.toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>`;
+                    return `<span class="fw-bold text-primary">$${total.toLocaleString('es-AR', {maximumFractionDigits: 0})}</span>`;
                 }
             },
             {
                 data: 'estado',
                 title: 'Estado',
                 render: function(data, type, row) {
+                    // Use the actual state from database (backend handles state updates)
                     const badgeClass = data === 'Pagado' ? 'bg-success' : 
                                      data === 'Pendiente' ? 'bg-warning' : 'bg-danger';
                     const icon = data === 'Pagado' ? 'fa-check-circle' : 
@@ -103,9 +106,9 @@ class PagosDataTablesConfig {
                 data: null,
                 title: 'Acciones',
                 orderable: false,
+                className: 'text-end',
                 render: function(data, type, row) {
-                    let actions = `
-                        <div class="btn-group" role="group">
+                    let actions = `<div class="d-flex justify-content-end gap-1">
                             <button type="button" class="btn btn-sm btn-outline-info" 
                                     onclick="window.pagosManager.showDetailsModal(${row.id})" 
                                     title="Ver detalles">
@@ -152,13 +155,28 @@ class PagosDataTablesConfig {
             type: 'POST',
             contentType: 'application/json',
             data: function(d) {
+                // Get filter values
+                const filtroEstado = document.getElementById('filtroEstado')?.value || '';
+                const filtroEstadoContrato = document.getElementById('filtroEstadoContrato')?.value || '';
+                const filtroNumeroContrato = document.getElementById('filtroNumeroContrato')?.value || '';
+                const filtroMes = document.getElementById('filtroMes')?.value || '';
+                const filtroAnio = document.getElementById('filtroAnio')?.value || '';
+                const filtroMonto = document.getElementById('filtroMonto')?.value || '';
+                
                 return JSON.stringify({
                     draw: d.draw,
                     start: d.start,
                     length: d.length,
                     search: d.search,
                     order: d.order,
-                    columns: d.columns
+                    columns: d.columns,
+                    // Custom filters
+                    filtroEstado: filtroEstado,
+                    filtroEstadoContrato: filtroEstadoContrato,
+                    filtroNumeroContrato: filtroNumeroContrato,
+                    filtroMes: filtroMes,
+                    filtroAnio: filtroAnio,
+                    filtroMonto: filtroMonto
                 });
             },
             dataSrc: function(json) {

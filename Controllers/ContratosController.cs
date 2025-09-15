@@ -315,7 +315,6 @@ namespace InmobiliariaGarciaJesus.Controllers
                     esFinalizacionTemprana = modelo.EsFinalizacionTemprana
                 };
                 
-                Console.WriteLine($"[DEBUG JSON] {System.Text.Json.JsonSerializer.Serialize(logData)}");
                 
                 await _contratoService.FinalizarContratoAsync(modelo);
                 

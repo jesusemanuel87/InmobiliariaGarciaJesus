@@ -195,7 +195,6 @@ namespace InmobiliariaGarciaJesus.Controllers
         [HttpPost]
         public async Task<IActionResult> Save([FromBody] Propietario propietario)
         {
-            Console.WriteLine($"Save method called with Id: {propietario?.Id}, Nombre: {propietario?.Nombre}");
             
             if (propietario == null)
             {

@@ -47,7 +47,7 @@ class PropietarioDataTablesConfig {
                 className: 'text-end',
                 render: function(data, type, row) {
                     const expandButton = row.hasInmuebles 
-                        ? `<button type="button" class="btn btn-sm btn-outline-primary me-1" data-id="${row.id}" title="Ver inmuebles">
+                        ? `<button type="button" class="btn btn-sm btn-outline-primary dt-expand-btn" data-id="${row.id}" title="Ver inmuebles">
                                <i class="fas fa-home"></i>
                            </button>`
                         : '';
@@ -73,25 +73,28 @@ class PropietarioDataTablesConfig {
 
     static formatChildRow(data) {
         if (!data || data.length === 0) {
-            return '<div class="p-3 text-muted text-center">No hay inmuebles registrados para este propietario</div>';
+            return '<div class="p-2 text-muted text-center bg-light">No hay inmuebles registrados para este propietario</div>';
         }
 
         let html = `
-            <div class="p-3">
-                <h6 class="mb-3"><i class="fas fa-home text-primary"></i> Inmuebles del Propietario</h6>
-                <div class="table-responsive">
-                    <table class="table table-sm table-striped">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Dirección</th>
-                                <th>Tipo</th>
-                                <th>Uso</th>
-                                <th>Estado</th>
-                                <th>Estado Contrato</th>
-                                <th class="text-end">Precio</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+            <div class="child-row-content">
+                <div class="bg-primary text-white px-3 py-2">
+                    <h6 class="mb-0"><i class="fas fa-home me-2"></i>Inmuebles del Propietario</h6>
+                </div>
+                <div class="p-3">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Dirección</th>
+                                    <th>Tipo</th>
+                                    <th>Uso</th>
+                                    <th>Estado</th>
+                                    <th>Estado Contrato</th>
+                                    <th class="text-end">Precio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
         `;
 
         data.forEach(inmueble => {
@@ -108,8 +111,9 @@ class PropietarioDataTablesConfig {
         });
 
         html += `
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         `;

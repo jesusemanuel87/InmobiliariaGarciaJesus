@@ -24,7 +24,7 @@ class PropietarioIndexManager {
         });
 
         // Add event listener for opening and closing details
-        $('#propietariosTable tbody').on('click', '.btn-outline-primary[data-id]', (e) => {
+        $('#propietariosTable tbody').on('click', '.dt-expand-btn', (e) => {
             e.preventDefault();
             e.stopPropagation();
             

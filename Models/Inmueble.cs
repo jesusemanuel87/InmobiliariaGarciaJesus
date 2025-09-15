@@ -39,6 +39,14 @@ namespace InmobiliariaGarciaJesus.Models
         [Display(Name = "Dirección")]
         public string Direccion { get; set; } = string.Empty;
 
+        [StringLength(100)]
+        [Display(Name = "Localidad")]
+        public string? Localidad { get; set; }
+
+        [StringLength(100)]
+        [Display(Name = "Provincia")]
+        public string? Provincia { get; set; }
+
         [Required]
         [Display(Name = "Tipo")]
         public TipoInmueble Tipo { get; set; } = TipoInmueble.Casa;
@@ -93,6 +101,13 @@ namespace InmobiliariaGarciaJesus.Models
         // Propiedad calculada para obtener la URL de la imagen de portada
         [NotMapped]
         public string? ImagenPortadaUrl => ImagenPortada?.RutaCompleta;
+
+        // Propiedad calculada para obtener el enlace de Google Maps
+        [NotMapped]
+        public string? GoogleMapsUrl => 
+            Latitud.HasValue && Longitud.HasValue 
+                ? $"https://www.google.com/maps?q={Latitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)},{Longitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}"
+                : null;
 
     }
 }

@@ -78,22 +78,19 @@ namespace InmobiliariaGarciaJesus.Services
         public async Task ActualizarEstadosPagosAsync()
         {
             var pagos = await _pagoRepository.GetAllAsync();
-            // Incluir pagos pendientes sin fecha de pago registrada
-            var pagosPendientes = pagos.Where(p => 
-                (p.Estado == EstadoPago.Pendiente || p.Estado == EstadoPago.Vencido) && 
-                p.FechaPago == null);
+            
+            // Incluir todos los pagos que no estén marcados como pagados
+            var pagosAProcesar = pagos.Where(p => p.Estado != EstadoPago.Pagado);
 
             var hoy = DateTime.Today;
-            bool cambiosRealizados = false;
             
-            foreach (var pago in pagosPendientes)
+            foreach (var pago in pagosAProcesar)
             {
-                // Si pasó la fecha de vencimiento, asegurar que esté marcado como Vencido
-                if (hoy > pago.FechaVencimiento && pago.Estado != EstadoPago.Vencido)
+                // Si pasó la fecha de vencimiento y no está pagado, marcarlo como Vencido
+                if (hoy > pago.FechaVencimiento && pago.Estado == EstadoPago.Pendiente)
                 {
                     pago.Estado = EstadoPago.Vencido;
                     await _pagoRepository.UpdateAsync(pago);
-                    cambiosRealizados = true;
                 }
                 
                 // Calcular intereses para pagos vencidos sin intereses calculados
@@ -101,18 +98,7 @@ namespace InmobiliariaGarciaJesus.Services
                 if (pago.Estado == EstadoPago.Vencido && pago.Intereses == 0 && pago.Multas == 0)
                 {
                     await CalcularInteresesYMultasAsync(pago.Id);
-                    cambiosRealizados = true;
                 }
-                else if (pago.Multas > 0)
-                {
-                    Console.WriteLine($"[DEBUG BACKGROUND] Pago {pago.Id}: Saltando cálculo de intereses, tiene multas por finalización: {pago.Multas}");
-                }
-            }
-            
-            // Log para debugging
-            if (cambiosRealizados)
-            {
-                Console.WriteLine($"[{DateTime.Now}] ActualizarEstadosPagosAsync: Se realizaron cambios en los pagos");
             }
         }
 
@@ -125,19 +111,13 @@ namespace InmobiliariaGarciaJesus.Services
             
             // Calcular solo intereses por retraso, NO sobrescribir multas existentes
             var interesesCalculados = await CalcularInteresesPorRetrasoAsync(pago.FechaVencimiento, pago.Importe);
-            var multasRetraso = await CalcularMultasPorRetrasoAsync(pago.FechaVencimiento, pago.Importe);
             
             // Solo actualizar si hay cambios en intereses, preservar multas existentes
             if (pago.Intereses != interesesCalculados)
             {
                 pago.Intereses = interesesCalculados;
                 // NO tocar pago.Multas - preservar multas por finalización temprana
-                Console.WriteLine($"[DEBUG CALC INTERESES] Pago {pagoId}: Actualizando solo intereses a {interesesCalculados}, preservando multas {pago.Multas}");
                 await _pagoRepository.UpdateAsync(pago);
-            }
-            else
-            {
-                Console.WriteLine($"[DEBUG CALC INTERESES] Pago {pagoId}: No hay cambios en intereses, multas preservadas: {pago.Multas}");
             }
         }
 

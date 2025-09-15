@@ -1,0 +1,174 @@
+@model InmobiliariaGarciaJesus.Models.Pago
+
+<div class="modal fade" id="pagoDeleteModal" tabindex="-1" aria-labelledby="pagoDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="pagoDeleteModalLabel">
+                    <i class="fas fa-trash"></i> Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="deleteForm" asp-action="DeleteConfirmed" method="post">
+                <div class="modal-body">
+                    <input type="hidden" asp-for="Id" />
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>¡Atención!</strong> Esta acción no se puede deshacer.
+                    </div>
+                    
+                    <p class="mb-3">¿Está seguro que desea eliminar el siguiente pago?</p>
+                    
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-2">
+                                        <strong>ID del Pago:</strong> 
+                                        <span class="badge bg-secondary">#@Model.Id</span>
+                                    </p>
+                                    
+                                    <p class="mb-2">
+                                        <strong>Contrato:</strong> 
+                                        <span class="badge bg-primary">#@Model.ContratoId</span>
+                                    </p>
+                                    
+                                    <p class="mb-2">
+                                        <strong>Número de Pago:</strong> 
+                                        <span class="badge bg-secondary">#@Model.Numero</span>
+                                    </p>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <p class="mb-2">
+                                        <strong>Fecha Vencimiento:</strong> 
+                                        <i class="fas fa-calendar-alt"></i> @Model.FechaVencimiento.ToString("dd/MM/yyyy")
+                                    </p>
+                                    
+                                    <p class="mb-2">
+                                        <strong>Importe:</strong> 
+                                        <span class="text-primary fw-bold">$@Model.Importe.ToString("N0")</span>
+                                    </p>
+                                    
+                                    <p class="mb-2">
+                                        <strong>Total a Pagar:</strong> 
+                                        <span class="text-success fw-bold">$@Model.TotalAPagar.ToString("N0")</span>
+                                    </p>
+                                    
+                                    <p class="mb-2">
+                                        <strong>Estado:</strong> 
+                                        @switch (Model.Estado)
+                                        {
+                                            case InmobiliariaGarciaJesus.Models.EstadoPago.Pendiente:
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-clock"></i> Pendiente
+                                                </span>
+                                                break;
+                                            case InmobiliariaGarciaJesus.Models.EstadoPago.Pagado:
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check"></i> Pagado
+                                                </span>
+                                                break;
+                                            case InmobiliariaGarciaJesus.Models.EstadoPago.Vencido:
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-exclamation-triangle"></i> Vencido
+                                                </span>
+                                                break;
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            @if (Model.FechaPago.HasValue)
+                            {
+                                <hr class="my-2">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <p class="mb-1">
+                                            <strong>Fecha de Pago:</strong> 
+                                            <span class="text-success">
+                                                <i class="fas fa-calendar-check"></i> @Model.FechaPago.Value.ToString("dd/MM/yyyy")
+                                            </span>
+                                        </p>
+                                        
+                                        <p class="mb-1">
+                                            <strong>Método de Pago:</strong> 
+                                            @switch (Model.MetodoPago)
+                                            {
+                                                case InmobiliariaGarciaJesus.Models.MetodoPago.MercadoPago:
+                                                    <span class="badge bg-primary">
+                                                        <i class="fas fa-credit-card"></i> MercadoPago
+                                                    </span>
+                                                    break;
+                                                case InmobiliariaGarciaJesus.Models.MetodoPago.Transferencia:
+                                                    <span class="badge bg-info">
+                                                        <i class="fas fa-exchange-alt"></i> Transferencia
+                                                    </span>
+                                                    break;
+                                                case InmobiliariaGarciaJesus.Models.MetodoPago.Efectivo:
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-money-bill"></i> Efectivo
+                                                    </span>
+                                                    break;
+                                                case InmobiliariaGarciaJesus.Models.MetodoPago.Cheque:
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="fas fa-money-check"></i> Cheque
+                                                    </span>
+                                                    break;
+                                                case InmobiliariaGarciaJesus.Models.MetodoPago.Otro:
+                                                    <span class="badge bg-secondary">
+                                                        <i class="fas fa-question"></i> Otro
+                                                    </span>
+                                                    break;
+                                                default:
+                                                    <span class="text-muted">No especificado</span>
+                                                    break;
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    
+                    @if (Model.Estado == InmobiliariaGarciaJesus.Models.EstadoPago.Pagado)
+                    {
+                        <div class="alert alert-danger mt-3">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <strong>Importante:</strong> Este pago ya ha sido registrado como pagado. 
+                            Eliminar este registro puede afectar los reportes financieros.
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Eliminar Pago
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Add confirmation on form submit
+        $('form[asp-action="Delete"]').on('submit', function(e) {
+            var isPaid = @(Model.Estado == InmobiliariaGarciaJesus.Models.EstadoPago.Pagado ? "true" : "false");
+            
+            if (isPaid) {
+                var confirmMessage = "¿Está completamente seguro de eliminar este pago pagado?\n\n" +
+                                   "Esta acción puede afectar los reportes financieros y no se puede deshacer.";
+                
+                if (!confirm(confirmMessage)) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+    });
+</script>

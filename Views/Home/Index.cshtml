@@ -1,8 +1,279 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model IEnumerable<InmobiliariaGarciaJesus.Models.Inmueble>
+@using InmobiliariaGarciaJesus.Models
+
+@{
+    ViewData["Title"] = "Inmuebles en Alquiler";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Bienvenido</h1>
-    <p>Proyecto Inmobiliaria en construcción.</p>
+<!-- Hero Section -->
+<div class="hero-section bg-primary text-white mb-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold mb-2">Encuentra tu hogar ideal</h1>
+                <p class="mb-0">Descubre los mejores inmuebles disponibles para alquiler en Argentina</p>
+            </div>
+            <div class="col-lg-4 text-center">
+                <i class="fas fa-home fa-4x opacity-75"></i>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Main Content with Sidebar Layout -->
+<div class="container-fluid">
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3 col-md-4 mb-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Filtros de búsqueda
+                    </h5>
+                </div>
+                <div class="card-body">
+                <form id="filtrosForm" method="get">
+                        <!-- Ubicación -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-map-marker-alt text-primary me-1"></i>Provincia
+                            </label>
+                            <select name="provincia" id="provinciaFilter" class="form-select">
+                                <option value="">Cargando provincias...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-city text-primary me-1"></i>Localidad
+                            </label>
+                            <select name="localidad" id="localidadFilter" class="form-select">
+                                <option value="">Seleccione primero una provincia</option>
+                            </select>
+                        </div>
+
+                        <!-- Fechas -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-calendar text-primary me-1"></i>Desde
+                            </label>
+                            <input type="date" name="fechaDesde" class="form-control" value="@ViewBag.FechaDesde?.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-calendar text-primary me-1"></i>Hasta
+                            </label>
+                            <input type="date" name="fechaHasta" class="form-control" value="@ViewBag.FechaHasta?.ToString("yyyy-MM-dd")" />
+                        </div>
+
+                        <!-- Precio -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-dollar-sign text-primary me-1"></i>Rango de precio
+                            </label>
+                            <div class="price-filter-container">
+                                <div class="mb-3">
+                                    <div class="input-group mb-2">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" name="precioMin" id="precioMin" class="form-control" 
+                                               placeholder="@(((decimal?)ViewBag.PrecioMinimo ?? 0).ToString(System.Globalization.CultureInfo.InvariantCulture))" value="@((ViewBag.PrecioMin ?? ViewBag.PrecioMinimo ?? 0).ToString())" 
+                                               min="@(((decimal?)ViewBag.PrecioMinimo ?? 0).ToString(System.Globalization.CultureInfo.InvariantCulture))" />
+                                    </div>
+                                    <div class="price-slider-container px-2">
+                                        <div class="dual-range-slider">
+                                            <input type="range" id="priceRangeMin" class="range-input range-min" 
+                                                   min="@(((decimal?)ViewBag.PrecioMinimo ?? 0).ToString(System.Globalization.CultureInfo.InvariantCulture))" max="@(((decimal?)ViewBag.PrecioMaximo ?? 1000000).ToString(System.Globalization.CultureInfo.InvariantCulture))" 
+                                                   value="@(((decimal?)ViewBag.PrecioMin ?? (decimal?)ViewBag.PrecioMinimo ?? 0).ToString(System.Globalization.CultureInfo.InvariantCulture))" />
+                                            <input type="range" id="priceRangeMax" class="range-input range-max" 
+                                                   min="@(((decimal?)ViewBag.PrecioMinimo ?? 0).ToString(System.Globalization.CultureInfo.InvariantCulture))" max="@(((decimal?)ViewBag.PrecioMaximo ?? 1000000).ToString(System.Globalization.CultureInfo.InvariantCulture))" 
+                                                   value="@(((decimal?)ViewBag.PrecioMax ?? (decimal?)ViewBag.PrecioMaximo ?? 1000000).ToString(System.Globalization.CultureInfo.InvariantCulture))" />
+                                            <div class="range-track">
+                                                <div class="range-fill" id="rangeFill"></div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-2">
+                                            <small class="text-muted">$@(((decimal?)ViewBag.PrecioMinimo ?? 0).ToString("N0"))</small>
+                                            <small class="text-muted">$@(((decimal?)ViewBag.PrecioMaximo ?? 1000000).ToString("N0"))</small>
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" name="precioMax" id="precioMax" class="form-control" 
+                                               placeholder="@(((decimal?)ViewBag.PrecioMaximo ?? 1000000).ToString(System.Globalization.CultureInfo.InvariantCulture))" value="@((ViewBag.PrecioMax ?? ViewBag.PrecioMaximo ?? 1000000).ToString())"
+                                               min="@(((decimal?)ViewBag.PrecioMinimo ?? 0).ToString(System.Globalization.CultureInfo.InvariantCulture))" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button type="button" class="btn btn-outline-secondary" onclick="limpiarFiltros()">
+                                <i class="fas fa-eraser me-1"></i>Limpiar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i>Buscar
+                            </button>
+                        </div>
+                </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Property Cards Content -->
+        <div class="col-lg-9 col-md-8">
+            <!-- Results Header -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">
+                    <i class="fas fa-building me-2 text-primary"></i>
+                    Inmuebles disponibles 
+                    <span class="badge bg-primary">@Model.Count()</span>
+                </h4>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" onclick="cambiarVista('cards')">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="cambiarVista('list')">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Property Cards -->
+    <div id="propertyContainer" class="row">
+        @if (Model.Any())
+        {
+            @foreach (var inmueble in Model)
+            {
+                <div class="col-lg-4 col-md-6 mb-4 property-card">
+                    <div class="card h-100 shadow-sm property-item">
+                        <!-- Image -->
+                        <div class="position-relative">
+                            @if (!string.IsNullOrEmpty(inmueble.ImagenPortadaUrl))
+                            {
+                                <img src="@inmueble.ImagenPortadaUrl" class="card-img-top property-image" alt="@inmueble.Direccion" />
+                            }
+                            else
+                            {
+                                <div class="card-img-top property-image-placeholder d-flex align-items-center justify-content-center bg-light">
+                                    <i class="fas fa-home fa-3x text-muted"></i>
+                                </div>
+                            }
+                            
+                            <!-- Price Badge -->
+                            @if (inmueble.Precio.HasValue)
+                            {
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <span class="badge bg-success fs-6 px-3 py-2">
+                                        $@inmueble.Precio.Value.ToString("N0")
+                                    </span>
+                                </div>
+                            }
+
+                            <!-- Type Badge -->
+                            <div class="position-absolute top-0 start-0 m-2">
+                                <span class="badge bg-primary">@inmueble.Tipo</span>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-truncate" title="@inmueble.Direccion">
+                                <i class="fas fa-map-marker-alt text-primary me-1"></i>
+                                @inmueble.Direccion
+                            </h5>
+                            
+                            @if (!string.IsNullOrEmpty(inmueble.Localidad) || !string.IsNullOrEmpty(inmueble.Provincia))
+                            {
+                                <p class="text-muted small mb-2">
+                                    @if (!string.IsNullOrEmpty(inmueble.Localidad))
+                                    {
+                                        @inmueble.Localidad
+                                    }
+                                    @if (!string.IsNullOrEmpty(inmueble.Provincia))
+                                    {
+                                        @if (!string.IsNullOrEmpty(inmueble.Localidad)) { <text>, </text> }
+                                        @inmueble.Provincia
+                                    }
+                                </p>
+                            }
+
+                            <!-- Property Details -->
+                            <div class="property-details mb-3">
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <div class="detail-item">
+                                            <i class="fas fa-bed text-primary"></i>
+                                            <small class="d-block">@inmueble.Ambientes amb.</small>
+                                        </div>
+                                    </div>
+                                    @if (inmueble.Superficie.HasValue)
+                                    {
+                                        <div class="col-4">
+                                            <div class="detail-item">
+                                                <i class="fas fa-ruler-combined text-primary"></i>
+                                                <small class="d-block">@inmueble.Superficie.Value.ToString("N0") m²</small>
+                                            </div>
+                                        </div>
+                                    }
+                                    <div class="col-4">
+                                        <div class="detail-item">
+                                            <i class="fas fa-tag text-primary"></i>
+                                            <small class="d-block">@inmueble.Uso</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="mt-auto">
+                                <div class="d-flex gap-2">
+                                    @if (inmueble.GoogleMapsUrl != null)
+                                    {
+                                        <a href="@inmueble.GoogleMapsUrl" target="_blank" class="btn btn-outline-primary btn-sm flex-fill">
+                                            <i class="fas fa-map-marker-alt"></i> Ubicación
+                                        </a>
+                                    }
+                                    <button class="btn btn-primary btn-sm flex-fill" onclick="verDetalles(@inmueble.Id)">
+                                        <i class="fas fa-eye"></i> Ver detalles
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No se encontraron inmuebles</h4>
+                    <p class="text-muted">Intenta modificar los filtros de búsqueda</p>
+                    <button class="btn btn-primary" onclick="limpiarFiltros()">
+                        <i class="fas fa-eraser me-1"></i>Limpiar filtros
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Home/index.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script src="~/js/georef-api.js"></script>
+    <script src="~/js/Home/index.js" asp-append-version="true"></script>
+    
+    <!-- Hidden inputs for ViewBag values -->
+    <input type="hidden" id="provinciaActual" value="@ViewBag.ProvinciaSeleccionada" />
+    <input type="hidden" id="localidadActual" value="@ViewBag.LocalidadSeleccionada" />
+    <input type="hidden" id="precioMinimo" value="@ViewBag.PrecioMinimo" />
+    <input type="hidden" id="precioMaximo" value="@ViewBag.PrecioMaximo" />
+    <input type="hidden" id="precioMinActual" value="@ViewBag.PrecioMin" />
+    <input type="hidden" id="precioMaxActual" value="@ViewBag.PrecioMax" />
+}

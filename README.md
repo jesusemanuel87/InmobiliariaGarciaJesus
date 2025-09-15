@@ -27,9 +27,22 @@ Sistema web desarrollado en ASP.NET Core MVC para la gestión de una inmobiliari
 - ✅ **Estados Dinámicos**: Badges coloridos para estados de inmuebles y contratos
 - ✅ **Servicio de Estados**: ContratoStateService para actualización automática de contratos vencidos
 
+### Tercera Entrega - Página Pública y Sistema de Filtros
+- ✅ **Página Pública de Inmuebles**: Listado público de propiedades disponibles para alquiler
+- ✅ **Sistema de Filtros Avanzados**:
+  - Filtro por ubicación (Provincia/Localidad) con integración API Georef Argentina
+  - Filtro por rango de fechas de disponibilidad
+  - Filtro por rango de precios con slider dual interactivo
+- ✅ **Slider de Precios Dual**: Implementación completa con thumbs arrastrables y fill visual
+- ✅ **Integración API Georef**: Dropdowns dinámicos de provincias y localidades argentinas
+- ✅ **Gestión de Imágenes**: Sistema completo de carga y visualización de imágenes de inmuebles
+- ✅ **Layout Responsivo**: Diseño con sidebar de filtros y tarjetas de propiedades
+- ✅ **UX Mejorada**: Hero section compacto, animaciones, efectos hover y feedback visual
+- ✅ **Funcionalidades Interactivas**: Limpiar filtros, cambio de vista (cards/lista), sincronización de inputs
+
 ### Funcionalidades Futuras
-- 🔄 Gestión de Pagos
 - 🔄 Sistema de Usuarios y Autenticación
+- 🔄 Gestión de Pagos
 - 🔄 Reportes y Dashboard
 
 ## 🗄️ Estructura de Base de Datos
@@ -64,11 +77,23 @@ Sistema web desarrollado en ASP.NET Core MVC para la gestión de una inmobiliari
 - `Ambientes` (NOT NULL)
 - `Superficie` (DECIMAL)
 - `Latitud`, `Longitud` (DECIMAL)
+- `Localidad`, `Provincia` (VARCHAR)
 - `PropietarioId` (FK)
 - `Tipo` (ENUM: Casa, Departamento, Local, Oficina, Terreno)
 - `Precio` (DECIMAL)
 - `Estado` (DEFAULT 1)
 - `Uso` (ENUM: Residencial, Comercial, Industrial)
+- `Disponible` (BOOLEAN, DEFAULT 1)
+
+#### InmuebleImagenes
+- `Id` (PK, AUTO_INCREMENT)
+- `InmuebleId` (FK)
+- `NombreArchivo` (VARCHAR)
+- `RutaArchivo` (VARCHAR)
+- `EsPortada` (BOOLEAN, DEFAULT 0)
+- `TamanoArchivo` (BIGINT)
+- `TipoMime` (VARCHAR)
+- `FechaCreacion`, `FechaActualizacion` (TIMESTAMP)
 
 #### Contratos
 - `Id` (PK, AUTO_INCREMENT)
@@ -130,12 +155,14 @@ Sistema web desarrollado en ASP.NET Core MVC para la gestión de una inmobiliari
 ```
 InmobiliariaGarciaJesus/
 ├── Controllers/
-│   ├── HomeController.cs
+│   ├── HomeController.cs (con página pública)
 │   ├── PropietariosController.cs
 │   ├── InquilinosController.cs
 │   ├── InmueblesController.cs
 │   ├── ContratosController.cs
-│   └── ContratoApiController.cs
+│   ├── ContratoApiController.cs
+│   ├── PagosController.cs
+│   └── ConfiguracionController.cs
 ├── Data/
 │   └── InmobiliariaContext.cs
 ├── Models/
@@ -143,21 +170,32 @@ InmobiliariaGarciaJesus/
 │   ├── Propietario.cs
 │   ├── Inquilino.cs
 │   ├── Inmueble.cs
+│   ├── InmuebleImagen.cs
 │   ├── Contrato.cs
 │   ├── Pago.cs
-│   ├── InmuebleConContrato.cs (DTO)
+│   ├── Configuracion.cs
+│   ├── ViewModels/ (múltiples ViewModels)
 │   └── ErrorViewModel.cs
 ├── Repositories/
 │   ├── IRepository.cs (interfaz genérica)
 │   ├── PropietarioRepository.cs
 │   ├── InquilinoRepository.cs
 │   ├── InmuebleRepository.cs
-│   └── ContratoRepository.cs
+│   ├── InmuebleImagenRepository.cs
+│   ├── ContratoRepository.cs
+│   ├── PagoRepository.cs
+│   └── ConfiguracionRepository.cs
 ├── Services/
 │   ├── ContratoService.cs
-│   └── ContratoStateService.cs
+│   ├── ContratoStateService.cs
+│   ├── InmuebleImagenService.cs
+│   ├── PagoService.cs
+│   ├── ConfiguracionService.cs
+│   └── PaymentBackgroundService.cs
 ├── Views/
 │   ├── Home/
+│   │   ├── Index.cshtml (página pública con filtros)
+│   │   └── Privacy.cshtml
 │   ├── Propietarios/
 │   │   ├── Index.cshtml (con vista expandible)
 │   │   ├── Inmuebles.cshtml
@@ -165,14 +203,24 @@ InmobiliariaGarciaJesus/
 │   ├── Inquilinos/
 │   ├── Inmuebles/
 │   ├── Contratos/
+│   ├── Pagos/
+│   ├── Configuracion/
 │   └── Shared/
 ├── wwwroot/
 │   ├── css/
+│   │   └── Home/
+│   │       └── index.css (estilos página pública)
 │   ├── js/
-│   └── lib/
+│   │   ├── Home/
+│   │   │   └── index.js (funcionalidad filtros)
+│   │   └── georef-api.js (API Argentina)
+│   ├── lib/
+│   └── uploads/
+│       └── inmuebles/ (imágenes por propiedad)
 ├── appsettings.json
 ├── Program.cs
 ├── Inmobiliaria_db.sql
+├── GOOGLE_MAPS_SETUP.md
 └── README.md
 ```
 
@@ -189,10 +237,15 @@ InmobiliariaGarciaJesus/
 - **Font Awesome 6**: Iconografía
 - **jQuery**: Manipulación DOM y AJAX
 - **HTML5 & CSS3**: Estructura y estilos
+- **API Georef Argentina**: Integración con servicio gubernamental para ubicaciones
 
 ### Base de Datos
 - **MySQL 8.0**: Sistema de gestión de base de datos
 - **Charset UTF8MB4**: Soporte completo para caracteres Unicode
+
+### APIs Externas
+- **Google Maps API**: Visualización de mapas y ubicaciones
+- **API Georef**: Servicio del gobierno argentino para provincias y localidades
 
 ## 🎯 Características Técnicas
 
@@ -211,36 +264,46 @@ InmobiliariaGarciaJesus/
 - **Iconografía Consistente**: Font Awesome en toda la aplicación
 - **Mensajes de Estado**: Feedback visual para operaciones
 - **Navegación Intuitiva**: Menú claro y accesible
+- **Página Pública Atractiva**: Hero section, tarjetas de propiedades con animaciones
+- **Filtros Interactivos**: Slider dual de precios, dropdowns dinámicos
+- **Experiencia de Usuario Optimizada**: Auto-filtrado, limpiar filtros, cambio de vista
+
+### Gestión de Archivos
+- **Sistema de Imágenes**: Carga múltiple por inmueble con imagen de portada
+- **Organización por Carpetas**: Estructura `/uploads/inmuebles/{id}/`
+- **Validaciones**: Tamaño máximo, tipos de archivo permitidos
+- **Gestión Automática**: Asignación de portada, eliminación en cascada
+
+### Servicios en Background
+- **PaymentBackgroundService**: Actualización automática de estados de pago cada hora
+- **Cálculo de Intereses**: Aplicación automática de penalizaciones por mora
+- **Logging Estructurado**: Seguimiento de operaciones automáticas
 
 ## 🔄 Próximas Mejoras
 
-1. **Implementación de ORM (Recomendado)**
-   - Migrar a Entity Framework Core para mayor productividad
-   - Implementar Code First con migraciones automáticas
-   - Aprovechar LINQ para consultas complejas
-   - Lazy loading para relaciones entre entidades
+### **Cuarta Entrega - Autenticación y Autorización** 🎯
+- **Sistema de Login/Logout**: Implementación de Identity Framework
+- **Roles de Usuario**: Admin, Empleado, Usuario Público
+- **Protección de Rutas**: Middleware de autorización
+- **Gestión de Sesiones**: Control de acceso y permisos
+- **Área de Administración**: Panel protegido para gestión
 
-2. **Autenticación y Autorización**
-   - Sistema de login/logout
-   - Roles de usuario (Admin, Empleado)
-   - Protección de rutas
+### Funcionalidades Futuras
+1. **Dashboard con Estadísticas**
+   - Métricas de inmuebles, contratos y pagos
+   - Gráficos interactivos
+   - Reportes de rendimiento
 
-3. **Gestión Completa**
-   - CRUD de Inmuebles
-   - CRUD de Contratos
-   - Gestión de Pagos
+2. **Reportes Avanzados**
+   - Generación de PDF
+   - Reportes de pagos y vencimientos
+   - Estadísticas por período
 
-4. **Funcionalidades Avanzadas**
-   - Dashboard con estadísticas
-   - Reportes en PDF
-   - Búsqueda y filtros avanzados
-   - Notificaciones de vencimientos
-
-5. **Mejoras Técnicas**
-   - API REST
-   - Logging estructurado
-   - Tests unitarios
-   - Dockerización
+3. **Mejoras Técnicas**
+   - API REST completa
+   - Tests unitarios e integración
+   - Logging estructurado con Serilog
+   - Dockerización para deployment
 
 ## 👥 Contribución
 
@@ -254,4 +317,5 @@ Proyecto académico - Universidad de La Punta 2025
 
 **Desarrollado por**: García Jesús  
 **Curso**: .NET - ULP 2025  
-**Fecha**: Agosto 2025
+**Fecha Inicio**: Agosto 2025
+**Fecha Fin**: Septiembre 2025

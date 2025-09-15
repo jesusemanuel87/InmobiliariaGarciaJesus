@@ -223,8 +223,6 @@ namespace InmobiliariaGarciaJesus.Services
             modelo.ImporteAdeudado = modelo.PagosAtrasados.Sum(p => p.TotalAPagar);
 
             // Debug: Mostrar información del cálculo
-            Console.WriteLine($"[DEBUG CALC] Contrato {contratoId}: EsFinalizacionTemprana={modelo.EsFinalizacionTemprana}");
-            Console.WriteLine($"[DEBUG CALC] MesesMulta={mesesMulta}, Precio={contrato.Precio}, ImporteAdeudado={modelo.ImporteAdeudado}");
             
             // Calcular multa si es finalización temprana
             if (modelo.EsFinalizacionTemprana)
@@ -235,14 +233,12 @@ namespace InmobiliariaGarciaJesus.Services
                 // Agregar deuda pendiente (pagos vencidos + mes actual)
                 modelo.MultaCalculada += modelo.ImporteAdeudado;
                 
-                Console.WriteLine($"[DEBUG CALC] Multa calculada (temprana): {modelo.MultaCalculada}");
             }
             else
             {
                 // Si no es finalización temprana, solo agregar deuda pendiente
                 modelo.MultaCalculada = modelo.ImporteAdeudado;
                 
-                Console.WriteLine($"[DEBUG CALC] Multa calculada (tardía): {modelo.MultaCalculada}");
             }
 
             return modelo;
@@ -270,7 +266,6 @@ namespace InmobiliariaGarciaJesus.Services
                 p.FechaVencimiento > modelo.FechaFinalizacion.AddDays(30) // Solo eliminar pagos más de 30 días en el futuro
             ).ToList();
 
-            Console.WriteLine($"[DEBUG] Eliminando {pagosFuturos.Count} pagos futuros del contrato {contrato.Id}");
 
             foreach (var pagoFuturo in pagosFuturos)
             {
@@ -278,7 +273,6 @@ namespace InmobiliariaGarciaJesus.Services
             }
 
             // Actualizar el pago del mes actual con la multa si corresponde
-            Console.WriteLine($"[DEBUG] Iniciando aplicación de multa. MultaCalculada: {modelo.MultaCalculada}");
             
             if (modelo.MultaCalculada.HasValue && modelo.MultaCalculada > 0)
             {
@@ -289,11 +283,6 @@ namespace InmobiliariaGarciaJesus.Services
                     p.Estado == EstadoPago.Pendiente
                 ).ToList();
                 
-                Console.WriteLine($"[DEBUG] Pagos pendientes encontrados para contrato {contrato.Id}: {pagosPendientesContrato.Count}");
-                foreach (var p in pagosPendientesContrato)
-                {
-                    Console.WriteLine($"[DEBUG] - Pago #{p.Numero}, Vencimiento: {p.FechaVencimiento:dd/MM/yyyy}, Multa actual: {p.Multas}");
-                }
                 
                 var pagoActual = pagosPendientesContrato
                     .Where(p => p.FechaVencimiento <= modelo.FechaFinalizacion.AddDays(30))
@@ -306,8 +295,6 @@ namespace InmobiliariaGarciaJesus.Services
                     var multaSoloTerminacion = modelo.MultaCalculada.Value - modelo.ImporteAdeudado;
                     
                     // Debug: Mostrar información del pago encontrado
-                    Console.WriteLine($"[DEBUG] Pago encontrado - ID: {pagoActual.Id}, Número: {pagoActual.Numero}, Multa actual: {pagoActual.Multas}");
-                    Console.WriteLine($"[DEBUG] Multa a aplicar: {multaSoloTerminacion}, Multa total calculada: {modelo.MultaCalculada.Value}, Deuda: {modelo.ImporteAdeudado}");
                     
                     if (multaSoloTerminacion > 0)
                     {
@@ -315,21 +302,13 @@ namespace InmobiliariaGarciaJesus.Services
                         pagoActual.Observaciones = (pagoActual.Observaciones ?? "") + " - Incluye multa por finalización temprana ($" + multaSoloTerminacion.ToString("N0") + ")";
                         var updateResult = await _pagoRepository.UpdateAsync(pagoActual);
                         
-                        Console.WriteLine($"[DEBUG] Actualización de pago {pagoActual.Id}: {updateResult}, Multa asignada: {pagoActual.Multas}");
-                        
-                        // Verificar que la actualización se guardó correctamente
-                        var pagoVerificacion = await _pagoRepository.GetByIdAsync(pagoActual.Id);
-                        Console.WriteLine($"[DEBUG] Verificación - Pago {pagoActual.Id} Multa en DB: {pagoVerificacion?.Multas}");
                     }
                     else
                     {
-                        Console.WriteLine($"[DEBUG] No se aplica multa porque multaSoloTerminacion = {multaSoloTerminacion}");
                     }
                 }
                 else
                 {
-                    Console.WriteLine("[DEBUG] No se encontró pago actual para aplicar la multa");
-                    Console.WriteLine($"[DEBUG] Fecha finalización: {modelo.FechaFinalizacion:dd/MM/yyyy}, Fecha límite búsqueda: {modelo.FechaFinalizacion.AddDays(30):dd/MM/yyyy}");
                     
                     // Crear nuevo pago con la multa
                     var pagoMulta = new Pago
@@ -349,7 +328,6 @@ namespace InmobiliariaGarciaJesus.Services
             }
             else
             {
-                Console.WriteLine($"[DEBUG] No se aplica multa. MultaCalculada: {modelo.MultaCalculada}");
             }
 
             return contrato;

@@ -1,0 +1,135 @@
+@model InmobiliariaGarciaJesus.Models.Pago
+
+<div class="modal fade" id="pagoFormModal" tabindex="-1" aria-labelledby="pagoFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="pagoFormModalLabel">
+                    <i class="fas fa-dollar-sign"></i> Registrar Pago
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="pagoForm" asp-action="RegistrarPago" method="post">
+                <div class="modal-body">
+                    <input type="hidden" asp-for="Id" />
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-info-circle"></i> Información del Pago
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="mb-1">
+                                                <strong>Contrato:</strong> 
+                                                <span class="badge bg-primary">#@Model.ContratoId</span>
+                                            </p>
+                                            <p class="mb-1">
+                                                <strong>Número de Pago:</strong> 
+                                                <span class="badge bg-secondary">#@Model.Numero</span>
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-1">
+                                                <strong>Importe:</strong> 
+                                                <span class="text-primary fw-bold">$@Model.Importe.ToString("N0")</span>
+                                            </p>
+                                            <p class="mb-1">
+                                                <strong>Total a Pagar:</strong> 
+                                                <span class="text-success fw-bold">$@Model.TotalAPagar.ToString("N0")</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="FechaPago" class="form-label">
+                            <i class="fas fa-calendar-alt"></i> Fecha de Pago <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="FechaPago" type="date" class="form-control" required />
+                        <span asp-validation-for="FechaPago" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="MetodoPago" class="form-label">
+                            <i class="fas fa-credit-card"></i> Método de Pago <span class="text-danger">*</span>
+                        </label>
+                        <select asp-for="MetodoPago" class="form-select" required>
+                            <option value="">Seleccionar método...</option>
+                            <option value="0">💳 MercadoPago</option>
+                            <option value="1">🏦 Transferencia Bancaria</option>
+                            <option value="2">💵 Efectivo</option>
+                            <option value="3">📄 Cheque</option>
+                            <option value="4">❓ Otro</option>
+                        </select>
+                        <span asp-validation-for="MetodoPago" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Observaciones" class="form-label">
+                            <i class="fas fa-sticky-note"></i> Observaciones
+                        </label>
+                        <textarea asp-for="Observaciones" class="form-control" rows="3" 
+                                  placeholder="Ingrese observaciones adicionales sobre el pago..."></textarea>
+                        <span asp-validation-for="Observaciones" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Nota:</strong> Al registrar este pago, el estado se actualizará automáticamente a "Pagado".
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Registrar Pago
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Set today's date as default
+        var today = new Date().toISOString().split('T')[0];
+        $('#FechaPago').val(today);
+        
+        // Form validation
+        $('#pagoForm').on('submit', function(e) {
+            var fechaPago = $('#FechaPago').val();
+            var metodoPago = $('#MetodoPago').val();
+            
+            if (!fechaPago) {
+                e.preventDefault();
+                alert('Por favor seleccione la fecha de pago.');
+                return false;
+            }
+            
+            if (!metodoPago) {
+                e.preventDefault();
+                alert('Por favor seleccione el método de pago.');
+                return false;
+            }
+            
+            // Validate date is not in the future
+            var selectedDate = new Date(fechaPago);
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (selectedDate > today) {
+                e.preventDefault();
+                alert('La fecha de pago no puede ser posterior a hoy.');
+                return false;
+            }
+        });
+    });
+</script>

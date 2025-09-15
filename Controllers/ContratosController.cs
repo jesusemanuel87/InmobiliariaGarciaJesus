@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Repositories;
 using InmobiliariaGarciaJesus.Services;
+using InmobiliariaGarciaJesus.Attributes;
 
 namespace InmobiliariaGarciaJesus.Controllers
 {
+    [AuthorizeMultipleRoles(RolUsuario.Empleado, RolUsuario.Administrador, RolUsuario.Propietario, RolUsuario.Inquilino)]
     public class ContratosController : Controller
     {
         private readonly IContratoService _contratoService;
@@ -71,7 +73,7 @@ namespace InmobiliariaGarciaJesus.Controllers
         {
             try
             {
-                var inquilinos = await _inquilinoRepository.GetAllAsync();
+                var inquilinos = await _inquilinoRepository.GetAllAsync(i => i.Estado == true);
                 var inmuebles = await _inmuebleRepository.GetAllAsync(i => i.Estado == EstadoInmueble.Activo);
                 
                 // Obtener configuraciones de meses mínimos
@@ -149,7 +151,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                     return NotFound();
                 }
 
-                var inquilinos = await _inquilinoRepository.GetAllAsync();
+                var inquilinos = await _inquilinoRepository.GetAllAsync(i => i.Estado == true);
                 var inmuebles = await _inmuebleRepository.GetAllAsync();
                 ViewBag.Inquilinos = inquilinos;
                 ViewBag.Inmuebles = inmuebles;
@@ -313,7 +315,6 @@ namespace InmobiliariaGarciaJesus.Controllers
                     esFinalizacionTemprana = modelo.EsFinalizacionTemprana
                 };
                 
-                Console.WriteLine($"[DEBUG JSON] {System.Text.Json.JsonSerializer.Serialize(logData)}");
                 
                 await _contratoService.FinalizarContratoAsync(modelo);
                 

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/InmobiliariaGarciaJesus.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <header>
@@ -28,36 +29,141 @@
                                 <i class="fas fa-home"></i> Inicio
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Propietarios" asp-action="Index">
-                                <i class="fas fa-user-tie"></i> Propietarios
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Inquilinos" asp-action="Index">
-                                <i class="fas fa-users"></i> Inquilinos
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Inmuebles" asp-action="Index">
-                                <i class="fas fa-building"></i> Inmuebles
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Contratos" asp-action="Index">
-                                <i class="fas fa-file-contract"></i> Contratos
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Pagos" asp-action="Index">
-                                <i class="fas fa-money-bill-wave"></i> Pagos
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Configuracion" asp-action="AdminPanel">
-                                <i class="fas fa-cogs"></i> Configuración
-                            </a>
-                        </li>
+                        
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            @if (User.IsInRole("Administrador") || User.IsInRole("Empleado"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Propietarios" asp-action="Index">
+                                        <i class="fas fa-user-tie"></i> Propietarios
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Inquilinos" asp-action="Index">
+                                        <i class="fas fa-users"></i> Inquilinos
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Inmuebles" asp-action="Index">
+                                        <i class="fas fa-building"></i> Inmuebles
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Contratos" asp-action="Index">
+                                        <i class="fas fa-file-contract"></i> Contratos
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Pagos" asp-action="Index">
+                                        <i class="fas fa-money-bill"></i> Pagos
+                                    </a>
+                                </li>
+                            }
+                            
+                            @if (User.IsInRole("Propietario"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Inmuebles" asp-action="MisInmuebles">
+                                        <i class="fas fa-building"></i> Mis Inmuebles
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Contratos" asp-action="MisContratos">
+                                        <i class="fas fa-file-contract"></i> Mis Contratos
+                                    </a>
+                                </li>
+                            }
+                            
+                            @if (User.IsInRole("Inquilino"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Contratos" asp-action="MiContrato">
+                                        <i class="fas fa-file-contract"></i> Mi Contrato
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Pagos" asp-action="MisPagos">
+                                        <i class="fas fa-money-bill"></i> Mis Pagos
+                                    </a>
+                                </li>
+                            }
+                            
+                            @if (User.IsInRole("Administrador"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-cog"></i> Administración
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-controller="Empleados" asp-action="Index">
+                                            <i class="fas fa-user-tie"></i> Empleados
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-controller="Configuracion" asp-action="Index">
+                                            <i class="fas fa-cog"></i> Configuración
+                                        </a></li>
+                                    </ul>
+                                </li>
+                            }
+                        }
+                    </ul>
+                    
+                    <!-- User Authentication Menu -->
+                    <ul class="navbar-nav">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                                    @{
+                                        var userPhotoUrl = User.FindFirst("FotoPerfil")?.Value;
+                                        var userRole = User.FindFirst("RoleDescription")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+                                    }
+                                    @if (!string.IsNullOrEmpty(userPhotoUrl))
+                                    {
+                                        <img src="@userPhotoUrl" alt="Foto de perfil" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-user text-white" style="font-size: 14px;"></i>
+                                        </div>
+                                    }
+                                    <div class="d-flex flex-column text-start">
+                                        <span style="font-size: 14px; line-height: 1.1;">@User.Identity.Name</span>
+                                        @if (!string.IsNullOrEmpty(userRole))
+                                        {
+                                            <small class="text-muted" style="font-size: 11px; line-height: 1;">(@userRole)</small>
+                                        }
+                                    </div>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" asp-controller="Auth" asp-action="Profile">
+                                        <i class="fas fa-user-circle"></i> Mi Perfil
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Auth" asp-action="Login">
+                                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Auth" asp-action="Register">
+                                    <i class="fas fa-user-plus"></i> Registrarse
+                                </a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

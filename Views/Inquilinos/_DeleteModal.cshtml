@@ -1,0 +1,83 @@
+@model InmobiliariaGarciaJesus.Models.Inquilino
+
+<div class="modal fade" id="deleteInquilinoModal" tabindex="-1" aria-labelledby="deleteInquilinoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteInquilinoModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="deleteInquilinoForm">
+                <input type="hidden" asp-for="Id" />
+                <div class="modal-body">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>¡Atención!</strong> Esta acción no se puede deshacer.
+                    </div>
+                    
+                    <p class="mb-3">¿Está seguro que desea eliminar el siguiente inquilino?</p>
+                    
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Nombre:</strong><br>
+                                    @Html.DisplayFor(model => model.NombreCompleto)
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>DNI:</strong><br>
+                                    @Html.DisplayFor(model => model.Dni)
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <strong>Email:</strong><br>
+                                    @Html.DisplayFor(model => model.Email)
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Teléfono:</strong><br>
+                                    @Html.DisplayFor(model => model.Telefono)
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.Direccion))
+                            {
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <strong>Dirección:</strong><br>
+                                        @Html.DisplayFor(model => model.Direccion)
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                        <label class="form-check-label" for="confirmDelete">
+                            Confirmo que deseo eliminar este inquilino
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="button" id="btnConfirmDelete" class="btn btn-danger" onclick="submitDeleteForm()" disabled>
+                        <i class="fas fa-trash"></i> Eliminar Inquilino
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Enable/disable delete button based on confirmation checkbox
+        $('#confirmDelete').change(function() {
+            $('#btnConfirmDelete').prop('disabled', !this.checked);
+        });
+    });
+</script>

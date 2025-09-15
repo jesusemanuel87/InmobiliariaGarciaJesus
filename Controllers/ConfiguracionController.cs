@@ -1,9 +1,11 @@
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Repositories;
+using InmobiliariaGarciaJesus.Attributes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InmobiliariaGarciaJesus.Controllers
 {
+    [AuthorizeAdmin]
     public class ConfiguracionController : Controller
     {
         private readonly IRepository<Configuracion> _configuracionRepository;

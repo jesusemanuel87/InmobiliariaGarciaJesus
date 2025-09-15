@@ -1,0 +1,135 @@
+@model InmobiliariaGarciaJesus.Models.Propietario
+
+<div class="modal fade" id="modalPropietario" tabindex="-1" aria-labelledby="modalPropietarioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Nuevo Propietario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formPropietario">
+                    <input type="hidden" id="propietarioId" value="@Model.Id">
+                    <input type="hidden" id="fechaCreacion" value="@Model.FechaCreacion.ToString("yyyy-MM-ddTHH:mm:ss")">
+
+                    <!-- Nombre y Apellido -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="nombre" class="form-label">
+                                <i class="fas fa-user"></i> Nombre *
+                            </label>
+                            <input type="text" class="form-control" id="nombre" value="@Model.Nombre" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="apellido" class="form-label">
+                                <i class="fas fa-user"></i> Apellido *
+                            </label>
+                            <input type="text" class="form-control" id="apellido" value="@Model.Apellido" required>
+                        </div>
+                    </div>
+
+                    <!-- DNI y Teléfono -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="dni" class="form-label">
+                                <i class="fas fa-id-card"></i> DNI *
+                            </label>
+                            <input type="text" class="form-control" id="dni" value="@Model.Dni" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="telefono" class="form-label">
+                                <i class="fas fa-phone"></i> Teléfono
+                            </label>
+                            <input type="text" class="form-control" id="telefono" value="@Model.Telefono">
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope"></i> Email *
+                            </label>
+                            <input type="email" class="form-control" id="email" value="@Model.Email" required>
+                        </div>
+                    </div>
+
+                    <!-- Dirección -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="direccion" class="form-label">
+                                <i class="fas fa-map-marker-alt"></i> Dirección
+                            </label>
+                            <textarea class="form-control" id="direccion" rows="3">@Model.Direccion</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Estado -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="estado" @(Model.Estado ? "checked" : "")>
+                                <label class="form-check-label" for="estado">
+                                    <i class="fas @(Model.Estado ? "fa-toggle-on text-success" : "fa-toggle-off text-secondary")"></i> 
+                                    <span id="estadoText">@(Model.Estado ? "Activo" : "Inactivo")</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de auditoría (solo para edición) -->
+                    <div id="auditInfo" class="row mb-3" style="display: none;">
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Información:</strong>
+                                <span id="fechaCreacionText"></span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="cleanupModals()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGuardar">
+                    <i class="fas fa-save"></i> Crear
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Limpiar errores al escribir
+        $('#formPropietario').find('input, textarea').on('input', function() {
+            $(this).removeClass('is-invalid');
+            $(this).next('.text-danger').remove();
+        });
+
+        // Actualizar texto del label del estado
+        $('#estado').change(function() {
+            const label = $(this).next('label').find('i');
+            const text = $(this).next('label').find('#estadoText');
+            if (this.checked) {
+                label.removeClass('fa-toggle-off text-secondary').addClass('fa-toggle-on text-success');
+                text.text('Activo');
+            } else {
+                label.removeClass('fa-toggle-on text-success').addClass('fa-toggle-off text-secondary');
+                text.text('Inactivo');
+            }
+        });
+
+        // Event listener para el botón guardar
+        $('#btnGuardar').click(function() {
+            console.log('Button clicked from modal script');
+            if (typeof submitForm === 'function') {
+                submitForm();
+            } else {
+                console.error('submitForm function not found');
+            }
+        });
+    });
+</script>

@@ -111,8 +111,8 @@ namespace InmobiliariaGarciaJesus.Repositories
             
             var query = @"UPDATE Inquilinos 
                          SET Nombre = @Nombre, Apellido = @Apellido, Dni = @Dni, 
-                             Telefono = @Telefono, Email = @Email, Direccion = @Direccion 
-                         WHERE Id = @Id AND Estado = 1";
+                             Telefono = @Telefono, Email = @Email, Direccion = @Direccion, Estado = @Estado 
+                         WHERE Id = @Id";
             
             using var command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@Id", inquilino.Id);
@@ -122,6 +122,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             command.Parameters.AddWithValue("@Telefono", inquilino.Telefono ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Email", inquilino.Email);
             command.Parameters.AddWithValue("@Direccion", inquilino.Direccion ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@Estado", inquilino.Estado);
             
             var rowsAffected = await command.ExecuteNonQueryAsync();
             return rowsAffected > 0;

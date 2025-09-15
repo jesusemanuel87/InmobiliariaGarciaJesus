@@ -38,9 +38,9 @@ namespace InmobiliariaGarciaJesus.Repositories
                     Intereses = Convert.ToDecimal(reader["Intereses"]),
                     Multas = Convert.ToDecimal(reader["Multas"]),
                     FechaVencimiento = Convert.ToDateTime(reader["FechaVencimiento"]),
-                    FechaPago = reader["FechaPago"] == DBNull.Value ? null : Convert.ToDateTime(reader["FechaPago"]),
+                    FechaPago = reader["FechaPago"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["FechaPago"]),
                     Estado = Enum.TryParse<EstadoPago>(reader["Estado"]?.ToString(), out var estado) ? estado : EstadoPago.Pendiente,
-                    MetodoPago = reader["metodo_pago"] == DBNull.Value ? null : Enum.TryParse<MetodoPago>(reader["metodo_pago"]?.ToString(), out var metodo) ? metodo : null,
+                    MetodoPago = reader["metodo_pago"] == DBNull.Value ? null : Enum.TryParse<MetodoPago>(reader["metodo_pago"]?.ToString(), out var metodo) ? metodo : (MetodoPago?)null,
                     Observaciones = reader["observaciones"]?.ToString(),
                     FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"])
                 });
@@ -75,7 +75,7 @@ namespace InmobiliariaGarciaJesus.Repositories
                 {
                     Id = Convert.ToInt32(reader["Id"]),
                     Numero = Convert.ToInt32(reader["Numero"]),
-                    FechaPago = reader["FechaPago"] == DBNull.Value ? null : Convert.ToDateTime(reader["FechaPago"]),
+                    FechaPago = reader["FechaPago"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["FechaPago"]),
                     ContratoId = Convert.ToInt32(reader["ContratoId"]),
                     Importe = Convert.ToDecimal(reader["Importe"]),
                     Intereses = reader["Intereses"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["Intereses"]),
@@ -83,7 +83,7 @@ namespace InmobiliariaGarciaJesus.Repositories
                     FechaVencimiento = reader["FechaVencimiento"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["FechaVencimiento"]),
                     Estado = Enum.TryParse<EstadoPago>(reader["Estado"]?.ToString(), out var estado) ? estado : EstadoPago.Pendiente,
                     FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
-                    MetodoPago = reader["metodo_pago"] == DBNull.Value ? null : Enum.TryParse<MetodoPago>(reader["metodo_pago"]?.ToString(), out var metodo) ? metodo : null,
+                    MetodoPago = reader["metodo_pago"] == DBNull.Value ? null : Enum.TryParse<MetodoPago>(reader["metodo_pago"]?.ToString(), out var metodo) ? metodo : (MetodoPago?)null,
                     Observaciones = reader["observaciones"] == DBNull.Value ? null : reader["observaciones"]?.ToString()
                 };
             }
@@ -125,8 +125,6 @@ namespace InmobiliariaGarciaJesus.Repositories
                              Importe = @Importe, Intereses = @Intereses, Multas = @Multas, FechaVencimiento = @FechaVencimiento,
                              Estado = @Estado, metodo_pago = @MetodoPago, observaciones = @Observaciones
                          WHERE Id = @Id";
-            
-            Console.WriteLine($"[DEBUG SQL] Actualizando pago {pago.Id} con Multa: {pago.Multas}");
 
             using var command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@Id", pago.Id);
@@ -142,15 +140,6 @@ namespace InmobiliariaGarciaJesus.Repositories
             command.Parameters.AddWithValue("@Observaciones", !string.IsNullOrEmpty(pago.Observaciones) ? pago.Observaciones : DBNull.Value);
 
             var rowsAffected = await command.ExecuteNonQueryAsync();
-            Console.WriteLine($"[DEBUG SQL] Filas afectadas: {rowsAffected}");
-            
-            // Verificar la actualización ejecutando una consulta SELECT
-            var verifyQuery = "SELECT Multas FROM pagos WHERE Id = @Id";
-            using var verifyCommand = new MySqlCommand(verifyQuery, connection);
-            verifyCommand.Parameters.AddWithValue("@Id", pago.Id);
-            var multaEnDB = await verifyCommand.ExecuteScalarAsync();
-            Console.WriteLine($"[DEBUG SQL] Multa verificada en DB: {multaEnDB}");
-            
             return rowsAffected > 0;
         }
 
@@ -191,7 +180,7 @@ namespace InmobiliariaGarciaJesus.Repositories
                 {
                     Id = Convert.ToInt32(reader["Id"]),
                     Numero = Convert.ToInt32(reader["Numero"]),
-                    FechaPago = reader["FechaPago"] == DBNull.Value ? null : Convert.ToDateTime(reader["FechaPago"]),
+                    FechaPago = reader["FechaPago"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["FechaPago"]),
                     ContratoId = Convert.ToInt32(reader["ContratoId"]),
                     Importe = Convert.ToDecimal(reader["Importe"]),
                     Intereses = reader["Intereses"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["Intereses"]),
@@ -199,7 +188,7 @@ namespace InmobiliariaGarciaJesus.Repositories
                     FechaVencimiento = reader["FechaVencimiento"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["FechaVencimiento"]),
                     Estado = Enum.TryParse<EstadoPago>(reader["Estado"]?.ToString(), out var estado) ? estado : EstadoPago.Pendiente,
                     FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
-                    MetodoPago = reader["metodo_pago"] == DBNull.Value ? null : Enum.TryParse<MetodoPago>(reader["metodo_pago"]?.ToString(), out var metodo) ? metodo : null,
+                    MetodoPago = reader["metodo_pago"] == DBNull.Value ? null : Enum.TryParse<MetodoPago>(reader["metodo_pago"]?.ToString(), out var metodo) ? metodo : (MetodoPago?)null,
                     Observaciones = reader["observaciones"] == DBNull.Value ? null : reader["observaciones"]?.ToString()
                 };
 
@@ -207,6 +196,52 @@ namespace InmobiliariaGarciaJesus.Repositories
             }
 
             return pagos;
+        }
+
+        public async Task<IEnumerable<dynamic>> GetAllWithRelatedDataAsync()
+        {
+            var results = new List<dynamic>();
+            
+            using var connection = _connectionManager.GetConnection();
+            await connection.OpenAsync();
+            
+            var query = @"SELECT 
+                            p.Id, p.Numero, p.ContratoId, p.Importe, p.Intereses, p.Multas, 
+                            p.FechaVencimiento, p.FechaPago, p.Estado, p.metodo_pago, p.observaciones, p.FechaCreacion,
+                            CONCAT(i.Nombre, ' ', i.Apellido) as InquilinoNombre,
+                            inm.Direccion as InmuebleDireccion,
+                            c.Estado as EstadoContrato
+                         FROM Pagos p
+                         INNER JOIN Contratos c ON p.ContratoId = c.Id
+                         INNER JOIN Inquilinos i ON c.InquilinoId = i.Id
+                         INNER JOIN Inmuebles inm ON c.InmuebleId = inm.Id";
+            
+            using var command = new MySqlCommand(query, connection);
+            using var reader = await command.ExecuteReaderAsync();
+            
+            while (await reader.ReadAsync())
+            {
+                results.Add(new
+                {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    Numero = Convert.ToInt32(reader["Numero"]),
+                    ContratoId = Convert.ToInt32(reader["ContratoId"]),
+                    Importe = Convert.ToDecimal(reader["Importe"]),
+                    Intereses = Convert.ToDecimal(reader["Intereses"]),
+                    Multas = Convert.ToDecimal(reader["Multas"]),
+                    FechaVencimiento = Convert.ToDateTime(reader["FechaVencimiento"]),
+                    FechaPago = reader["FechaPago"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["FechaPago"]),
+                    Estado = Enum.TryParse<EstadoPago>(reader["Estado"]?.ToString(), out var estado) ? estado : EstadoPago.Pendiente,
+                    MetodoPago = reader["metodo_pago"] == DBNull.Value ? null : Enum.TryParse<MetodoPago>(reader["metodo_pago"]?.ToString(), out var metodo) ? metodo : (MetodoPago?)null,
+                    Observaciones = reader["observaciones"]?.ToString(),
+                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                    InquilinoNombre = reader["InquilinoNombre"]?.ToString(),
+                    InmuebleDireccion = reader["InmuebleDireccion"]?.ToString(),
+                    EstadoContrato = Enum.TryParse<EstadoContrato>(reader["EstadoContrato"]?.ToString(), out var estadoContrato) ? estadoContrato : EstadoContrato.Activo
+                });
+            }
+            
+            return results;
         }
     }
 }

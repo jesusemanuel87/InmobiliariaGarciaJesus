@@ -36,6 +36,30 @@
                                 <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Direccion)</dt>
                                 <dd class="col-sm-8">@Html.DisplayFor(model => model.Direccion)</dd>
 
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Localidad)</dt>
+                                <dd class="col-sm-8">
+                                    @if (!string.IsNullOrEmpty(Model.Localidad))
+                                    {
+                                        @Model.Localidad
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No especificado</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Provincia)</dt>
+                                <dd class="col-sm-8">
+                                    @if (!string.IsNullOrEmpty(Model.Provincia))
+                                    {
+                                        @Model.Provincia
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No especificado</span>
+                                    }
+                                </dd>
+
                                 <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Tipo)</dt>
                                 <dd class="col-sm-8">
                                     <span class="badge bg-info">@Html.DisplayFor(model => model.Tipo)</span>
@@ -104,23 +128,19 @@
                                     }
                                 </dd>
 
-                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Latitud)</dt>
+                                <dt class="col-sm-4">Coordenadas</dt>
                                 <dd class="col-sm-8">
-                                    @if (Model.Latitud.HasValue)
+                                    @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
                                     {
-                                        @Model.Latitud.Value.ToString("F6")
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">No especificado</span>
-                                    }
-                                </dd>
-
-                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Longitud)</dt>
-                                <dd class="col-sm-8">
-                                    @if (Model.Longitud.HasValue)
-                                    {
-                                        @Model.Longitud.Value.ToString("F6")
+                                        <div>
+                                            <strong>Lat:</strong> @Model.Latitud.Value.ToString("F6")<br>
+                                            <strong>Lng:</strong> @Model.Longitud.Value.ToString("F6")
+                                        </div>
+                                        <div class="mt-2">
+                                            <a href="@Model.GoogleMapsUrl" target="_blank" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-map-marker-alt"></i> Ver en Google Maps
+                                            </a>
+                                        </div>
                                     }
                                     else
                                     {
@@ -133,6 +153,28 @@
                             </dl>
                         </div>
                     </div>
+
+                    @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
+                    {
+                        <!-- Sección del Mapa -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-map-marked-alt"></i> Ubicación del Inmueble</h5>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div id="map" style="height: 400px; width: 100%;"></div>
+                                    </div>
+                                    <div class="card-footer text-center">
+                                        <a href="@Model.GoogleMapsUrl" target="_blank" class="btn btn-primary">
+                                            <i class="fas fa-external-link-alt"></i> Abrir en Google Maps
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -140,19 +182,16 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/Inmueble/details-inmueble.js"></script>
     <script>
-        $(document).ready(function() {
-            cargarImagenes();
-        });
-
-        function cargarImagenes() {
-            $.get('@Url.Action("GetImagenes", "Inmuebles")', { id: @Model.Id, readOnly: true })
-                .done(function(data) {
-                    $('#imagenes-container').html(data);
-                })
-                .fail(function() {
-                    $('#imagenes-container').html('<div class="col-12 text-center text-danger"><i class="fas fa-exclamation-triangle"></i> Error al cargar imágenes</div>');
-                });
-        }
+        // Initialize InmuebleDetailsManager with model data
+        inmuebleDetailsManager = new InmuebleDetailsManager(
+            @Model.Id,
+            @(Model.Latitud?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "null"),
+            @(Model.Longitud?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "null"),
+            '@Html.Raw(Model.Direccion?.Replace("'", "\\'"))',
+            '@Html.Raw(Model.Localidad?.Replace("'", "\\'"))',
+            '@Html.Raw(Model.Provincia?.Replace("'", "\\'"))'
+        );
     </script>
 }

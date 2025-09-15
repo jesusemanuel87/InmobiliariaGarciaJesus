@@ -40,7 +40,7 @@
                                     <th>Teléfono</th>
                                     <th>Fecha Creación</th>
                                     <th class="text-center">Estado</th>
-                                    <th class="text-center no-sort">Acciones</th>
+                                    <th class="text-end no-sort">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -79,4 +79,36 @@
     <script src="~/js/Propietario/propietario-modals.js"></script>
     <script src="~/js/Propietario/propietario-manager.js"></script>
     <script src="~/js/Propietario/index.js"></script>
+
+    <style>
+        /* Expandable rows styling */
+        .child-row-content {
+            background-color: #f8f9fa;
+            border-left: 3px solid #007bff;
+        }
+        
+        .child-row-content .table {
+            margin-bottom: 0;
+        }
+        
+        .child-row-content .table th {
+            border-top: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .child-row-content .table td {
+            font-size: 0.875rem;
+            vertical-align: middle;
+        }
+
+        /* Action buttons alignment and spacing */
+        #propietariosTable .text-end {
+            text-align: right !important;
+        }
+        
+        .gap-1 > * + * {
+            margin-left: 0.25rem !important;
+        }
+    </style>
 }

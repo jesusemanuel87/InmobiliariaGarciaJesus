@@ -44,9 +44,17 @@ class PropietarioDataTablesConfig {
                 data: null,
                 title: 'Acciones',
                 orderable: false,
+                className: 'text-end',
                 render: function(data, type, row) {
+                    const expandButton = row.hasInmuebles 
+                        ? `<button type="button" class="btn btn-sm btn-outline-primary me-1" data-id="${row.id}" title="Ver inmuebles">
+                               <i class="fas fa-home"></i>
+                           </button>`
+                        : '';
+                    
                     return `
-                        <div class="btn-group" role="group">
+                        <div class="d-flex justify-content-end gap-1">
+                            ${expandButton}
                             <button type="button" class="btn btn-sm btn-outline-info" onclick="showDetailsModal(${row.id})" title="Ver detalles">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -61,6 +69,52 @@ class PropietarioDataTablesConfig {
                 }
             }
         ];
+    }
+
+    static formatChildRow(data) {
+        if (!data || data.length === 0) {
+            return '<div class="p-3 text-muted text-center">No hay inmuebles registrados para este propietario</div>';
+        }
+
+        let html = `
+            <div class="p-3">
+                <h6 class="mb-3"><i class="fas fa-home text-primary"></i> Inmuebles del Propietario</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Dirección</th>
+                                <th>Tipo</th>
+                                <th>Uso</th>
+                                <th>Estado</th>
+                                <th>Estado Contrato</th>
+                                <th class="text-end">Precio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+
+        data.forEach(inmueble => {
+            html += `
+                <tr>
+                    <td>${inmueble.direccion}</td>
+                    <td><span class="badge bg-info">${inmueble.tipo}</span></td>
+                    <td><span class="badge bg-secondary">${inmueble.uso}</span></td>
+                    <td><span class="badge bg-success">${inmueble.estado}</span></td>
+                    <td><span class="badge ${inmueble.estadoContratoCss}">${inmueble.estadoContrato}</span></td>
+                    <td class="text-end">$${inmueble.precio.toLocaleString('es-AR')}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        return html;
     }
 
     static getAjaxConfig() {

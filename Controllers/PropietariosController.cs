@@ -113,7 +113,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                         break;
                 }
                 
-                // Apply pagination
+                // Apply pagination and include inmuebles data
                 var pagedData = allPropietarios
                     .Skip(start)
                     .Take(length)
@@ -125,7 +125,8 @@ namespace InmobiliariaGarciaJesus.Controllers
                         email = p.Email,
                         telefono = p.Telefono ?? "",
                         fechaCreacion = p.FechaCreacion,
-                        estado = p.Estado
+                        estado = p.Estado,
+                        hasInmuebles = ((InmuebleRepository)_inmuebleRepository).GetInmueblesByPropietarioIdAsync(p.Id).Result.Any()
                     })
                     .ToList();
 
@@ -410,6 +411,33 @@ namespace InmobiliariaGarciaJesus.Controllers
         {
             var inmuebles = await ((InmuebleRepository)_inmuebleRepository).GetInmueblesByPropietarioIdAsync(id);
             return PartialView("_InmueblesPartial", inmuebles);
+        }
+
+        // AJAX endpoint to get inmuebles data for DataTables expansion
+        [HttpGet]
+        public async Task<IActionResult> GetInmueblesData(int id)
+        {
+            try
+            {
+                var inmuebles = await ((InmuebleRepository)_inmuebleRepository).GetInmueblesByPropietarioIdAsync(id);
+                
+                var inmueblesData = inmuebles.Select(i => new
+                {
+                    direccion = i.Direccion,
+                    tipo = i.Tipo.ToString(),
+                    uso = i.Uso.ToString(),
+                    estado = i.Estado.ToString(),
+                    estadoContrato = i.EstadoContratoTexto,
+                    estadoContratoCss = i.EstadoContratoCssClass,
+                    precio = i.Precio ?? 0
+                }).ToList();
+
+                return Json(new { success = true, data = inmueblesData });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
     }
 }

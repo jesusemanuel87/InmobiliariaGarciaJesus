@@ -22,6 +22,60 @@ class PropietarioIndexManager {
             columns: columns,
             order: PropietarioDataTablesConfig.getDefaultOrder()
         });
+
+        // Add event listener for opening and closing details
+        $('#propietariosTable tbody').on('click', '.btn-outline-primary[data-id]', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const button = $(e.currentTarget);
+            const tr = button.closest('tr');
+            const row = this.dataTable.row(tr);
+            const icon = button.find('i');
+            
+            if (row.child.isShown()) {
+                // This row is already open - close it
+                row.child.hide();
+                tr.removeClass('shown');
+                icon.removeClass('fa-minus').addClass('fa-home');
+                button.removeClass('btn-outline-secondary').addClass('btn-outline-primary');
+            } else {
+                // Open this row
+                const rowData = row.data();
+                if (rowData.hasInmuebles) {
+                    this.loadInmueblesData(row, tr, button);
+                }
+            }
+        });
+    }
+
+    loadInmueblesData(row, tr, button) {
+        const rowData = row.data();
+        const icon = button.find('i');
+        
+        // Show loading state
+        icon.removeClass('fa-home').addClass('fa-spinner fa-spin');
+        button.removeClass('btn-outline-primary').addClass('btn-outline-secondary');
+        
+        $.get(`/Propietarios/GetInmueblesData/${rowData.id}`)
+            .done((response) => {
+                if (response.success) {
+                    const childContent = PropietarioDataTablesConfig.formatChildRow(response.data);
+                    row.child(childContent).show();
+                    tr.addClass('shown');
+                    icon.removeClass('fa-spinner fa-spin').addClass('fa-minus');
+                    button.removeClass('btn-outline-primary').addClass('btn-outline-secondary');
+                } else {
+                    this.showAlert('danger', 'Error al cargar los inmuebles: ' + response.message);
+                    icon.removeClass('fa-spinner fa-spin').addClass('fa-home');
+                    button.removeClass('btn-outline-secondary').addClass('btn-outline-primary');
+                }
+            })
+            .fail(() => {
+                this.showAlert('danger', 'Error al cargar los inmuebles del propietario');
+                icon.removeClass('fa-spinner fa-spin').addClass('fa-home');
+                button.removeClass('btn-outline-secondary').addClass('btn-outline-primary');
+            });
     }
 
     bindEvents() {

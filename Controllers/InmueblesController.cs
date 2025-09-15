@@ -79,7 +79,7 @@ namespace InmobiliariaGarciaJesus.Controllers
         {
             try
             {
-                var propietarios = await _propietarioRepository.GetAllAsync();
+                var propietarios = await _propietarioRepository.GetAllAsync(p => p.Estado);
                 ViewBag.Propietarios = propietarios;
                 return View();
             }
@@ -112,7 +112,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                 }
             }
 
-            var propietarios = await _propietarioRepository.GetAllAsync();
+            var propietarios = await _propietarioRepository.GetAllAsync(p => p.Estado);
             ViewBag.Propietarios = propietarios;
             return View(inmueble);
         }
@@ -133,7 +133,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                     return NotFound();
                 }
 
-                var propietarios = await _propietarioRepository.GetAllAsync();
+                var propietarios = await _propietarioRepository.GetAllAsync(p => p.Estado);
                 ViewBag.Propietarios = propietarios;
                 return View(inmueble);
             }
@@ -168,7 +168,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                 }
             }
 
-            var propietarios = await _propietarioRepository.GetAllAsync();
+            var propietarios = await _propietarioRepository.GetAllAsync(p => p.Estado);
             ViewBag.Propietarios = propietarios;
             return View(inmueble);
         }

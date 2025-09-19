@@ -1,24 +1,25 @@
-using InmobiliariaGarciaJesus.Data;
 using InmobiliariaGarciaJesus.Models;
 using MySql.Data.MySqlClient;
+using Microsoft.Extensions.Configuration;
 using System.Data;
 
 namespace InmobiliariaGarciaJesus.Repositories
 {
     public class InmuebleImagenRepository : IRepository<InmuebleImagen>
     {
-        private readonly MySqlConnectionManager _connectionManager;
+        private readonly string _connectionString;
 
-        public InmuebleImagenRepository(MySqlConnectionManager connectionManager)
+        public InmuebleImagenRepository(IConfiguration configuration)
         {
-            _connectionManager = connectionManager;
+            _connectionString = configuration.GetConnectionString("DefaultConnection") 
+                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
         }
 
         public async Task<IEnumerable<InmuebleImagen>> GetAllAsync()
         {
             var imagenes = new List<InmuebleImagen>();
             
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"SELECT Id, InmuebleId, NombreArchivo, RutaArchivo, TamanoBytes, 
@@ -53,7 +54,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<InmuebleImagen?> GetByIdAsync(int id)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"SELECT Id, InmuebleId, NombreArchivo, RutaArchivo, EsPortada, 
@@ -77,7 +78,7 @@ namespace InmobiliariaGarciaJesus.Repositories
         {
             var imagenes = new List<InmuebleImagen>();
             
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"SELECT Id, InmuebleId, NombreArchivo, RutaArchivo, EsPortada, 
@@ -100,7 +101,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<InmuebleImagen?> GetPortadaByInmuebleIdAsync(int inmuebleId)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"SELECT Id, InmuebleId, NombreArchivo, RutaArchivo, EsPortada, 
@@ -123,7 +124,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<int> CreateAsync(InmuebleImagen imagen)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"INSERT INTO InmuebleImagenes 
@@ -148,7 +149,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<bool> UpdateAsync(InmuebleImagen imagen)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"UPDATE InmuebleImagenes SET 
@@ -178,7 +179,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<bool> DeleteAsync(int id)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = "DELETE FROM InmuebleImagenes WHERE Id = @Id";
@@ -192,7 +193,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<bool> SetPortadaAsync(int imagenId, int inmuebleId)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             using var transaction = await connection.BeginTransactionAsync();
             

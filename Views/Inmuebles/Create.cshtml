@@ -150,6 +150,18 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="~/js/shared/google-maps-service.js"></script>
     <script src="~/js/georef-api.js"></script>
     <script src="~/js/Inmueble/create-inmueble.js"></script>
+    <script>
+        // Configurar Google Maps API Key
+        @if (!string.IsNullOrEmpty(ViewBag.GoogleMapsApiKey as string))
+        {
+            <text>
+            if (window.googleMapsService) {
+                window.googleMapsService.setApiKey('@ViewBag.GoogleMapsApiKey');
+            }
+            </text>
+        }
+    </script>
 }

@@ -1,4 +1,3 @@
-using InmobiliariaGarciaJesus.Data;
 using InmobiliariaGarciaJesus.Models;
 using MySql.Data.MySqlClient;
 
@@ -6,18 +5,19 @@ namespace InmobiliariaGarciaJesus.Repositories
 {
     public class PagoRepository : IRepository<Pago>
     {
-        private readonly MySqlConnectionManager _connectionManager;
+        private readonly string _connectionString;
 
-        public PagoRepository(MySqlConnectionManager connectionManager)
+        public PagoRepository(IConfiguration configuration)
         {
-            _connectionManager = connectionManager;
+            _connectionString = configuration.GetConnectionString("DefaultConnection") 
+                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
         }
 
         public async Task<IEnumerable<Pago>> GetAllAsync()
         {
             var pagos = new List<Pago>();
             
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"SELECT Id, Numero, ContratoId, Importe, Intereses, Multas, 
@@ -57,7 +57,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<Pago?> GetByIdAsync(int id)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
 
             var query = @"SELECT Id, Numero, FechaPago, ContratoId, Importe, Intereses, Multas, FechaVencimiento, Estado, FechaCreacion, metodo_pago, observaciones 
@@ -93,7 +93,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<int> CreateAsync(Pago pago)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
 
             var query = @"INSERT INTO pagos (Numero, FechaPago, ContratoId, Importe, Intereses, Multas, FechaVencimiento, Estado, FechaCreacion)
@@ -117,7 +117,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<bool> UpdateAsync(Pago pago)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
 
             var query = @"UPDATE pagos 
@@ -145,7 +145,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<bool> DeleteAsync(int id)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
 
             var query = "DELETE FROM pagos WHERE Id = @Id";
@@ -159,7 +159,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<List<Pago>> GetPagosByContratoIdAsync(int contratoId)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
 
             var query = @"SELECT Id, Numero, FechaPago, ContratoId, Importe, Intereses, Multas, FechaVencimiento, Estado, FechaCreacion, metodo_pago, observaciones 
@@ -202,7 +202,7 @@ namespace InmobiliariaGarciaJesus.Repositories
         {
             var results = new List<dynamic>();
             
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"SELECT 

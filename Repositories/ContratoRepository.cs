@@ -1,4 +1,3 @@
-using InmobiliariaGarciaJesus.Data;
 using InmobiliariaGarciaJesus.Models;
 using MySql.Data.MySqlClient;
 
@@ -6,18 +5,19 @@ namespace InmobiliariaGarciaJesus.Repositories
 {
     public class ContratoRepository : IRepository<Contrato>
     {
-        private readonly MySqlConnectionManager _connectionManager;
+        private readonly string _connectionString;
 
-        public ContratoRepository(MySqlConnectionManager connectionManager)
+        public ContratoRepository(IConfiguration configuration)
         {
-            _connectionManager = connectionManager;
+            _connectionString = configuration.GetConnectionString("DefaultConnection") 
+                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
         }
 
         public async Task<IEnumerable<Contrato>> GetAllAsync()
         {
             var contratos = new List<Contrato>();
             
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"SELECT c.Id, c.FechaInicio, c.FechaFin, c.Precio, c.InquilinoId, c.InmuebleId, c.Estado, c.FechaCreacion,
@@ -73,7 +73,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<Contrato?> GetByIdAsync(int id)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"SELECT c.Id, c.FechaInicio, c.FechaFin, c.Precio, c.InquilinoId, c.InmuebleId, 
@@ -128,7 +128,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<int> CreateAsync(Contrato contrato)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"INSERT INTO contratos (FechaInicio, FechaFin, Precio, InquilinoId, InmuebleId, 
@@ -153,7 +153,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<bool> UpdateAsync(Contrato contrato)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"UPDATE contratos 
@@ -178,7 +178,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<bool> DeleteAsync(int id)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = "UPDATE contratos SET Estado = @Estado WHERE Id = @Id";
@@ -193,7 +193,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<bool> HasOverlappingContractAsync(int inmuebleId, DateTime fechaInicio, DateTime fechaFin, int? excludeContratoId = null)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"SELECT COUNT(*) FROM contratos 
@@ -224,7 +224,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<DateTime?> GetNextAvailableDateAsync(int inmuebleId)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"SELECT MAX(FechaFin) FROM contratos 
@@ -248,7 +248,7 @@ namespace InmobiliariaGarciaJesus.Repositories
         {
             var unavailableDates = new List<(DateTime, DateTime)>();
             
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"SELECT FechaInicio, FechaFin FROM contratos 

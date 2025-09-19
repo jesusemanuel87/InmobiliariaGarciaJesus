@@ -419,6 +419,9 @@ $RECYCLE.BIN/
 .idea/
 *.sln.iml
 
+# Documentation
+DEPENDENCY_INJECTION_COMPARISON.md
+
 ##
 ## Visual Studio Code
 ##

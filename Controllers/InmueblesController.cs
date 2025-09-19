@@ -13,17 +13,20 @@ namespace InmobiliariaGarciaJesus.Controllers
         private readonly IRepository<Propietario> _propietarioRepository;
         private readonly IInmuebleImagenService _imagenService;
         private readonly InmuebleImagenRepository _imagenRepository;
+        private readonly IConfiguration _configuration;
 
         public InmueblesController(
             IRepository<Inmueble> inmuebleRepository, 
             IRepository<Propietario> propietarioRepository,
             IInmuebleImagenService imagenService,
-            InmuebleImagenRepository imagenRepository)
+            InmuebleImagenRepository imagenRepository,
+            IConfiguration configuration)
         {
             _inmuebleRepository = inmuebleRepository;
             _propietarioRepository = propietarioRepository;
             _imagenService = imagenService;
             _imagenRepository = imagenRepository;
+            _configuration = configuration;
         }
 
         // GET: Inmuebles
@@ -40,6 +43,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                     inmueble.Imagenes = imagenes.ToList();
                 }
                 
+                ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
                 return View(inmuebles);
             }
             catch (Exception ex)
@@ -65,6 +69,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                     return NotFound();
                 }
 
+                ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
                 return View(inmueble);
             }
             catch (Exception ex)
@@ -81,6 +86,7 @@ namespace InmobiliariaGarciaJesus.Controllers
             {
                 var propietarios = await _propietarioRepository.GetAllAsync(p => p.Estado);
                 ViewBag.Propietarios = propietarios;
+                ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
                 return View();
             }
             catch (Exception ex)
@@ -135,6 +141,7 @@ namespace InmobiliariaGarciaJesus.Controllers
 
                 var propietarios = await _propietarioRepository.GetAllAsync(p => p.Estado);
                 ViewBag.Propietarios = propietarios;
+                ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
                 return View(inmueble);
             }
             catch (Exception ex)
@@ -228,7 +235,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                     .Select(i => new { 
                         id = i.Id, 
                         direccion = i.Direccion,
-                        precio = i.Precio.Value 
+                        precio = i.Precio ?? 0 
                     })
                     .ToList();
                 

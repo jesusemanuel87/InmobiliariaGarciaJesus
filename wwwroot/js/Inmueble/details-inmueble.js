@@ -30,17 +30,11 @@ class InmuebleDetailsManager {
 
     initializeGoogleMaps() {
         if (this.latitud && this.longitud) {
-            // Load Google Maps when document is ready
-            if (typeof google !== 'undefined' && google.maps) {
-                this.initMap();
+            // Usar el servicio de Google Maps para cargar la API
+            if (window.googleMapsService) {
+                window.googleMapsService.loadGoogleMaps(() => this.initMap());
             } else {
-                // Load Google Maps API if not available
-                window.initMap = () => this.initMap();
-                const script = document.createElement('script');
-                script.src = 'https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap';
-                script.async = true;
-                script.defer = true;
-                document.head.appendChild(script);
+                console.error('GoogleMapsService no está disponible');
             }
         }
     }

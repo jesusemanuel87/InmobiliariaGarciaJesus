@@ -1,4 +1,3 @@
-using InmobiliariaGarciaJesus.Data;
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Repositories;
 using InmobiliariaGarciaJesus.Services;
@@ -22,8 +21,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     });
 
-// Registrar MySqlConnectionManager
-builder.Services.AddSingleton<MySqlConnectionManager>();
 
 // Registrar repositorios
 builder.Services.AddScoped<IRepository<Inquilino>, InquilinoRepository>();

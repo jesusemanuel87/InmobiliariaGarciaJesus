@@ -182,8 +182,19 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/shared/google-maps-service.js"></script>
     <script src="~/js/Inmueble/details-inmueble.js"></script>
     <script>
+        // Configurar Google Maps API Key
+        @if (!string.IsNullOrEmpty(ViewBag.GoogleMapsApiKey as string))
+        {
+            <text>
+            if (window.googleMapsService) {
+                window.googleMapsService.setApiKey('@ViewBag.GoogleMapsApiKey');
+            }
+            </text>
+        }
+
         // Initialize InmuebleDetailsManager with model data
         inmuebleDetailsManager = new InmuebleDetailsManager(
             @Model.Id,

@@ -1,4 +1,3 @@
-using InmobiliariaGarciaJesus.Data;
 using InmobiliariaGarciaJesus.Models;
 using MySql.Data.MySqlClient;
 
@@ -6,18 +5,19 @@ namespace InmobiliariaGarciaJesus.Repositories
 {
     public class InquilinoRepository : IRepository<Inquilino>
     {
-        private readonly MySqlConnectionManager _connectionManager;
+        private readonly string _connectionString;
 
-        public InquilinoRepository(MySqlConnectionManager connectionManager)
+        public InquilinoRepository(IConfiguration configuration)
         {
-            _connectionManager = connectionManager;
+            _connectionString = configuration.GetConnectionString("DefaultConnection") 
+                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
         }
 
         public async Task<IEnumerable<Inquilino>> GetAllAsync()
         {
             var inquilinos = new List<Inquilino>();
             
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = "SELECT Id, Nombre, Apellido, DNI, Telefono, Email, Direccion, Estado FROM Inquilinos";
@@ -51,7 +51,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<Inquilino?> GetByIdAsync(int id)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"SELECT Id, Nombre, Apellido, Dni, Telefono, Email, Direccion, FechaCreacion, Estado 
@@ -83,7 +83,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<int> CreateAsync(Inquilino inquilino)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"INSERT INTO Inquilinos (Nombre, Apellido, Dni, Telefono, Email, Direccion, FechaCreacion, Estado) 
@@ -106,7 +106,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<bool> UpdateAsync(Inquilino inquilino)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = @"UPDATE Inquilinos 
@@ -130,7 +130,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<bool> DeleteAsync(int id)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = "UPDATE Inquilinos SET Estado = 0 WHERE Id = @Id";

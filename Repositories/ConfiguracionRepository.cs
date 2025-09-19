@@ -1,4 +1,3 @@
-using InmobiliariaGarciaJesus.Data;
 using InmobiliariaGarciaJesus.Models;
 using MySql.Data.MySqlClient;
 
@@ -6,18 +5,19 @@ namespace InmobiliariaGarciaJesus.Repositories
 {
     public class ConfiguracionRepository : IRepository<Configuracion>
     {
-        private readonly MySqlConnectionManager _connectionManager;
+        private readonly string _connectionString;
 
-        public ConfiguracionRepository(MySqlConnectionManager connectionManager)
+        public ConfiguracionRepository(IConfiguration configuration)
         {
-            _connectionManager = connectionManager;
+            _connectionString = configuration.GetConnectionString("DefaultConnection") 
+                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
         }
 
         public async Task<IEnumerable<Configuracion>> GetAllAsync()
         {
             var configuraciones = new List<Configuracion>();
             
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
             var query = "SELECT Id, Clave, Tipo, Valor, Descripcion, FechaCreacion, FechaModificacion FROM configuraciones";
@@ -50,7 +50,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<Configuracion?> GetByIdAsync(int id)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
 
             var query = @"SELECT Id, Clave, Valor, Descripcion, Tipo, FechaCreacion, FechaModificacion 
@@ -81,7 +81,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<Configuracion?> GetByClaveAsync(string clave)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
 
             var query = @"SELECT Id, Clave, Valor, Descripcion, Tipo, FechaCreacion, FechaModificacion 
@@ -112,7 +112,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<int> CreateAsync(Configuracion configuracion)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
 
             var query = @"INSERT INTO configuraciones (Clave, Valor, Descripcion, Tipo, FechaCreacion, FechaModificacion) 
@@ -133,7 +133,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<bool> UpdateAsync(Configuracion configuracion)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
 
             var query = @"UPDATE configuraciones 
@@ -155,7 +155,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<bool> DeleteAsync(int id)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
 
             var query = "DELETE FROM configuraciones WHERE Id = @Id";
@@ -169,7 +169,7 @@ namespace InmobiliariaGarciaJesus.Repositories
 
         public async Task<IEnumerable<Configuracion>> GetByTipoAsync(TipoConfiguracion tipo)
         {
-            using var connection = _connectionManager.GetConnection();
+            using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
 
             var query = @"SELECT Id, Clave, Valor, Descripcion, Tipo, FechaCreacion, FechaModificacion 

@@ -36,7 +36,8 @@ class PagosFilters {
         const currentYear = now.getFullYear();
         
         // Set default values
-        this.filtroEstado.value = 'Pendiente';
+        this.filtroEstado.value = '';
+        this.filtroEstadoContrato.value = 'Activo';
         this.filtroMes.value = currentMonth.toString();
         this.filtroAnio.value = currentYear.toString();
         

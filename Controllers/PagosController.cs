@@ -658,5 +658,6 @@ namespace InmobiliariaGarciaJesus.Controllers
                 return Json(new { success = false, message = $"Error: {ex.Message}" });
             }
         }
+
     }
 }

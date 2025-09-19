@@ -94,8 +94,8 @@ namespace InmobiliariaGarciaJesus.Services
                 }
                 
                 // Calcular intereses para pagos vencidos sin intereses calculados
-                // SOLO si no tienen multas por finalización temprana
-                if (pago.Estado == EstadoPago.Vencido && pago.Intereses == 0 && pago.Multas == 0)
+                // Los intereses se calculan independientemente de las multas existentes
+                if (pago.Estado == EstadoPago.Vencido && pago.Intereses == 0)
                 {
                     await CalcularInteresesYMultasAsync(pago.Id);
                 }
@@ -107,8 +107,6 @@ namespace InmobiliariaGarciaJesus.Services
             var pago = await _pagoRepository.GetByIdAsync(pagoId);
             if (pago == null) return;
 
-            var fechaPago = pago.FechaPago ?? DateTime.Today;
-            
             // Calcular solo intereses por retraso, NO sobrescribir multas existentes
             var interesesCalculados = await CalcularInteresesPorRetrasoAsync(pago.FechaVencimiento, pago.Importe);
             
@@ -131,34 +129,47 @@ namespace InmobiliariaGarciaJesus.Services
             var configuraciones = await _configuracionRepository.GetAllAsync();
             decimal porcentajeInteres = 0;
 
+            // Calcular en qué día del mes estamos y en qué día del mes venció
+            var diaHoy = hoy.Day;
+            var diaVencimiento = fechaVencimiento.Day;
+            var mesVencimiento = fechaVencimiento.Month;
+            var anioVencimiento = fechaVencimiento.Year;
+            
             // Calcular meses completos de retraso
             var mesesRetraso = ((hoy.Year - fechaVencimiento.Year) * 12) + hoy.Month - fechaVencimiento.Month;
-            
-            // Del 1 al 10: Sin interés
-            if (diasRetraso <= 10)
+
+            // Si estamos en el mismo mes del vencimiento
+            if (mesesRetraso == 0)
             {
-                return 0; // No aplica interés
+                // Del día de vencimiento hasta el día 10: Sin interés
+                if (diaHoy <= 10)
+                {
+                    return 0;
+                }
+                // Del día 11 al 20: 10%
+                else if (diaHoy <= 20)
+                {
+                    var config = configuraciones.FirstOrDefault(c => c.Clave == "INTERES_VENCIMIENTO_10_20");
+                    if (config != null && decimal.TryParse(config.Valor, out var valor))
+                        porcentajeInteres = valor;
+                }
+                // Del día 21 al 30/31: 15%
+                else
+                {
+                    var config = configuraciones.FirstOrDefault(c => c.Clave == "INTERES_VENCIMIENTO_20_PLUS");
+                    if (config != null && decimal.TryParse(config.Valor, out var valor))
+                        porcentajeInteres = valor;
+                }
             }
-            // Del 11 al 20: INTERES_VENCIMIENTO_10_20 (configurado: 10%)
-            else if (diasRetraso <= 20)
-            {
-                var config = configuraciones.FirstOrDefault(c => c.Clave == "INTERES_VENCIMIENTO_10_20");
-                if (config != null && decimal.TryParse(config.Valor, out var valor))
-                    porcentajeInteres = valor;
-            }
-            // Si pasó 1 mes completo o más: INTERES_VENCIMIENTO_MENSUAL (configurado: 30%)
+            // Si pasó al menos 1 mes completo: 20% por cada mes
             else if (mesesRetraso >= 1)
             {
                 var config = configuraciones.FirstOrDefault(c => c.Clave == "INTERES_VENCIMIENTO_MENSUAL");
                 if (config != null && decimal.TryParse(config.Valor, out var valor))
-                    porcentajeInteres = valor;
-            }
-            // Del 21 hasta fin de mes (mismo mes): INTERES_VENCIMIENTO_20_PLUS (configurado: 20%)
-            else
-            {
-                var config = configuraciones.FirstOrDefault(c => c.Clave == "INTERES_VENCIMIENTO_20_PLUS");
-                if (config != null && decimal.TryParse(config.Valor, out var valor))
-                    porcentajeInteres = valor;
+                {
+                    // 20% por cada mes de retraso
+                    porcentajeInteres = valor * mesesRetraso;
+                }
             }
 
             return importe * (porcentajeInteres / 100);

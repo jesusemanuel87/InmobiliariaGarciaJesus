@@ -1,0 +1,153 @@
+/* Dropdown multiselect personalizado para Inmuebles */
+.inmuebles-filters .dropdown-toggle {
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Checkboxes limpios y simples */
+.inmuebles-filters .form-check-input {
+    width: 16px !important;
+    height: 16px !important;
+    margin-top: 0 !important;
+    margin-right: 8px !important;
+    margin-left: 0 !important;
+    flex-shrink: 0 !important;
+    border: 1px solid #007bff !important;
+    border-radius: 3px !important;
+    background-color: white !important;
+    cursor: pointer !important;
+    position: relative !important;
+    display: inline-block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.inmuebles-filters .form-check-input:checked {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
+    background-size: 100% 100% !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+.inmuebles-filters .form-check-input:focus {
+    border-color: #86b7fe !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+.inmuebles-filters .dropdown-toggle:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.inmuebles-filters .dropdown-menu {
+    max-height: none;
+    overflow-y: visible;
+    border: 1px solid #ced4da;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.inmuebles-filters .dropdown-item-text {
+    padding: 8px 16px !important;
+    margin: 0 !important;
+    border: none !important;
+    background: none !important;
+    overflow: visible !important;
+    position: relative !important;
+}
+
+.inmuebles-filters .dropdown-item-text:hover {
+    background-color: #f8f9fa;
+}
+
+.inmuebles-filters .form-check {
+    margin-bottom: 0;
+    padding-left: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.inmuebles-filters .form-check-label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 0;
+    padding-left: 0;
+    gap: 0.5rem;
+}
+
+/* Placeholder del dropdown */
+#disponibilidadPlaceholder {
+    color: #6c757d;
+    font-weight: normal;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Estilo especial para la opción "Todos" */
+.inmuebles-filters .dropdown-item-text.border-bottom {
+    border-bottom: 1px solid #dee2e6 !important;
+    margin-bottom: 5px;
+    padding-bottom: 10px;
+}
+
+.inmuebles-filters .dropdown-item-text.border-bottom label {
+    font-weight: bold;
+    color: #495057;
+}
+
+/* Estilos para los labels de disponibilidad */
+.inmuebles-filters label[for="disponibilidadDisponible"] {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.inmuebles-filters label[for="disponibilidadReservado"] {
+    color: #ffc107;
+    font-weight: 500;
+}
+
+.inmuebles-filters label[for="disponibilidadNoDisponible"] {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+/* Mejoras para el panel de filtros */
+.inmuebles-filters .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.inmuebles-filters .form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Animación para el toggle del panel */
+#filtrosPanel {
+    transition: all 0.3s ease;
+}
+
+/* Badges de resultados */
+.badge {
+    font-size: 0.875em;
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+    .inmuebles-filters .form-check-input {
+        width: 18px !important;
+        height: 18px !important;
+    }
+}

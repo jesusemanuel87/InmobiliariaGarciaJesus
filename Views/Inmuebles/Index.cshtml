@@ -4,6 +4,9 @@
     ViewData["Title"] = "Inmuebles";
 }
 
+<!-- Inmuebles Filters CSS -->
+<link rel="stylesheet" href="~/css/inmuebles-filters.css">
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -31,7 +34,7 @@
             }
 
             <!-- Filtros -->
-            <div class="card shadow mb-3">
+            <div class="card shadow mb-3 inmuebles-filters">
                 <div class="card-body">
                     <form method="get" id="filtrosForm">
                         <div class="row g-3">
@@ -108,39 +111,40 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label for="filtroDisponibilidad" class="form-label">
+                                <label for="disponibilidad" class="form-label">
                                     <i class="fas fa-check-circle me-1"></i>Disponibilidad
                                 </label>
-                                <select name="disponibilidad" id="filtroDisponibilidad" class="form-select" multiple size="3">
-                                    @{
-                                        var disponibilidadSeleccionada = ViewBag.DisponibilidadSeleccionada as string[] ?? new string[0];
-                                    }
-                                    @if (disponibilidadSeleccionada.Contains("Disponible"))
-                                    {
-                                        <option value="Disponible" selected>Disponible</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="Disponible">Disponible</option>
-                                    }
-                                    @if (disponibilidadSeleccionada.Contains("Reservado"))
-                                    {
-                                        <option value="Reservado" selected>Reservado</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="Reservado">Reservado</option>
-                                    }
-                                    @if (disponibilidadSeleccionada.Contains("NoDisponible"))
-                                    {
-                                        <option value="NoDisponible" selected>No Disponible</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="NoDisponible">No Disponible</option>
-                                    }
-                                </select>
-                                <small class="text-muted">Mantén Ctrl para seleccionar múltiples</small>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" id="disponibilidadDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span id="disponibilidadPlaceholder">Seleccionar disponibilidad...</span>
+                                    </button>
+                                    <div class="dropdown-menu w-100" aria-labelledby="disponibilidadDropdown" id="disponibilidadDropdownMenu">
+                                        <div class="form-check dropdown-item-text border-bottom">
+                                            <input class="form-check-input" type="checkbox" id="disponibilidadTodos">
+                                            <label class="form-check-label" for="disponibilidadTodos">
+                                                <strong>Todos</strong>
+                                            </label>
+                                        </div>
+                                        <div class="form-check dropdown-item-text">
+                                            <input class="form-check-input" type="checkbox" name="disponibilidad" value="Disponible" id="disponibilidadDisponible">
+                                            <label class="form-check-label" for="disponibilidadDisponible">
+                                                Disponible
+                                            </label>
+                                        </div>
+                                        <div class="form-check dropdown-item-text">
+                                            <input class="form-check-input" type="checkbox" name="disponibilidad" value="Reservado" id="disponibilidadReservado">
+                                            <label class="form-check-label" for="disponibilidadReservado">
+                                                Reservado
+                                            </label>
+                                        </div>
+                                        <div class="form-check dropdown-item-text">
+                                            <input class="form-check-input" type="checkbox" name="disponibilidad" value="NoDisponible" id="disponibilidadNoDisponible">
+                                            <label class="form-check-label" for="disponibilidadNoDisponible">
+                                                No Disponible
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         

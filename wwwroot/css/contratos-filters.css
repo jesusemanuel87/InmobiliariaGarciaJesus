@@ -1,0 +1,207 @@
+/* Dropdown multiselect personalizado */
+.contratos-filters .dropdown-toggle {
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Checkboxes limpios y simples */
+.contratos-filters .form-check-input {
+    width: 16px !important;
+    height: 16px !important;
+    margin-top: 0 !important;
+    margin-right: 8px !important;
+    margin-left: 0 !important;
+    flex-shrink: 0 !important;
+    border: 1px solid #007bff !important;
+    border-radius: 3px !important;
+    background-color: white !important;
+    cursor: pointer !important;
+    position: relative !important;
+    display: inline-block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.contratos-filters .form-check-input:checked {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
+    background-size: 100% 100% !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+.contratos-filters .form-check-input:focus {
+    border-color: #86b7fe !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+.contratos-filters .dropdown-toggle:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.contratos-filters .dropdown-menu {
+    max-height: none;
+    overflow-y: visible;
+    border: 1px solid #ced4da;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.contratos-filters .dropdown-item-text {
+    padding: 8px 16px !important;
+    margin: 0 !important;
+    border: none !important;
+    background: none !important;
+    overflow: visible !important;
+    position: relative !important;
+}
+
+.contratos-filters .dropdown-item-text:hover {
+    background-color: #f8f9fa;
+}
+
+.contratos-filters .form-check {
+    margin-bottom: 0;
+    padding-left: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Estilos duplicados eliminados - ya están definidos arriba */
+
+.contratos-filters .form-check-label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 0;
+    padding-left: 0;
+    gap:0.5rem
+}
+
+/* Placeholder del dropdown */
+#estadoPlaceholder {
+    color: #6c757d;
+    font-weight: normal;
+}
+
+/* Estilo especial para la opción "Todos" */
+.contratos-filters .dropdown-item-text.border-bottom {
+    border-bottom: 1px solid #dee2e6 !important;
+    margin-bottom: 5px;
+    padding-bottom: 10px;
+}
+
+.contratos-filters .dropdown-item-text.border-bottom label {
+    font-weight: bold;
+    color: #495057;
+}
+
+/* Mejorar la apariencia del panel de filtros */
+.contratos-filters .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.contratos-filters .form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Animación para el toggle del panel */
+#filtersPanel {
+    transition: all 0.3s ease;
+}
+
+/* Badges de resultados */
+.contratos-results .badge {
+    font-size: 0.875em;
+}
+
+/* Responsividad para Choices.js */
+@media (max-width: 768px) {
+    .choices[data-type*="select-multiple"] .choices__inner {
+        min-height: 44px;
+    }
+    
+    .contratos-filters .col-md-3 {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Estilos para el botón toggle */
+.contratos-filters #toggleFilters {
+    transition: all 0.3s ease;
+}
+
+.contratos-filters #toggleFilters i {
+    transition: transform 0.3s ease;
+}
+
+/* Estilos para los labels de estado */
+.contratos-filters label[for="estadoActivo"] {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.contratos-filters label[for="estadoFinalizado"] {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.contratos-filters label[for="estadoCancelado"] {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+.contratos-filters label[for="estadoReservado"] {
+    color: #ffc107;
+    font-weight: 500;
+}
+
+/* Mejoras para el panel de filtros */
+.contratos-filters .row.g-3 > .col-md-3 {
+    padding-bottom: 0.5rem;
+}
+
+.contratos-filters .btn-group {
+    gap: 0.5rem;
+}
+
+/* Hover effects para mejor UX */
+.contratos-filters .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Loading state para Choices.js */
+.choices.is-loading .choices__inner {
+    opacity: 0.7;
+}
+
+/* Custom scrollbar para dropdown */
+.choices__list--dropdown {
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #f8f9fa;
+}
+
+.choices__list--dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.choices__list--dropdown::-webkit-scrollbar-track {
+    background: #f8f9fa;
+}
+
+.choices__list--dropdown::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 3px;
+}
+
+.choices__list--dropdown::-webkit-scrollbar-thumb:hover {
+    background: #0056b3;
+}

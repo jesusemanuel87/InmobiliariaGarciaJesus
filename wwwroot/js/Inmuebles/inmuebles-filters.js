@@ -5,6 +5,7 @@
 class InmueblesFilters {
     constructor() {
         this.initializeElements();
+        this.initializeDisponibilidadDropdown();
         this.bindEvents();
         this.loadProvincias();
         this.setCurrentValues();
@@ -41,6 +42,90 @@ class InmueblesFilters {
 
         // Georef service
         this.georefService = window.georefService || new GeorefService();
+    }
+
+    initializeDisponibilidadDropdown() {
+        const checkboxes = document.querySelectorAll('input[name="disponibilidad"]');
+        const todosCheckbox = document.getElementById('disponibilidadTodos');
+        const placeholder = document.getElementById('disponibilidadPlaceholder');
+        const dropdown = document.getElementById('disponibilidadDropdown');
+        
+        if (checkboxes.length > 0 && placeholder) {
+            // Escuchar cambios en los checkboxes individuales
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    this.updateTodosCheckbox();
+                    this.updateDisponibilidadPlaceholder();
+                    
+                    // No auto-submit para permitir selección múltiple
+                    // El usuario debe hacer clic en "Buscar" o presionar Enter
+                });
+            });
+
+            // Escuchar cambios en el checkbox "Todos"
+            if (todosCheckbox) {
+                todosCheckbox.addEventListener('change', () => {
+                    const isChecked = todosCheckbox.checked;
+                    
+                    // Marcar/desmarcar todos los checkboxes
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                    });
+                    
+                    this.updateDisponibilidadPlaceholder();
+                    
+                    // No auto-submit para permitir selección múltiple
+                    // El usuario debe hacer clic en "Buscar" o presionar Enter
+                });
+            }
+            
+            // Prevenir que el dropdown se cierre al hacer clic en los checkboxes
+            const dropdownMenu = document.getElementById('disponibilidadDropdownMenu');
+            if (dropdownMenu) {
+                dropdownMenu.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            }
+        }
+    }
+
+    updateTodosCheckbox() {
+        const checkboxes = document.querySelectorAll('input[name="disponibilidad"]');
+        const todosCheckbox = document.getElementById('disponibilidadTodos');
+        
+        if (todosCheckbox) {
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            const noneChecked = Array.from(checkboxes).every(cb => !cb.checked);
+            
+            if (allChecked) {
+                todosCheckbox.checked = true;
+                todosCheckbox.indeterminate = false;
+            } else if (noneChecked) {
+                todosCheckbox.checked = false;
+                todosCheckbox.indeterminate = false;
+            } else {
+                todosCheckbox.checked = false;
+                todosCheckbox.indeterminate = true;
+            }
+        }
+    }
+
+    updateDisponibilidadPlaceholder() {
+        const checkboxes = document.querySelectorAll('input[name="disponibilidad"]:checked');
+        const placeholder = document.getElementById('disponibilidadPlaceholder');
+        
+        if (!placeholder) return;
+        
+        if (checkboxes.length === 0) {
+            placeholder.textContent = 'Seleccionar...';
+            placeholder.style.color = '#6c757d';
+        } else if (checkboxes.length === 1) {
+            placeholder.textContent = checkboxes[0].value;
+            placeholder.style.color = '#212529';
+        } else {
+            placeholder.textContent = `${checkboxes.length} seleccionadas`;
+            placeholder.style.color = '#212529';
+        }
     }
 
     bindEvents() {
@@ -191,12 +276,17 @@ class InmueblesFilters {
             this.filtroUso.value = this.usoActual;
         }
         
-        if (this.filtroDisponibilidad && this.disponibilidadActual) {
-            // Para multi-select, necesitamos manejar múltiples valores
+        // Manejar disponibilidad con checkboxes
+        if (this.disponibilidadActual) {
             const valoresSeleccionados = this.disponibilidadActual.split(',');
-            Array.from(this.filtroDisponibilidad.options).forEach(option => {
-                option.selected = valoresSeleccionados.includes(option.value);
+            valoresSeleccionados.forEach(valor => {
+                const checkbox = document.querySelector(`input[name="disponibilidad"][value="${valor}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
             });
+            this.updateTodosCheckbox();
+            this.updateDisponibilidadPlaceholder();
         }
         
         // Debug logs
@@ -221,13 +311,15 @@ class InmueblesFilters {
             // Establecer valores por defecto para la primera carga
             
             // Disponibilidad por defecto: Disponible y Reservado
-            if (this.filtroDisponibilidad && !this.disponibilidadActual) {
-                // Seleccionar múltiples opciones por defecto
-                Array.from(this.filtroDisponibilidad.options).forEach(option => {
-                    if (option.value === 'Disponible' || option.value === 'Reservado') {
-                        option.selected = true;
-                    }
-                });
+            if (!this.disponibilidadActual) {
+                const disponibleCheckbox = document.getElementById('disponibilidadDisponible');
+                const reservadoCheckbox = document.getElementById('disponibilidadReservado');
+                
+                if (disponibleCheckbox) disponibleCheckbox.checked = true;
+                if (reservadoCheckbox) reservadoCheckbox.checked = true;
+                
+                this.updateTodosCheckbox();
+                this.updateDisponibilidadPlaceholder();
             }
             
             // Estado por defecto para Administradores y Empleados: Activo
@@ -270,11 +362,12 @@ class InmueblesFilters {
         if (this.filtroUso) this.filtroUso.value = '';
         if (this.filtroProvincia) this.filtroProvincia.value = '';
         if (this.filtroLocalidad) this.filtroLocalidad.innerHTML = '<option value="">Seleccione primero una provincia</option>';
-        if (this.filtroDisponibilidad) {
-            Array.from(this.filtroDisponibilidad.options).forEach(option => {
-                option.selected = false;
-            });
-        }
+        // Limpiar checkboxes de disponibilidad
+        document.querySelectorAll('input[name="disponibilidad"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        const todosCheckbox = document.getElementById('disponibilidadTodos');
+        if (todosCheckbox) todosCheckbox.checked = false;
         if (this.precioMin) this.precioMin.value = '';
         if (this.precioMax) this.precioMax.value = '';
         if (this.fechaDesde) this.fechaDesde.value = '';
@@ -292,7 +385,7 @@ class InmueblesFilters {
             uso: this.filtroUso?.value || '',
             provincia: this.filtroProvincia?.value || '',
             localidad: this.filtroLocalidad?.value || '',
-            disponibilidad: this.filtroDisponibilidad ? Array.from(this.filtroDisponibilidad.selectedOptions).map(o => o.value) : [],
+            disponibilidad: Array.from(document.querySelectorAll('input[name="disponibilidad"]:checked')).map(cb => cb.value),
             precioMin: this.precioMin?.value || '',
             precioMax: this.precioMax?.value || '',
             fechaDesde: this.fechaDesde?.value || '',
@@ -307,10 +400,18 @@ class InmueblesFilters {
         if (filters.uso && this.filtroUso) this.filtroUso.value = filters.uso;
         if (filters.provincia && this.filtroProvincia) this.filtroProvincia.value = filters.provincia;
         if (filters.localidad && this.filtroLocalidad) this.filtroLocalidad.value = filters.localidad;
-        if (filters.disponibilidad && this.filtroDisponibilidad) {
-            Array.from(this.filtroDisponibilidad.options).forEach(option => {
-                option.selected = filters.disponibilidad.includes(option.value);
+        if (filters.disponibilidad) {
+            // Limpiar checkboxes primero
+            document.querySelectorAll('input[name="disponibilidad"]').forEach(cb => cb.checked = false);
+            
+            // Marcar los valores seleccionados
+            filters.disponibilidad.forEach(value => {
+                const checkbox = document.querySelector(`input[name="disponibilidad"][value="${value}"]`);
+                if (checkbox) checkbox.checked = true;
             });
+            
+            this.updateTodosCheckbox();
+            this.updateDisponibilidadPlaceholder();
         }
         if (filters.precioMin && this.precioMin) this.precioMin.value = filters.precioMin;
         if (filters.precioMax && this.precioMax) this.precioMax.value = filters.precioMax;

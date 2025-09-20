@@ -29,12 +29,127 @@ namespace InmobiliariaGarciaJesus.Controllers
         }
 
         // GET: Contratos
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string[]? estado = null, string? inquilino = null, string? inmueble = null,
+            decimal? precioMin = null, decimal? precioMax = null, DateTime? fechaDesde = null, DateTime? fechaHasta = null,
+            DateTime? fechaInicioDesde = null, DateTime? fechaInicioHasta = null, DateTime? fechaFinDesde = null, DateTime? fechaFinHasta = null)
         {
             try
             {
                 var contratos = await _contratoService.GetAllAsync();
-                return View(contratos);
+                var contratosQuery = contratos.AsQueryable();
+
+                // Restricción por rol: Los inquilinos solo ven sus propios contratos
+                var userRole = HttpContext.Session.GetString("UserRole");
+                var userId = HttpContext.Session.GetString("UserId");
+                
+                // Establecer valores por defecto si no se han especificado filtros
+                bool isFirstLoad = !Request.Query.Any();
+                
+                if (isFirstLoad)
+                {
+                    // Valores por defecto: Activo y Reservado
+                    estado = estado ?? new[] { "Activo", "Reservado" };
+                }
+
+                // Filtros por rol
+                if (userRole == "Inquilino" && int.TryParse(userId, out var inquilinoUserId))
+                {
+                    // Los inquilinos solo ven sus propios contratos
+                    contratosQuery = contratosQuery.Where(c => c.InquilinoId == inquilinoUserId);
+                }
+                else if (userRole == "Propietario" && int.TryParse(userId, out var propietarioUserId))
+                {
+                    // Los propietarios solo ven contratos de sus inmuebles
+                    contratosQuery = contratosQuery.Where(c => c.Inmueble != null && c.Inmueble.PropietarioId == propietarioUserId);
+                }
+
+                // Aplicar filtros
+                // Filtro por estado (multiselect)
+                if (estado != null && estado.Any() && !estado.Contains("Todos"))
+                {
+                    var estadosEnum = estado.Where(e => Enum.TryParse<EstadoContrato>(e, out _))
+                                           .Select(e => Enum.Parse<EstadoContrato>(e))
+                                           .ToList();
+                    if (estadosEnum.Any())
+                    {
+                        contratosQuery = contratosQuery.Where(c => estadosEnum.Contains(c.Estado));
+                    }
+                }
+
+                // Filtro por inquilino (búsqueda por nombre)
+                if (!string.IsNullOrEmpty(inquilino))
+                {
+                    contratosQuery = contratosQuery.Where(c => c.Inquilino != null && 
+                        (c.Inquilino.NombreCompleto.Contains(inquilino, StringComparison.OrdinalIgnoreCase) ||
+                         c.Inquilino.Dni.Contains(inquilino, StringComparison.OrdinalIgnoreCase)));
+                }
+
+                // Filtro por inmueble (búsqueda por dirección)
+                if (!string.IsNullOrEmpty(inmueble))
+                {
+                    contratosQuery = contratosQuery.Where(c => c.Inmueble != null && 
+                        c.Inmueble.Direccion.Contains(inmueble, StringComparison.OrdinalIgnoreCase));
+                }
+
+                // Filtro por precio
+                if (precioMin.HasValue)
+                {
+                    contratosQuery = contratosQuery.Where(c => c.Precio >= precioMin.Value);
+                }
+                if (precioMax.HasValue)
+                {
+                    contratosQuery = contratosQuery.Where(c => c.Precio <= precioMax.Value);
+                }
+
+                // Filtro por fecha de inicio del contrato
+                if (fechaInicioDesde.HasValue)
+                {
+                    contratosQuery = contratosQuery.Where(c => c.FechaInicio >= fechaInicioDesde.Value);
+                }
+                if (fechaInicioHasta.HasValue)
+                {
+                    contratosQuery = contratosQuery.Where(c => c.FechaInicio <= fechaInicioHasta.Value);
+                }
+
+                // Filtro por fecha de fin del contrato
+                if (fechaFinDesde.HasValue)
+                {
+                    contratosQuery = contratosQuery.Where(c => c.FechaFin >= fechaFinDesde.Value);
+                }
+                if (fechaFinHasta.HasValue)
+                {
+                    contratosQuery = contratosQuery.Where(c => c.FechaFin <= fechaFinHasta.Value);
+                }
+
+                // Filtro por fecha de creación
+                if (fechaDesde.HasValue)
+                {
+                    contratosQuery = contratosQuery.Where(c => c.FechaCreacion >= fechaDesde.Value);
+                }
+                if (fechaHasta.HasValue)
+                {
+                    contratosQuery = contratosQuery.Where(c => c.FechaCreacion <= fechaHasta.Value);
+                }
+
+                var contratosFiltrados = contratosQuery.OrderByDescending(c => c.FechaCreacion).ToList();
+
+                // Pasar datos para los filtros
+                ViewBag.Estados = estado;
+                ViewBag.Inquilino = inquilino;
+                ViewBag.Inmueble = inmueble;
+                ViewBag.PrecioMin = precioMin;
+                ViewBag.PrecioMax = precioMax;
+                ViewBag.FechaDesde = fechaDesde;
+                ViewBag.FechaHasta = fechaHasta;
+                ViewBag.FechaInicioDesde = fechaInicioDesde;
+                ViewBag.FechaInicioHasta = fechaInicioHasta;
+                ViewBag.FechaFinDesde = fechaFinDesde;
+                ViewBag.FechaFinHasta = fechaFinHasta;
+                ViewBag.UserRole = userRole;
+                ViewBag.TotalContratos = contratos.Count();
+                ViewBag.ContratosFiltrados = contratosFiltrados.Count;
+
+                return View(contratosFiltrados);
             }
             catch (Exception ex)
             {

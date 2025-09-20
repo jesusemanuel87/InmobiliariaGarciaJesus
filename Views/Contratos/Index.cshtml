@@ -4,6 +4,9 @@
     ViewData["Title"] = "Contratos";
 }
 
+<!-- Contratos Filters CSS -->
+<link rel="stylesheet" href="~/css/contratos-filters.css">
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -30,7 +33,158 @@
                 </div>
             }
 
-            <div class="card">
+            <!-- Panel de Filtros -->
+            <div class="card mb-4 contratos-filters">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-filter"></i> Filtros
+                        </h5>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="toggleFilters">
+                            <i class="fas fa-chevron-up"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body" id="filtersPanel">
+                    <form method="get" id="filtersForm">
+                        <div class="row g-3">
+                            <!-- Estado (Multiselect) -->
+                            <div class="col-md-3">
+                                <label for="estado" class="form-label">Estado</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" id="estadoDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span id="estadoPlaceholder">Seleccionar estados...</span>
+                                    </button>
+                                    <div class="dropdown-menu w-100" aria-labelledby="estadoDropdown" id="estadoDropdownMenu">
+                                        <div class="form-check dropdown-item-text border-bottom">
+                                            <input class="form-check-input" type="checkbox" id="estadoTodos">
+                                            <label class="form-check-label" for="estadoTodos">
+                                                <strong>Todos</strong>
+                                            </label>
+                                        </div>
+                                        <div class="form-check dropdown-item-text">
+                                            <input class="form-check-input" type="checkbox" name="estado" value="Activo" id="estadoActivo">
+                                            <label class="form-check-label" for="estadoActivo">
+                                                Activo
+                                            </label>
+                                        </div>
+                                        <div class="form-check dropdown-item-text">
+                                            <input class="form-check-input" type="checkbox" name="estado" value="Finalizado" id="estadoFinalizado">
+                                            <label class="form-check-label" for="estadoFinalizado">
+                                                Finalizado
+                                            </label>
+                                        </div>
+                                        <div class="form-check dropdown-item-text">
+                                            <input class="form-check-input" type="checkbox" name="estado" value="Cancelado" id="estadoCancelado">
+                                            <label class="form-check-label" for="estadoCancelado">
+                                                Cancelado
+                                            </label>
+                                        </div>
+                                        <div class="form-check dropdown-item-text">
+                                            <input class="form-check-input" type="checkbox" name="estado" value="Reservado" id="estadoReservado">
+                                            <label class="form-check-label" for="estadoReservado">
+                                                Reservado
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Inquilino -->
+                            <div class="col-md-3">
+                                <label for="inquilino" class="form-label">Inquilino</label>
+                                <input type="text" name="inquilino" id="inquilino" class="form-control" 
+                                       value="@ViewBag.Inquilino" placeholder="Nombre o DNI">
+                            </div>
+
+                            <!-- Inmueble -->
+                            <div class="col-md-3">
+                                <label for="inmueble" class="form-label">Inmueble</label>
+                                <input type="text" name="inmueble" id="inmueble" class="form-control" 
+                                       value="@ViewBag.Inmueble" placeholder="Dirección">
+                            </div>
+
+                            <!-- Precio Mínimo -->
+                            <div class="col-md-3">
+                                <label for="precioMin" class="form-label">Precio Mínimo</label>
+                                <input type="number" name="precioMin" id="precioMin" class="form-control" 
+                                       value="@ViewBag.PrecioMin" placeholder="0" min="0" step="1000">
+                            </div>
+
+                            <!-- Precio Máximo -->
+                            <div class="col-md-3">
+                                <label for="precioMax" class="form-label">Precio Máximo</label>
+                                <input type="number" name="precioMax" id="precioMax" class="form-control" 
+                                       value="@ViewBag.PrecioMax" placeholder="Sin límite" min="0" step="1000">
+                            </div>
+
+                            <!-- Fecha Inicio Desde -->
+                            <div class="col-md-3">
+                                <label for="fechaInicioDesde" class="form-label">Inicio Desde</label>
+                                <input type="date" name="fechaInicioDesde" id="fechaInicioDesde" class="form-control" 
+                                       value="@(ViewBag.FechaInicioDesde?.ToString("yyyy-MM-dd"))">
+                            </div>
+
+                            <!-- Fecha Inicio Hasta -->
+                            <div class="col-md-3">
+                                <label for="fechaInicioHasta" class="form-label">Inicio Hasta</label>
+                                <input type="date" name="fechaInicioHasta" id="fechaInicioHasta" class="form-control" 
+                                       value="@(ViewBag.FechaInicioHasta?.ToString("yyyy-MM-dd"))">
+                            </div>
+
+                            <!-- Fecha Fin Desde -->
+                            <div class="col-md-3">
+                                <label for="fechaFinDesde" class="form-label">Fin Desde</label>
+                                <input type="date" name="fechaFinDesde" id="fechaFinDesde" class="form-control" 
+                                       value="@(ViewBag.FechaFinDesde?.ToString("yyyy-MM-dd"))">
+                            </div>
+
+                            <!-- Fecha Fin Hasta -->
+                            <div class="col-md-3">
+                                <label for="fechaFinHasta" class="form-label">Fin Hasta</label>
+                                <input type="date" name="fechaFinHasta" id="fechaFinHasta" class="form-control" 
+                                       value="@(ViewBag.FechaFinHasta?.ToString("yyyy-MM-dd"))">
+                            </div>
+
+                            <!-- Fecha Creación Desde -->
+                            <div class="col-md-3">
+                                <label for="fechaDesde" class="form-label">Creado Desde</label>
+                                <input type="date" name="fechaDesde" id="fechaDesde" class="form-control" 
+                                       value="@(ViewBag.FechaDesde?.ToString("yyyy-MM-dd"))">
+                            </div>
+
+                            <!-- Fecha Creación Hasta -->
+                            <div class="col-md-3">
+                                <label for="fechaHasta" class="form-label">Creado Hasta</label>
+                                <input type="date" name="fechaHasta" id="fechaHasta" class="form-control" 
+                                       value="@(ViewBag.FechaHasta?.ToString("yyyy-MM-dd"))">
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-search"></i> Filtrar
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="clearFilters">
+                                    <i class="fas fa-times"></i> Limpiar Filtros
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Resultados -->
+            <div class="card contratos-results">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-contract"></i> Contratos
+                            <span class="badge bg-primary ms-2">@ViewBag.ContratosFiltrados de @ViewBag.TotalContratos</span>
+                        </h5>
+                    </div>
+                </div>
                 <div class="card-body">
                     @if (Model.Any())
                     {
@@ -154,11 +308,22 @@
                     {
                         <div class="text-center py-5">
                             <i class="fas fa-file-contract fa-3x text-muted mb-3"></i>
-                            <h4 class="text-muted">No hay contratos registrados</h4>
-                            <p class="text-muted">Comienza agregando tu primer contrato</p>
-                            <a asp-action="Create" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Crear Contrato
-                            </a>
+                            @if (ViewBag.TotalContratos > 0)
+                            {
+                                <h4 class="text-muted">No se encontraron contratos con los filtros aplicados</h4>
+                                <p class="text-muted">Intenta ajustar los criterios de búsqueda</p>
+                                <button type="button" class="btn btn-outline-secondary" id="clearFiltersEmpty">
+                                    <i class="fas fa-times"></i> Limpiar Filtros
+                                </button>
+                            }
+                            else
+                            {
+                                <h4 class="text-muted">No hay contratos registrados</h4>
+                                <p class="text-muted">Comienza agregando tu primer contrato</p>
+                                <a asp-action="Create" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Crear Contrato
+                                </a>
+                            }
                         </div>
                     }
                 </div>
@@ -168,5 +333,11 @@
 </div>
 
 @section Scripts {
+    <!-- Pasar datos del servidor al JavaScript -->
+    <script>
+        window.estadosSeleccionados = [];
+    </script>
+    
+    <script src="~/js/Contratos/contratos-filters.js"></script>
     <script src="~/js/Contrato/index-contrato.js"></script>
 }

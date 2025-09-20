@@ -29,6 +29,14 @@ namespace InmobiliariaGarciaJesus.Models
         Inactivo
     }
 
+    public enum DisponibilidadInmueble
+    {
+        Disponible,
+        Reservado,
+        [Display(Name = "No Disponible")]
+        NoDisponible
+    }
+
     public class Inmueble
     {
         [Key]

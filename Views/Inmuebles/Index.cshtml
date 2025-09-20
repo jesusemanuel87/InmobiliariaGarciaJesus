@@ -30,7 +30,189 @@
                 </div>
             }
 
+            <!-- Filtros -->
+            <div class="card shadow mb-3">
+                <div class="card-body">
+                    <form method="get" id="filtrosForm">
+                        <div class="row g-3">
+                            <!-- DEBUG: UserRole = @ViewBag.UserRole -->
+                            @if (ViewBag.UserRole == "Administrador" || ViewBag.UserRole == "Empleado")
+                            {
+                                <div class="col-md-2">
+                                    <label for="filtroEstado" class="form-label">
+                                        <i class="fas fa-toggle-on me-1"></i>Estado
+                                    </label>
+                                    <select name="estado" id="filtroEstado" class="form-select">
+                                        <option value="">Todos los estados</option>
+                                        @{
+                                            var estadoSeleccionado = ViewBag.EstadoSeleccionado?.ToString();
+                                        }
+                                        @if (estadoSeleccionado == "Activo")
+                                        {
+                                            <option value="Activo" selected>Activo</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="Activo">Activo</option>
+                                        }
+                                        @if (estadoSeleccionado == "Inactivo")
+                                        {
+                                            <option value="Inactivo" selected>Inactivo</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="Inactivo">Inactivo</option>
+                                        }
+                                    </select>
+                                </div>
+                            }
+                            <div class="col-md-2">
+                                <label for="filtroTipo" class="form-label">
+                                    <i class="fas fa-home me-1"></i>Tipo
+                                </label>
+                                <select name="tipo" id="filtroTipo" class="form-select">
+                                    <option value="">Todos los tipos</option>
+                                    <option value="Casa">Casa</option>
+                                    <option value="Departamento">Departamento</option>
+                                    <option value="Local">Local</option>
+                                    <option value="Oficina">Oficina</option>
+                                    <option value="Galpon">Galpón</option>
+                                    <option value="Terreno">Terreno</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="filtroUso" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>Uso
+                                </label>
+                                <select name="uso" id="filtroUso" class="form-select">
+                                    <option value="">Todos los usos</option>
+                                    <option value="Residencial">Residencial</option>
+                                    <option value="Comercial">Comercial</option>
+                                    <option value="Industrial">Industrial</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="filtroProvincia" class="form-label">
+                                    <i class="fas fa-map-marker-alt me-1"></i>Provincia
+                                </label>
+                                <select name="provincia" id="filtroProvincia" class="form-select">
+                                    <option value="">Cargando provincias...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="filtroLocalidad" class="form-label">
+                                    <i class="fas fa-city me-1"></i>Localidad
+                                </label>
+                                <select name="localidad" id="filtroLocalidad" class="form-select">
+                                    <option value="">Seleccione primero una provincia</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="filtroDisponibilidad" class="form-label">
+                                    <i class="fas fa-check-circle me-1"></i>Disponibilidad
+                                </label>
+                                <select name="disponibilidad" id="filtroDisponibilidad" class="form-select" multiple size="3">
+                                    @{
+                                        var disponibilidadSeleccionada = ViewBag.DisponibilidadSeleccionada as string[] ?? new string[0];
+                                    }
+                                    @if (disponibilidadSeleccionada.Contains("Disponible"))
+                                    {
+                                        <option value="Disponible" selected>Disponible</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="Disponible">Disponible</option>
+                                    }
+                                    @if (disponibilidadSeleccionada.Contains("Reservado"))
+                                    {
+                                        <option value="Reservado" selected>Reservado</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="Reservado">Reservado</option>
+                                    }
+                                    @if (disponibilidadSeleccionada.Contains("NoDisponible"))
+                                    {
+                                        <option value="NoDisponible" selected>No Disponible</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="NoDisponible">No Disponible</option>
+                                    }
+                                </select>
+                                <small class="text-muted">Mantén Ctrl para seleccionar múltiples</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-alt me-1"></i>Disponibilidad para Alquiler
+                                </label>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label for="fechaDesde" class="form-label small">Desde</label>
+                                        <input type="date" name="fechaDesde" id="fechaDesde" class="form-control" 
+                                               value="@ViewBag.FechaDesde" />
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="fechaHasta" class="form-label small">Hasta</label>
+                                        <input type="date" name="fechaHasta" id="fechaHasta" class="form-control" 
+                                               value="@ViewBag.FechaHasta" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-dollar-sign me-1"></i>Rango de Precio
+                                </label>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label for="precioMin" class="form-label small">$ Mínimo</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" name="precioMin" id="precioMin" class="form-control" 
+                                                   placeholder="Precio mínimo" value="@ViewBag.PrecioMin" 
+                                                   min="@ViewBag.PrecioMinimo" />
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="precioMax" class="form-label small">$ Máximo</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" name="precioMax" id="precioMax" class="form-control" 
+                                                   placeholder="Precio máximo" value="@ViewBag.PrecioMax" 
+                                                   min="@ViewBag.PrecioMinimo" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="button" id="limpiarFiltros" class="btn btn-outline-secondary me-2">
+                                    <i class="fas fa-eraser me-1"></i>Limpiar Filtros
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i>Buscar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Resultados 
+                        <span class="badge bg-primary">@Model.Count() inmuebles</span>
+                    </h5>
+                    @if (ViewBag.UserRole == "Inquilino")
+                    {
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>Mostrando solo inmuebles activos
+                        </small>
+                    }
+                </div>
                 <div class="card-body">
                     @if (Model.Any())
                     {
@@ -46,6 +228,7 @@
                                         <th>@Html.DisplayNameFor(model => model.Precio)</th>
                                         <th>@Html.DisplayNameFor(model => model.Uso)</th>
                                         <th>@Html.DisplayNameFor(model => model.Estado)</th>
+                                        <th>Disponibilidad</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
@@ -116,6 +299,24 @@
                                                 }
                                             </td>
                                             <td>
+                                                @{
+                                                    var estadosDisponibilidad = ViewBag.EstadosDisponibilidad as Dictionary<int, string>;
+                                                    var estadoDisponibilidad = estadosDisponibilidad?.GetValueOrDefault(item.Id, "Disponible") ?? "Disponible";
+                                                }
+                                                @if (estadoDisponibilidad == "Disponible")
+                                                {
+                                                    <span class="badge bg-success">Disponible</span>
+                                                }
+                                                else if (estadoDisponibilidad == "Reservado")
+                                                {
+                                                    <span class="badge bg-warning text-dark">Reservado</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">No Disponible</span>
+                                                }
+                                            </td>
+                                            <td>
                                                 <div class="btn-group" role="group">
                                                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm me-1" title="Ver detalles">
                                                         <i class="fas fa-eye me-1"></i>
@@ -137,9 +338,26 @@
                     else
                     {
                         <div class="text-center py-5">
-                            <i class="fas fa-home fa-3x text-muted mb-3"></i>
-                            <h4 class="text-muted">No hay inmuebles registrados</h4>
-                            <p class="text-muted">Comienza agregando tu primer inmueble</p>
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">No se encontraron inmuebles</h4>
+                            <p class="text-muted">
+                                @if (Context.Request.Query.Count > 0)
+                                {
+                                    <span>No hay inmuebles que coincidan con los filtros aplicados.</span><br>
+                                    <span>Intenta ajustar los criterios de búsqueda.</span>
+                                }
+                                else
+                                {
+                                    <span>No hay inmuebles registrados en el sistema.</span><br>
+                                    <span>Comienza agregando tu primer inmueble.</span>
+                                }
+                            </p>
+                            @if (Context.Request.Query.Count > 0)
+                            {
+                                <button type="button" id="limpiarFiltrosEmpty" class="btn btn-outline-secondary me-2">
+                                    <i class="fas fa-eraser me-1"></i>Limpiar Filtros
+                                </button>
+                            }
                             <a asp-action="Create" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Crear Inmueble
                             </a>
@@ -150,3 +368,18 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/georef-api.js"></script>
+    <script src="~/js/Inmuebles/inmuebles-filters.js"></script>
+    
+    <!-- Hidden inputs for ViewBag values -->
+    <input type="hidden" id="estadoActual" value="@ViewBag.EstadoSeleccionado" />
+    <input type="hidden" id="tipoActual" value="@ViewBag.TipoSeleccionado" />
+    <input type="hidden" id="usoActual" value="@ViewBag.UsoSeleccionado" />
+    <input type="hidden" id="provinciaActual" value="@ViewBag.ProvinciaSeleccionada" />
+    <input type="hidden" id="localidadActual" value="@ViewBag.LocalidadSeleccionada" />
+    <input type="hidden" id="disponibleActual" value="@ViewBag.DisponibleSeleccionado" />
+    <input type="hidden" id="userRole" value="@ViewBag.UserRole" />
+    <input type="hidden" id="canViewAllStates" value="@ViewBag.CanViewAllStates" />
+}

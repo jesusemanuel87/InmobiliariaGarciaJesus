@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Repositories;
 using InmobiliariaGarciaJesus.Services;
+using System.Collections.Generic;
 using InmobiliariaGarciaJesus.Attributes;
 
 namespace InmobiliariaGarciaJesus.Controllers
@@ -30,21 +31,189 @@ namespace InmobiliariaGarciaJesus.Controllers
         }
 
         // GET: Inmuebles
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? estado = null, string? tipo = null, string? uso = null, 
+            decimal? precioMin = null, decimal? precioMax = null, string? provincia = null, string? localidad = null,
+            string[]? disponibilidad = null, DateTime? fechaDesde = null, DateTime? fechaHasta = null)
         {
             try
             {
                 var inmuebles = await _inmuebleRepository.GetAllAsync();
+                var inmueblesQuery = inmuebles.AsQueryable();
+
+                // Restricción por rol: Los inquilinos solo ven inmuebles activos
+                var userRole = HttpContext.Session.GetString("UserRole");
                 
-                // Cargar imágenes de portada para cada inmueble
-                foreach (var inmueble in inmuebles)
+                // Establecer valores por defecto si no se han especificado filtros
+                bool isFirstLoad = !Request.Query.Any();
+                
+                if (isFirstLoad)
+                {
+                    // Valores por defecto
+                    provincia = provincia ?? "San Luis";
+                    localidad = localidad ?? "San Luis";
+                    disponibilidad = disponibilidad ?? new[] { "Disponible", "Reservado" };
+                    
+                    if (userRole == "Administrador" || userRole == "Empleado")
+                    {
+                        estado = estado ?? "Activo";
+                    }
+                }
+
+                if (userRole == "Inquilino")
+                {
+                    inmueblesQuery = inmueblesQuery.Where(i => i.Estado == EstadoInmueble.Activo);
+                    estado = "Activo"; // Forzar filtro para inquilinos
+                }
+                else
+                {
+                    // Para empleados y administradores, aplicar filtro de estado si se especifica
+                    if (!string.IsNullOrEmpty(estado) && estado != "Todos")
+                    {
+                        if (Enum.TryParse<EstadoInmueble>(estado, out var estadoEnum))
+                        {
+                            inmueblesQuery = inmueblesQuery.Where(i => i.Estado == estadoEnum);
+                        }
+                    }
+                }
+
+                // Aplicar otros filtros
+                if (!string.IsNullOrEmpty(tipo) && tipo != "Todos")
+                {
+                    if (Enum.TryParse<TipoInmueble>(tipo, out var tipoEnum))
+                    {
+                        inmueblesQuery = inmueblesQuery.Where(i => i.Tipo == tipoEnum);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(uso) && uso != "Todos")
+                {
+                    if (Enum.TryParse<UsoInmueble>(uso, out var usoEnum))
+                    {
+                        inmueblesQuery = inmueblesQuery.Where(i => i.Uso == usoEnum);
+                    }
+                }
+
+                if (precioMin.HasValue)
+                {
+                    inmueblesQuery = inmueblesQuery.Where(i => i.Precio >= precioMin.Value);
+                }
+
+                if (precioMax.HasValue)
+                {
+                    inmueblesQuery = inmueblesQuery.Where(i => i.Precio <= precioMax.Value);
+                }
+
+                if (!string.IsNullOrEmpty(provincia) && provincia != "Todas")
+                {
+                    inmueblesQuery = inmueblesQuery.Where(i => 
+                        !string.IsNullOrEmpty(i.Provincia) && i.Provincia.Contains(provincia, StringComparison.OrdinalIgnoreCase));
+                }
+
+                if (!string.IsNullOrEmpty(localidad) && localidad != "Todas")
+                {
+                    inmueblesQuery = inmueblesQuery.Where(i => 
+                        !string.IsNullOrEmpty(i.Localidad) && i.Localidad.Contains(localidad, StringComparison.OrdinalIgnoreCase));
+                }
+
+                // Filtro por disponibilidad (multi-select)
+                if (disponibilidad != null && disponibilidad.Any())
+                {
+                    // Obtener contratos para determinar el estado real de disponibilidad
+                    var contratoRepository = HttpContext.RequestServices.GetRequiredService<IRepository<Contrato>>();
+                    var contratos = await contratoRepository.GetAllAsync();
+                    var fechaActual = DateTime.Now;
+
+                    var inmueblesConEstado = inmueblesQuery.Select(i => new
+                    {
+                        Inmueble = i,
+                        EstadoDisponibilidad = DeterminarDisponibilidad(i, contratos, fechaActual)
+                    }).ToList();
+
+                    // Filtrar por los estados seleccionados
+                    var inmueblesConDisponibilidad = inmueblesConEstado
+                        .Where(x => disponibilidad.Contains(x.EstadoDisponibilidad))
+                        .Select(x => x.Inmueble);
+
+                    inmueblesQuery = inmueblesConDisponibilidad.AsQueryable();
+                }
+
+                // Filtro por fechas de disponibilidad para alquiler
+                if (fechaDesde.HasValue || fechaHasta.HasValue)
+                {
+                    // Necesitamos verificar que el inmueble esté disponible en el rango de fechas
+                    // Esto requiere verificar que no haya contratos activos que se solapen con el rango
+                    var contratoRepository = HttpContext.RequestServices.GetRequiredService<IRepository<Contrato>>();
+                    var contratos = await contratoRepository.GetAllAsync();
+
+                    if (fechaDesde.HasValue && fechaHasta.HasValue)
+                    {
+                        // Filtrar inmuebles que NO tengan contratos activos en el rango de fechas
+                        var inmueblesConContratosEnRango = contratos
+                            .Where(c => c.Estado == EstadoContrato.Activo &&
+                                       c.FechaInicio <= fechaHasta.Value &&
+                                       c.FechaFin >= fechaDesde.Value)
+                            .Select(c => c.InmuebleId)
+                            .Distinct()
+                            .ToList();
+
+                        inmueblesQuery = inmueblesQuery.Where(i => !inmueblesConContratosEnRango.Contains(i.Id));
+                    }
+                }
+
+                var inmueblesFiltrados = inmueblesQuery.ToList();
+                
+                // Cargar imágenes de portada y determinar disponibilidad para cada inmueble
+                var contratoRepositoryFinal = HttpContext.RequestServices.GetRequiredService<IRepository<Contrato>>();
+                var todosLosContratos = await contratoRepositoryFinal.GetAllAsync();
+                var fechaActualFinal = DateTime.Now;
+                var estadosDisponibilidad = new Dictionary<int, string>();
+
+                foreach (var inmueble in inmueblesFiltrados)
                 {
                     var imagenes = await _imagenRepository.GetByInmuebleIdAsync(inmueble.Id);
                     inmueble.Imagenes = imagenes.ToList();
+                    
+                    // Determinar y guardar el estado de disponibilidad
+                    estadosDisponibilidad[inmueble.Id] = DeterminarDisponibilidad(inmueble, todosLosContratos, fechaActualFinal);
                 }
+
+                // Pasar estados de disponibilidad a la vista
+                ViewBag.EstadosDisponibilidad = estadosDisponibilidad;
+
+                // Pasar datos para los filtros
+                ViewBag.EstadoSeleccionado = estado;
+                ViewBag.TipoSeleccionado = tipo;
+                ViewBag.UsoSeleccionado = uso;
+                ViewBag.PrecioMin = precioMin;
+                ViewBag.PrecioMax = precioMax;
+                ViewBag.ProvinciaSeleccionada = provincia;
+                ViewBag.LocalidadSeleccionada = localidad;
+                ViewBag.DisponibilidadSeleccionada = disponibilidad;
+                ViewBag.FechaDesde = fechaDesde?.ToString("yyyy-MM-dd");
+                ViewBag.FechaHasta = fechaHasta?.ToString("yyyy-MM-dd");
+
+                // Calcular rangos de precios
+                var todosConPrecio = inmuebles.Where(i => i.Precio.HasValue).ToList();
+                if (todosConPrecio.Any())
+                {
+                    ViewBag.PrecioMinimo = todosConPrecio.Min(i => i.Precio!.Value);
+                    ViewBag.PrecioMaximo = todosConPrecio.Max(i => i.Precio!.Value);
+                }
+                else
+                {
+                    ViewBag.PrecioMinimo = 0;
+                    ViewBag.PrecioMaximo = 1000000;
+                }
+
+                // Información del rol para la vista
+                ViewBag.UserRole = userRole;
+                ViewBag.CanViewAllStates = userRole == "Empleado" || userRole == "Administrador";
+                
+                // Debug: Log del rol para verificar
+                Console.WriteLine($"DEBUG - UserRole: '{userRole}', CanViewAllStates: {ViewBag.CanViewAllStates}");
                 
                 ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
-                return View(inmuebles);
+                return View(inmueblesFiltrados);
             }
             catch (Exception ex)
             {
@@ -346,6 +515,68 @@ namespace InmobiliariaGarciaJesus.Controllers
                 var viewName = readOnly ? "_ImagenesGaleriaReadOnly" : "_ImagenesGaleria";
                 return PartialView(viewName, new List<InmuebleImagen>());
             }
+        }
+
+        // Método privado para determinar el estado de disponibilidad de un inmueble
+        private string DeterminarDisponibilidad(Inmueble inmueble, IEnumerable<Contrato> contratos, DateTime fechaActual)
+        {
+            // Debug: Log para inmueble ID 1
+            if (inmueble.Id == 1)
+            {
+                Console.WriteLine($"DEBUG - Inmueble ID 1: Disponible={inmueble.Disponible}, FechaActual={fechaActual:yyyy-MM-dd}");
+                var contratosInmueble = contratos.Where(c => c.InmuebleId == inmueble.Id).ToList();
+                Console.WriteLine($"DEBUG - Contratos encontrados para ID 1: {contratosInmueble.Count}");
+                foreach (var c in contratosInmueble)
+                {
+                    Console.WriteLine($"DEBUG - Contrato: Estado={c.Estado}, Inicio={c.FechaInicio:yyyy-MM-dd}, Fin={c.FechaFin:yyyy-MM-dd}");
+                }
+            }
+
+            // Si el inmueble está marcado como no disponible en la base
+            if (!inmueble.Disponible)
+            {
+                return "NoDisponible";
+            }
+
+            // Verificar si tiene contratos activos (en curso ahora)
+            var contratoActivo = contratos.FirstOrDefault(c => 
+                c.InmuebleId == inmueble.Id && 
+                c.Estado == EstadoContrato.Activo &&
+                c.FechaInicio <= fechaActual &&
+                c.FechaFin >= fechaActual);
+
+            if (contratoActivo != null)
+            {
+                if (inmueble.Id == 1) Console.WriteLine($"DEBUG - ID 1: Contrato ACTIVO encontrado");
+                return "NoDisponible";
+            }
+
+            // Verificar si tiene contratos futuros (reservado) - incluir tanto Activo como Reservado
+            var contratoFuturo = contratos.FirstOrDefault(c => 
+                c.InmuebleId == inmueble.Id && 
+                (c.Estado == EstadoContrato.Activo || c.Estado == EstadoContrato.Reservado) &&
+                c.FechaInicio > fechaActual);
+
+            if (contratoFuturo != null)
+            {
+                if (inmueble.Id == 1) Console.WriteLine($"DEBUG - ID 1: Contrato FUTURO encontrado - RESERVADO");
+                return "Reservado";
+            }
+
+            // Verificar si tiene contratos con estado "Reservado" independientemente de la fecha
+            var contratoReservado = contratos.FirstOrDefault(c => 
+                c.InmuebleId == inmueble.Id && 
+                c.Estado == EstadoContrato.Reservado);
+
+            if (contratoReservado != null)
+            {
+                if (inmueble.Id == 1) Console.WriteLine($"DEBUG - ID 1: Contrato con estado RESERVADO encontrado");
+                return "Reservado";
+            }
+
+            // Si no tiene contratos activos ni futuros, está disponible
+            if (inmueble.Id == 1) Console.WriteLine($"DEBUG - ID 1: Sin contratos - DISPONIBLE");
+            return "Disponible";
         }
     }
 }

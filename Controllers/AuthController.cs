@@ -73,6 +73,12 @@ namespace InmobiliariaGarciaJesus.Controllers
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
 
+            // Establecer información de sesión
+            HttpContext.Session.SetString("UserId", usuario.Id.ToString());
+            HttpContext.Session.SetString("UserEmail", usuario.Email);
+            HttpContext.Session.SetString("UserRole", usuario.Rol.ToString());
+            HttpContext.Session.SetString("UserName", usuario.NombreCompleto);
+
             _logger.LogInformation("Usuario logueado exitosamente: {Email}", model.Email);
 
             if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
@@ -138,6 +144,10 @@ namespace InmobiliariaGarciaJesus.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            
+            // Limpiar sesión
+            HttpContext.Session.Clear();
+            
             _logger.LogInformation("Usuario deslogueado");
             return RedirectToAction("Index", "Home");
         }

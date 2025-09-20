@@ -22,12 +22,47 @@ namespace InmobiliariaGarciaJesus.Controllers
             _logger = logger;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(bool? estado = true, string? rol = null, string? buscar = null)
         {
             try
             {
                 var empleados = await _empleadoService.GetAllEmpleadosAsync();
-                return View(empleados);
+                
+                // Aplicar filtros
+                var empleadosFiltrados = empleados.AsQueryable();
+
+                // Filtro por estado (por defecto: Activo)
+                if (estado.HasValue)
+                {
+                    empleadosFiltrados = empleadosFiltrados.Where(e => e.Estado == estado.Value);
+                }
+
+                // Filtro por rol
+                if (!string.IsNullOrEmpty(rol))
+                {
+                    if (Enum.TryParse<RolEmpleado>(rol, out var rolEnum))
+                    {
+                        empleadosFiltrados = empleadosFiltrados.Where(e => e.Rol == rolEnum);
+                    }
+                }
+
+                // Filtro de búsqueda (nombre, DNI, email)
+                if (!string.IsNullOrEmpty(buscar))
+                {
+                    empleadosFiltrados = empleadosFiltrados.Where(e =>
+                        e.NombreCompleto.Contains(buscar, StringComparison.OrdinalIgnoreCase) ||
+                        e.Dni.Contains(buscar, StringComparison.OrdinalIgnoreCase) ||
+                        e.Email.Contains(buscar, StringComparison.OrdinalIgnoreCase));
+                }
+
+                var resultado = empleadosFiltrados.ToList();
+
+                // Pasar datos para mantener los filtros
+                ViewBag.EstadoSeleccionado = estado;
+                ViewBag.RolSeleccionado = rol;
+                ViewBag.BuscarSeleccionado = buscar;
+
+                return View(resultado);
             }
             catch (Exception ex)
             {

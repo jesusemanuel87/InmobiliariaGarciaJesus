@@ -47,7 +47,7 @@ class PropietarioDataTablesConfig {
                 className: 'text-end',
                 render: function(data, type, row) {
                     const expandButton = row.hasInmuebles 
-                        ? `<button type="button" class="btn btn-sm btn-outline-primary dt-expand-btn" data-id="${row.id}" title="Ver inmuebles">
+                        ? `<button type="button" class="btn btn-outline-primary btn-sm dt-expand-btn" data-id="${row.id}" title="Ver inmuebles">
                                <i class="fas fa-home"></i>
                            </button>`
                         : '';
@@ -57,7 +57,7 @@ class PropietarioDataTablesConfig {
                     const canDelete = row.canDelete || false;
                     
                     const deleteButton = canDelete
-                        ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="showDeleteModal(${row.id})" title="Eliminar">
+                        ? `<button type="button" class="btn btn-outline-danger btn-sm" onclick="showDeleteModal(${row.id})" title="Eliminar">
                                <i class="fas fa-trash"></i>
                            </button>`
                         : '';
@@ -65,10 +65,10 @@ class PropietarioDataTablesConfig {
                     return `
                         <div class="d-flex justify-content-end gap-1">
                             ${expandButton}
-                            <button type="button" class="btn btn-sm btn-outline-info" onclick="showDetailsModal(${row.id})" title="Ver detalles">
+                            <button type="button" class="btn btn-outline-info btn-sm" onclick="showDetailsModal(${row.id})" title="Ver detalles">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-warning" onclick="showEditModal(${row.id})" title="Editar">
+                            <button type="button" class="btn btn-outline-warning btn-sm" onclick="showEditModal(${row.id})" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
                             ${deleteButton}

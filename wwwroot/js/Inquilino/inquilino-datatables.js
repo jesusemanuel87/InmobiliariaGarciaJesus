@@ -55,17 +55,17 @@ class InquilinoDataTablesConfig {
                     const canDelete = row.canDelete || false;
                     
                     const deleteButton = canDelete
-                        ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="showDeleteModal(${row.id})" title="Eliminar">
+                        ? `<button type="button" class="btn btn-outline-danger btn-sm" onclick="showDeleteModal(${row.id})" title="Eliminar">
                                <i class="fas fa-trash"></i>
                            </button>`
                         : '';
                     
                     return `
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-sm btn-outline-info" onclick="showDetailsModal(${row.id})" title="Ver detalles">
+                        <div class="d-flex justify-content-center gap-1">
+                            <button type="button" class="btn btn-outline-info btn-sm" onclick="showDetailsModal(${row.id})" title="Ver detalles">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-warning" onclick="showEditModal(${row.id})" title="Editar">
+                            <button type="button" class="btn btn-outline-warning btn-sm" onclick="showEditModal(${row.id})" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
                             ${deleteButton}

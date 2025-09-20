@@ -19,7 +19,18 @@
             
             if (string.IsNullOrEmpty(action))
             {
-                return currentController?.Equals(controller, StringComparison.OrdinalIgnoreCase) == true ? "active" : "";
+                // Si no se especifica acción, solo marcar activo si es el controlador correcto
+                // Y NO es una acción específica que tenga su propio enlace
+                if (currentController?.Equals(controller, StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    // Para el controlador Home, solo marcar "Inicio" como activo si la acción es "Index"
+                    if (controller.Equals("Home", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return currentAction?.Equals("Index", StringComparison.OrdinalIgnoreCase) == true ? "active" : "";
+                    }
+                    return "active";
+                }
+                return "";
             }
             else
             {

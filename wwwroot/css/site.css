@@ -29,3 +29,91 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* Navbar Active State */
+.navbar-nav .nav-link.active {
+  background-color: rgba(13, 110, 253, 0.1) !important;
+  color: #0d6efd !important;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(13, 110, 253, 0.15);
+  position: relative;
+}
+
+.navbar-nav .nav-link.active::before {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 3px;
+  background-color: #0d6efd;
+  border-radius: 2px;
+}
+
+.navbar-nav .nav-link.active i {
+  color: #0d6efd !important;
+}
+
+/* Hover effect for non-active nav links */
+.navbar-nav .nav-link:not(.active):hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 0.375rem;
+  transition: background-color 0.2s ease;
+}
+
+/* Dropdown toggle active state */
+.navbar-nav .dropdown-toggle.active {
+  background-color: rgba(13, 110, 253, 0.1) !important;
+  color: #0d6efd !important;
+  border-radius: 0.375rem;
+  font-weight: 600;
+}
+
+/* Layout styles (moved from _Layout.cshtml.css) */
+a.navbar-brand {
+  white-space: normal;
+  text-align: center;
+  word-break: break-all;
+}
+
+a {
+  color: #0077cc;
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+.border-top {
+  border-top: 1px solid #e5e5e5;
+}
+.border-bottom {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow {
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+button.accept-policy {
+  font-size: 1rem;
+  line-height: inherit;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+}

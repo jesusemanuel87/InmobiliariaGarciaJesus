@@ -73,6 +73,11 @@
     <!-- Custom Scripts -->
     <script src="~/js/shared/datatables-config.js"></script>
     
+    <!-- Pass user role to JavaScript BEFORE loading DataTables configs -->
+    <script>
+        window.userRole = '@ViewBag.UserRole';
+    </script>
+    
     <!-- Propietario Module Scripts (load in order) -->
     <script src="~/js/Propietario/propietario-utils.js"></script>
     <script src="~/js/Propietario/propietario-datatables.js"></script>

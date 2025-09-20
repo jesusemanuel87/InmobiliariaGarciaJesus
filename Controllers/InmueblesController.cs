@@ -350,6 +350,7 @@ namespace InmobiliariaGarciaJesus.Controllers
         }
 
         // GET: Inmuebles/Delete/5
+        [AuthorizeMultipleRoles(RolUsuario.Administrador)]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -377,6 +378,7 @@ namespace InmobiliariaGarciaJesus.Controllers
         // POST: Inmuebles/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [AuthorizeMultipleRoles(RolUsuario.Administrador)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             try

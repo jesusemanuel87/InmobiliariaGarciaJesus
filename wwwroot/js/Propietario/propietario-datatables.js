@@ -52,6 +52,16 @@ class PropietarioDataTablesConfig {
                            </button>`
                         : '';
                     
+                    // Solo mostrar botón de eliminar para Administradores
+                    // Usar el valor del servidor como fuente de verdad
+                    const canDelete = row.canDelete || false;
+                    
+                    const deleteButton = canDelete
+                        ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="showDeleteModal(${row.id})" title="Eliminar">
+                               <i class="fas fa-trash"></i>
+                           </button>`
+                        : '';
+                    
                     return `
                         <div class="d-flex justify-content-end gap-1">
                             ${expandButton}
@@ -61,9 +71,7 @@ class PropietarioDataTablesConfig {
                             <button type="button" class="btn btn-sm btn-outline-warning" onclick="showEditModal(${row.id})" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="showDeleteModal(${row.id})" title="Eliminar">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            ${deleteButton}
                         </div>
                     `;
                 }

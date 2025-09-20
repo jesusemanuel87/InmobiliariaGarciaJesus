@@ -21,6 +21,8 @@ namespace InmobiliariaGarciaJesus.Controllers
         // GET: Propietarios
         public IActionResult Index()
         {
+            // Pasar el rol del usuario a la vista
+            ViewBag.UserRole = HttpContext.Session.GetString("UserRole");
             return View();
         }
 
@@ -126,7 +128,8 @@ namespace InmobiliariaGarciaJesus.Controllers
                         telefono = p.Telefono ?? "",
                         fechaCreacion = p.FechaCreacion,
                         estado = p.Estado,
-                        hasInmuebles = ((InmuebleRepository)_inmuebleRepository).GetInmueblesByPropietarioIdAsync(p.Id).Result.Any()
+                        hasInmuebles = ((InmuebleRepository)_inmuebleRepository).GetInmueblesByPropietarioIdAsync(p.Id).Result.Any(),
+                        canDelete = HttpContext.Session.GetString("UserRole") == "Administrador"
                     })
                     .ToList();
 
@@ -333,6 +336,7 @@ namespace InmobiliariaGarciaJesus.Controllers
         }
 
         // GET: Propietarios/Delete/5
+        [AuthorizeMultipleRoles(RolUsuario.Administrador)]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -367,6 +371,7 @@ namespace InmobiliariaGarciaJesus.Controllers
         // POST: Propietarios/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [AuthorizeMultipleRoles(RolUsuario.Administrador)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             try

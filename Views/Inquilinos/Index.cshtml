@@ -74,6 +74,11 @@
     <!-- Custom Scripts -->
     <script src="~/js/shared/datatables-config.js"></script>
     
+    <!-- Pass user role to JavaScript BEFORE loading DataTables configs -->
+    <script>
+        window.userRole = '@ViewBag.UserRole';
+    </script>
+    
     <!-- Inquilino Module Scripts (load in order) -->
     <script src="~/js/Inquilino/inquilino-utils.js"></script>
     <script src="~/js/Inquilino/inquilino-datatables.js"></script>

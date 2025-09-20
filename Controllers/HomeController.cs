@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace InmobiliariaGarciaJesus.Controllers;
 
@@ -86,6 +87,12 @@ public class HomeController : Controller
             _logger.LogError(ex, "Error al cargar inmuebles públicos");
             return View(new List<Inmueble>());
         }
+    }
+
+    [Authorize(Roles = "Administrador,Empleado")]
+    public IActionResult Dashboard()
+    {
+        return View();
     }
 
     public IActionResult Privacy()

@@ -89,7 +89,7 @@ namespace InmobiliariaGarciaJesus.Controllers
             // Redirigir según el rol del usuario
             return usuario.Rol switch
             {
-                RolUsuario.Administrador or RolUsuario.Empleado => RedirectToAction("Index", "Propietarios"),
+                RolUsuario.Administrador or RolUsuario.Empleado => RedirectToAction("Dashboard", "Home"),
                 RolUsuario.Propietario => RedirectToAction("MisInmuebles", "Inmuebles"),
                 RolUsuario.Inquilino => RedirectToAction("MiContrato", "Contratos"),
                 _ => RedirectToAction("Index", "Home")

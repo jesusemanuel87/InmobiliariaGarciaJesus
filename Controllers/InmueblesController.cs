@@ -238,6 +238,32 @@ namespace InmobiliariaGarciaJesus.Controllers
                     return NotFound();
                 }
 
+                // Validar acceso: Solo Admin/Empleado o el propietario del inmueble
+                var userRole = HttpContext.Session.GetString("UserRole");
+                var userId = HttpContext.Session.GetString("UserId");
+
+                if (userRole == "Propietario")
+                {
+                    // Verificar que el propietario sea el dueño del inmueble
+                    var usuarioRepo = HttpContext.RequestServices.GetService<IRepository<Usuario>>();
+                    if (usuarioRepo != null && !string.IsNullOrEmpty(userId))
+                    {
+                        var usuario = (await usuarioRepo.GetAllAsync()).FirstOrDefault(u => u.Id.ToString() == userId);
+                        if (usuario?.PropietarioId != inmueble.PropietarioId)
+                        {
+                            return RedirectToAction("AccessDenied", "Auth");
+                        }
+                    }
+                    else
+                    {
+                        return RedirectToAction("AccessDenied", "Auth");
+                    }
+                }
+                else if (userRole != "Administrador" && userRole != "Empleado")
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
+
                 ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
                 return View(inmueble);
             }
@@ -249,18 +275,18 @@ namespace InmobiliariaGarciaJesus.Controllers
         }
 
         // GET: Inmuebles/Create
+        [AuthorizeMultipleRoles(RolUsuario.Empleado, RolUsuario.Administrador)]
         public async Task<IActionResult> Create()
         {
             try
             {
-                var propietarios = await _propietarioRepository.GetAllAsync(p => p.Estado);
-                ViewBag.Propietarios = propietarios;
-                ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
+                var propietarios = await _propietarioRepository.GetAllAsync();
+                ViewBag.PropietarioId = propietarios.ToList();
                 return View();
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "Error al cargar los propietarios: " + ex.Message;
+                TempData["Error"] = "Error al cargar la página de creación: " + ex.Message;
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -308,6 +334,32 @@ namespace InmobiliariaGarciaJesus.Controllers
                     return NotFound();
                 }
 
+                // Validar acceso: Solo Admin/Empleado o el propietario del inmueble
+                var userRole = HttpContext.Session.GetString("UserRole");
+                var userId = HttpContext.Session.GetString("UserId");
+
+                if (userRole == "Propietario")
+                {
+                    // Verificar que el propietario sea el dueño del inmueble
+                    var usuarioRepo = HttpContext.RequestServices.GetService<IRepository<Usuario>>();
+                    if (usuarioRepo != null && !string.IsNullOrEmpty(userId))
+                    {
+                        var usuario = (await usuarioRepo.GetAllAsync()).FirstOrDefault(u => u.Id.ToString() == userId);
+                        if (usuario?.PropietarioId != inmueble.PropietarioId)
+                        {
+                            return RedirectToAction("AccessDenied", "Auth");
+                        }
+                    }
+                    else
+                    {
+                        return RedirectToAction("AccessDenied", "Auth");
+                    }
+                }
+                else if (userRole != "Administrador" && userRole != "Empleado")
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
+
                 var propietarios = await _propietarioRepository.GetAllAsync(p => p.Estado);
                 ViewBag.Propietarios = propietarios;
                 ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
@@ -328,6 +380,32 @@ namespace InmobiliariaGarciaJesus.Controllers
             if (id != inmueble.Id)
             {
                 return NotFound();
+            }
+
+            // Validar acceso antes de actualizar
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userId = HttpContext.Session.GetString("UserId");
+
+            if (userRole == "Propietario")
+            {
+                // Verificar que el propietario sea el dueño del inmueble
+                var usuarioRepo = HttpContext.RequestServices.GetService<IRepository<Usuario>>();
+                if (usuarioRepo != null && !string.IsNullOrEmpty(userId))
+                {
+                    var usuario = (await usuarioRepo.GetAllAsync()).FirstOrDefault(u => u.Id.ToString() == userId);
+                    if (usuario?.PropietarioId != inmueble.PropietarioId)
+                    {
+                        return RedirectToAction("AccessDenied", "Auth");
+                    }
+                }
+                else
+                {
+                    return RedirectToAction("AccessDenied", "Auth");
+                }
+            }
+            else if (userRole != "Administrador" && userRole != "Empleado")
+            {
+                return RedirectToAction("AccessDenied", "Auth");
             }
 
             if (ModelState.IsValid)

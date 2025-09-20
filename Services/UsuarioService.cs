@@ -128,17 +128,25 @@ namespace InmobiliariaGarciaJesus.Services
                 int? personaId = null;
                 
                 // Crear la persona según el tipo de usuario
-                switch (model.TipoUsuario)
+                try
                 {
-                    case RolUsuario.Propietario:
-                        personaId = await CreatePropietarioAsync(model);
-                        break;
-                    case RolUsuario.Inquilino:
-                        personaId = await CreateInquilinoAsync(model);
-                        break;
-                    case RolUsuario.Empleado:
-                    case RolUsuario.Administrador:
-                        return (false, "Los empleados deben ser creados por un administrador", null);
+                    switch (model.TipoUsuario)
+                    {
+                        case RolUsuario.Propietario:
+                            personaId = await CreatePropietarioAsync(model);
+                            break;
+                        case RolUsuario.Inquilino:
+                            personaId = await CreateInquilinoAsync(model);
+                            break;
+                        case RolUsuario.Empleado:
+                        case RolUsuario.Administrador:
+                            return (false, "Los empleados deben ser creados por un administrador", null);
+                    }
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // Error específico de DNI duplicado u otros errores de validación
+                    return (false, ex.Message, null);
                 }
 
                 if (!personaId.HasValue)
@@ -361,17 +369,39 @@ namespace InmobiliariaGarciaJesus.Services
                 return null;
             }
 
-            var propietario = new Propietario
+            try
             {
-                Nombre = model.Nombre,
-                Apellido = model.Apellido,
-                Dni = model.Dni,
-                Telefono = model.Telefono,
-                Email = model.Email,
-                Estado = true
-            };
+                // Verificar si ya existe un propietario con este DNI
+                var propietarios = await _propietarioRepository.GetAllAsync();
+                if (propietarios.Any(p => p.Dni == model.Dni))
+                {
+                    throw new InvalidOperationException($"Ya existe un propietario registrado con el DNI {model.Dni}");
+                }
 
-            return await _propietarioRepository.CreateAsync(propietario);
+                var propietario = new Propietario
+                {
+                    Nombre = model.Nombre,
+                    Apellido = model.Apellido,
+                    Dni = model.Dni,
+                    Telefono = model.Telefono,
+                    Email = model.Email,
+                    Estado = true
+                };
+
+                return await _propietarioRepository.CreateAsync(propietario);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al crear propietario con DNI: {Dni}", model.Dni);
+                
+                // Si es un error de clave duplicada, lanzar excepción específica
+                if (ex.Message.Contains("Duplicate entry") && ex.Message.Contains("UK_propietarios_DNI"))
+                {
+                    throw new InvalidOperationException($"Ya existe un propietario registrado con el DNI {model.Dni}");
+                }
+                
+                throw;
+            }
         }
 
         private async Task<int?> CreateInquilinoAsync(RegisterViewModel model)
@@ -382,17 +412,39 @@ namespace InmobiliariaGarciaJesus.Services
                 return null;
             }
 
-            var inquilino = new Inquilino
+            try
             {
-                Nombre = model.Nombre,
-                Apellido = model.Apellido,
-                Dni = model.Dni,
-                Telefono = model.Telefono,
-                Email = model.Email,
-                Estado = true
-            };
+                // Verificar si ya existe un inquilino con este DNI
+                var inquilinos = await _inquilinoRepository.GetAllAsync();
+                if (inquilinos.Any(i => i.Dni == model.Dni))
+                {
+                    throw new InvalidOperationException($"Ya existe un inquilino registrado con el DNI {model.Dni}");
+                }
 
-            return await _inquilinoRepository.CreateAsync(inquilino);
+                var inquilino = new Inquilino
+                {
+                    Nombre = model.Nombre,
+                    Apellido = model.Apellido,
+                    Dni = model.Dni,
+                    Telefono = model.Telefono,
+                    Email = model.Email,
+                    Estado = true
+                };
+
+                return await _inquilinoRepository.CreateAsync(inquilino);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al crear inquilino con DNI: {Dni}", model.Dni);
+                
+                // Si es un error de clave duplicada, lanzar excepción específica
+                if (ex.Message.Contains("Duplicate entry") && ex.Message.Contains("UK_inquilinos_DNI"))
+                {
+                    throw new InvalidOperationException($"Ya existe un inquilino registrado con el DNI {model.Dni}");
+                }
+                
+                throw;
+            }
         }
 
         public static string HashPassword(string password)

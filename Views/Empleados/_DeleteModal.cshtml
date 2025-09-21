@@ -1,0 +1,93 @@
+@model InmobiliariaGarciaJesus.Models.Empleado
+
+<!-- Delete Confirmation Modal for Empleado -->
+<div class="modal fade" id="empleadoDeleteModal" tabindex="-1" aria-labelledby="empleadoDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="empleadoDeleteModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Alert container for modal-specific messages -->
+                <div id="deleteModalAlerts"></div>
+
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>¡Atención!</strong> Esta acción no se puede deshacer.
+                </div>
+
+                <p class="mb-3">¿Está seguro que desea eliminar el siguiente empleado?</p>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>DNI:</strong> @Model.Dni
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Nombre:</strong> @Model.NombreCompleto
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Email:</strong> @Model.Email
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>Rol:</strong> 
+                                    <span class="badge @(Model.Rol == InmobiliariaGarciaJesus.Models.RolEmpleado.Administrador ? "bg-danger" : "bg-primary")">
+                                        @Model.Rol.ToString()
+                                    </span>
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Estado:</strong> 
+                                    <span class="badge @(Model.Estado ? "bg-success" : "bg-secondary")">
+                                        @(Model.Estado ? "Activo" : "Inactivo")
+                                    </span>
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Fecha Ingreso:</strong> @Model.FechaCreacion.ToString("dd/MM/yyyy")
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.Rol == InmobiliariaGarciaJesus.Models.RolEmpleado.Administrador)
+                {
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        <strong>Advertencia:</strong> Este empleado es un Administrador con permisos completos en el sistema.
+                    </div>
+                }
+
+                <div class="mt-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirmDelete">
+                        <label class="form-check-label fw-bold text-danger" for="confirmDelete">
+                            Confirmo que deseo eliminar este empleado permanentemente
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <strong>Nota:</strong> Al eliminar este empleado también se eliminará su usuario asociado del sistema.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" onclick="deleteEmpleado(@Model.Id)">
+                    <i class="fas fa-trash"></i> Eliminar Empleado
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

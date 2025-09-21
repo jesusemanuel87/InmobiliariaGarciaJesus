@@ -1,0 +1,159 @@
+@model InmobiliariaGarciaJesus.Models.Empleado
+
+<!-- Form Modal for Create/Edit Empleado -->
+<div class="modal fade" id="empleadoFormModal" tabindex="-1" aria-labelledby="empleadoFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="empleadoFormModalLabel">
+                    <i class="fas @(Model.Id == 0 ? "fa-plus" : "fa-edit")"></i>
+                    @(Model.Id == 0 ? "Nuevo Empleado" : "Editar Empleado")
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="empleadoForm" novalidate>
+                    <input type="hidden" name="Id" value="@Model.Id" />
+                    @if (Model.Id > 0)
+                    {
+                        <input type="hidden" name="FechaCreacion" value="@Model.FechaCreacion.ToString("yyyy-MM-ddTHH:mm:ss")" />
+                        <input type="hidden" name="Estado" value="@Model.Estado.ToString().ToLower()" />
+                    }
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="Dni" class="form-label">DNI <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="Dni" value="@Model.Dni" 
+                                       placeholder="Ej: 12345678" maxlength="8" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" name="Email" value="@Model.Email" 
+                                       placeholder="empleado@email.com" required />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="Nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="Nombre" value="@Model.Nombre" 
+                                       placeholder="Nombre del empleado" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="Apellido" class="form-label">Apellido <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="Apellido" value="@Model.Apellido" 
+                                       placeholder="Apellido del empleado" required />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="Telefono" class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" name="Telefono" value="@Model.Telefono" 
+                                       placeholder="Ej: 2664123456" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="Rol" class="form-label">Rol <span class="text-danger">*</span></label>
+                                <select class="form-select" name="Rol" required>
+                                    <option value="">Seleccionar rol</option>
+                                    @{
+                                        var isEmpleado = Model.Rol == InmobiliariaGarciaJesus.Models.RolEmpleado.Empleado;
+                                        var isAdministrador = Model.Rol == InmobiliariaGarciaJesus.Models.RolEmpleado.Administrador;
+                                    }
+                                    <option value="Empleado" selected="@isEmpleado">Empleado</option>
+                                    <option value="Administrador" selected="@isAdministrador">Administrador</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @if (Model.Id == 0)
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Credenciales de Usuario:</strong> Se creará automáticamente un usuario para este empleado.
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="NombreUsuario" class="form-label">Nombre de Usuario <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="NombreUsuario" 
+                                           placeholder="Usuario para login" required />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="Password" class="form-label">Contraseña <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" name="Password" 
+                                           placeholder="Contraseña inicial" required />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-key"></i>
+                            <strong>Cambio de Contraseña:</strong> Deje los campos vacíos si no desea cambiar la contraseña del usuario.
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="NombreUsuario" class="form-label">Nombre de Usuario</label>
+                                    <input type="text" class="form-control" name="NombreUsuario" 
+                                           placeholder="Cambiar nombre de usuario (opcional)" />
+                                    <div class="form-text">Deje vacío para mantener el actual</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="Password" class="form-label">Nueva Contraseña</label>
+                                    <input type="password" class="form-control" name="Password" 
+                                           placeholder="Nueva contraseña (opcional)" />
+                                    <div class="form-text">Deje vacío para mantener la actual</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="Estado" 
+                                           @(Model.Estado ? "checked" : "") />
+                                    <label class="form-check-label">Empleado Activo</label>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="text-muted small">
+                        <i class="fas fa-asterisk text-danger"></i> Campos obligatorios
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveEmpleado()">
+                    <i class="fas @(Model.Id == 0 ? "fa-plus" : "fa-save")"></i>
+                    @(Model.Id == 0 ? "Crear Empleado" : "Guardar Cambios")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

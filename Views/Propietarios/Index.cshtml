@@ -44,9 +44,9 @@
                             <div class="col-md-3">
                                 <label class="form-label">Estado</label>
                                 <select id="filtroEstado" class="form-select">
-                                    <option value="">Todos</option>
-                                    <option value="true" selected>Activo</option>
-                                    <option value="false">Inactivo</option>
+                                    <option value="Todos">Todos</option>
+                                    <option value="Activo" selected>Activo</option>
+                                    <option value="Inactivo">Inactivo</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -121,10 +121,10 @@
     </script>
     
     <!-- Propietario Module Scripts (load in order) -->
-    <script src="~/js/Propietario/propietario-filters.js"></script>
-    <script src="~/js/Propietario/propietario-utils.js"></script>
-    <script src="~/js/Propietario/propietario-datatables.js"></script>
-    <script src="~/js/Propietario/propietario-modals.js"></script>
-    <script src="~/js/Propietario/propietario-manager.js"></script>
-    <script src="~/js/Propietario/index.js"></script>
+    <script src="~/js/Propietario/propietario-filters.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Propietario/propietario-utils.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Propietario/propietario-datatables.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Propietario/propietario-modals.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Propietario/propietario-manager.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Propietario/index.js?v=@DateTime.Now.Ticks"></script>
 }

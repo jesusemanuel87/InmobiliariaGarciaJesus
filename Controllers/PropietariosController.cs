@@ -19,10 +19,15 @@ namespace InmobiliariaGarciaJesus.Controllers
         }
 
         // GET: Propietarios
-        public IActionResult Index()
+        public IActionResult Index(string estado = "Activo", string buscar = "")
         {
             // Pasar el rol del usuario a la vista
             ViewBag.UserRole = HttpContext.Session.GetString("UserRole");
+            
+            // Pasar valores de filtros para persistencia
+            ViewBag.EstadoSeleccionado = estado;
+            ViewBag.BuscarTexto = buscar;
+            
             return View();
         }
 
@@ -62,7 +67,33 @@ namespace InmobiliariaGarciaJesus.Controllers
                 var allPropietarios = propietarios.ToList();
                 var totalRecords = allPropietarios.Count;
                 
-                // Apply search filter
+                // Parse custom filters from request
+                string estadoFilter = "";
+                string buscarFilter = "";
+                
+                if (request.TryGetProperty("estado", out var estadoProp))
+                {
+                    estadoFilter = estadoProp.GetString() ?? "";
+                }
+                
+                if (request.TryGetProperty("buscar", out var buscarProp))
+                {
+                    buscarFilter = buscarProp.GetString() ?? "";
+                }
+                
+                // Apply Estado filter (default to "Activo" if not specified)
+                if (string.IsNullOrEmpty(estadoFilter))
+                {
+                    estadoFilter = "Activo"; // Default filter
+                }
+                
+                if (!string.IsNullOrEmpty(estadoFilter) && estadoFilter != "Todos")
+                {
+                    bool estadoBool = estadoFilter.Equals("Activo", StringComparison.OrdinalIgnoreCase);
+                    allPropietarios = allPropietarios.Where(p => p.Estado == estadoBool).ToList();
+                }
+                
+                // Apply search filter (from DataTables search box)
                 if (!string.IsNullOrEmpty(searchValue))
                 {
                     allPropietarios = allPropietarios.Where(p => 
@@ -72,6 +103,18 @@ namespace InmobiliariaGarciaJesus.Controllers
                         p.Email.Contains(searchValue, StringComparison.OrdinalIgnoreCase) ||
                         (p.Telefono != null && p.Telefono.Contains(searchValue, StringComparison.OrdinalIgnoreCase)) ||
                         (p.Direccion != null && p.Direccion.Contains(searchValue, StringComparison.OrdinalIgnoreCase))
+                    ).ToList();
+                }
+                
+                // Apply custom search filter (from filters panel)
+                if (!string.IsNullOrEmpty(buscarFilter))
+                {
+                    allPropietarios = allPropietarios.Where(p => 
+                        p.Nombre.Contains(buscarFilter, StringComparison.OrdinalIgnoreCase) ||
+                        p.Apellido.Contains(buscarFilter, StringComparison.OrdinalIgnoreCase) ||
+                        p.Dni.Contains(buscarFilter, StringComparison.OrdinalIgnoreCase) ||
+                        p.Email.Contains(buscarFilter, StringComparison.OrdinalIgnoreCase) ||
+                        (p.Telefono != null && p.Telefono.Contains(buscarFilter, StringComparison.OrdinalIgnoreCase))
                     ).ToList();
                 }
 

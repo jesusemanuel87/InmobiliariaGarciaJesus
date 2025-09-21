@@ -1,38 +1,90 @@
-// Inquilinos Filters - Sistema de filtrado para inquilinos
+// Inquilinos Filters - Sistema de filtrado para inquilinos (patrón Pagos)
 class InquilinosFilters {
     constructor() {
-        this.table = null;
+        this.filtroEstado = document.getElementById('filtroEstado');
+        this.filtroBuscar = document.getElementById('filtroBuscar');
+        
         this.initializeFilters();
+        this.bindEvents();
     }
 
     initializeFilters() {
-        // Aplicar filtros por defecto
+        // Set default values
         this.setDefaultFilters();
-        
-        // Event listeners
-        document.getElementById('filtroEstado').addEventListener('change', () => this.applyFilters());
-        document.getElementById('filtroBuscar').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.applyFilters();
-            }
-        });
     }
 
     setDefaultFilters() {
         // Estado por defecto: Activo
-        document.getElementById('filtroEstado').value = 'true';
+        if (this.filtroEstado) {
+            this.filtroEstado.value = 'Activo';
+        }
+        if (this.filtroBuscar) {
+            this.filtroBuscar.value = '';
+        }
+        
+        // Apply filters immediately after a short delay
+        setTimeout(() => {
+            this.applyFilters();
+        }, 100);
     }
 
-    applyFilters() {
-        if (this.table) {
-            this.table.ajax.reload();
+    bindEvents() {
+        // Bind filter change events
+        if (this.filtroEstado) {
+            this.filtroEstado.addEventListener('change', () => this.applyFilters());
+        }
+        
+        if (this.filtroBuscar) {
+            this.filtroBuscar.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.applyFilters();
+                }
+            });
+            this.filtroBuscar.addEventListener('input', () => {
+                // Auto-apply after typing (with debounce)
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
+                    this.applyFilters();
+                }, 500);
+            });
         }
     }
 
+    applyFilters() {
+        // Clear any pending filter requests to avoid multiple simultaneous calls
+        clearTimeout(this.filterTimeout);
+        
+        this.filterTimeout = setTimeout(() => {
+            if (window.inquilinoManager && window.inquilinoManager.dataTable) {
+                // For server-side processing, just reload the table
+                // The filters will be sent automatically via the AJAX data function
+                window.inquilinoManager.dataTable.ajax.reload();
+            }
+        }, 100);
+    }
+
     clearFilters() {
-        document.getElementById('filtroEstado').value = 'true';
-        document.getElementById('filtroBuscar').value = '';
+        // Reset all filter selects to default values
+        if (this.filtroEstado) {
+            this.filtroEstado.value = 'Activo';
+        }
+        if (this.filtroBuscar) {
+            this.filtroBuscar.value = '';
+        }
+        
+        // Reload table with cleared filters
         this.applyFilters();
+    }
+
+    resetToDefaults() {
+        // Reset to default filter values
+        this.setDefaultFilters();
+    }
+
+    // Method to be called when DataTables is reinitialized
+    reinitialize() {
+        // Just ensure default filters are applied
+        this.setDefaultFilters();
     }
 
     getFilterData() {

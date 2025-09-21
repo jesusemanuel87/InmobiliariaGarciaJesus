@@ -44,9 +44,9 @@
                             <div class="col-md-3">
                                 <label class="form-label">Estado</label>
                                 <select id="filtroEstado" class="form-select">
-                                    <option value="">Todos</option>
-                                    <option value="true" selected>Activo</option>
-                                    <option value="false">Inactivo</option>
+                                    <option value="Todos">Todos</option>
+                                    <option value="Activo" selected>Activo</option>
+                                    <option value="Inactivo">Inactivo</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -121,10 +121,10 @@
     </script>
     
     <!-- Inquilino Module Scripts (load in order) -->
-    <script src="~/js/Inquilino/inquilino-filters.js"></script>
-    <script src="~/js/Inquilino/inquilino-utils.js"></script>
-    <script src="~/js/Inquilino/inquilino-datatables.js"></script>
-    <script src="~/js/Inquilino/inquilino-modals.js"></script>
-    <script src="~/js/Inquilino/inquilino-manager.js"></script>
-    <script src="~/js/Inquilino/index.js"></script>
+    <script src="~/js/Inquilino/inquilino-filters.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Inquilino/inquilino-utils.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Inquilino/inquilino-datatables.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Inquilino/inquilino-modals.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Inquilino/inquilino-manager.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/Inquilino/index.js?v=@DateTime.Now.Ticks"></script>
 }

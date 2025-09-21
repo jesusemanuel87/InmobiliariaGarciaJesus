@@ -2,6 +2,7 @@
 class InquilinoIndexManager {
     constructor() {
         this.dataTable = null;
+        this.filters = null;
         this.init();
     }
 
@@ -22,6 +23,19 @@ class InquilinoIndexManager {
             columns: columns,
             order: InquilinoDataTablesConfig.getDefaultOrder()
         });
+        
+        // Initialize filters with a small delay to ensure everything is ready
+        setTimeout(() => {
+            this.initializeFilters();
+        }, 500);
+    }
+
+    initializeFilters() {
+        if (!this.filters) {
+            this.filters = new InquilinosFilters();
+            // Make filters globally available
+            window.inquilinosFilters = this.filters;
+        }
     }
 
     bindEvents() {

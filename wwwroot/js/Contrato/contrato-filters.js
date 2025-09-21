@@ -26,10 +26,8 @@ class ContratosFilters {
                     this.updateTodosCheckbox();
                     this.updatePlaceholder();
                     
-                    // Auto-submit después de un pequeño delay
-                    setTimeout(() => {
-                        document.getElementById('filtersForm').submit();
-                    }, 300);
+                    // No auto-submit para permitir selección múltiple
+                    // El usuario debe hacer clic en "Buscar" o presionar Enter
                 });
             });
 
@@ -45,10 +43,8 @@ class ContratosFilters {
                     
                     this.updatePlaceholder();
                     
-                    // Auto-submit después de un pequeño delay
-                    setTimeout(() => {
-                        document.getElementById('filtersForm').submit();
-                    }, 300);
+                    // No auto-submit para permitir selección múltiple
+                    // El usuario debe hacer clic en "Buscar" o presionar Enter
                 });
             }
             

@@ -135,13 +135,20 @@ class PropietarioDataTablesConfig {
             type: 'POST',
             contentType: 'application/json',
             data: function(d) {
+                // Get filter values from form
+                const estadoSelect = document.getElementById('filtroEstado');
+                const buscarInput = document.getElementById('filtroBuscar');
+                
                 return JSON.stringify({
                     draw: d.draw,
                     start: d.start,
                     length: d.length,
                     search: d.search,
                     order: d.order,
-                    columns: d.columns
+                    columns: d.columns,
+                    // Custom filters
+                    estado: estadoSelect ? estadoSelect.value : 'Activo',
+                    buscar: buscarInput ? buscarInput.value : ''
                 });
             },
             dataSrc: function(json) {

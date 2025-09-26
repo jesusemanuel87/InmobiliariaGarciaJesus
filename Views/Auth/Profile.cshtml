@@ -37,20 +37,21 @@
                                 <img id="profileImage" src="@photoUrl" alt="Foto de perfil" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
                                 
                                 <!-- Botón para cambiar foto -->
-                                <button type="button" class="btn btn-sm btn-primary position-absolute" style="bottom: 0; right: 25%; transform: translateX(50%);" onclick="document.getElementById('profilePhotoInput').click();" title="Cambiar foto">
+                                <button type="button" class="btn btn-sm btn-primary position-absolute" style="bottom: 5px; right: 35px;" onclick="document.getElementById('profilePhotoInput').click();" title="Cambiar foto">
                                     <i class="fas fa-camera"></i>
                                 </button>
                                 
                                 <!-- Botón para eliminar foto (solo si no es la imagen por defecto) -->
                                 @if (!string.IsNullOrEmpty(Model.FotoPerfil) && !Model.FotoPerfil.Contains("user_default.png"))
                                 {
-                                    <button type="button" class="btn btn-sm btn-danger position-absolute" style="bottom: 0; right: -25%; transform: translateX(-50%);" onclick="deleteProfilePhoto()" title="Eliminar foto">
+                                    <button type="button" class="btn btn-sm btn-danger position-absolute" style="bottom: 5px; right: 5px;" onclick="deleteProfilePhoto()" title="Eliminar foto">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 }
                                 
                                 <form id="profilePhotoForm" enctype="multipart/form-data" style="display: none;">
                                     <input type="file" id="profilePhotoInput" name="profilePhoto" accept="image/*" onchange="uploadProfilePhoto()">
+                                    @Html.AntiForgeryToken()
                                 </form>
                             </div>
                             <h5>@Model.NombreUsuario</h5>

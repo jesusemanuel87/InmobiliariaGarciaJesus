@@ -5,23 +5,34 @@ class AuthProfileManager {
     }
 
     init() {
-        $(document).ready(() => {
+        // Inicializar inmediatamente si el DOM está listo, sino esperar
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.bindPasswordConfirmation();
+                console.log('AuthProfileManager initialized (DOM ready)');
+            });
+        } else {
             this.bindPasswordConfirmation();
-            console.log('AuthProfileManager initialized');
-        });
+            console.log('AuthProfileManager initialized (immediate)');
+        }
     }
 
     bindPasswordConfirmation() {
-        $('input[name="ConfirmPassword"]').on('input', (e) => {
-            const newPassword = $('input[name="NewPassword"]').val();
-            const confirmPassword = $(e.target).val();
-            
-            if (newPassword !== confirmPassword) {
-                e.target.setCustomValidity('Las contraseñas no coinciden');
-            } else {
-                e.target.setCustomValidity('');
-            }
-        });
+        // Usar vanilla JavaScript si jQuery no está disponible
+        const confirmPasswordInput = document.querySelector('input[name="ConfirmPassword"]');
+        if (confirmPasswordInput) {
+            confirmPasswordInput.addEventListener('input', (e) => {
+                const newPasswordInput = document.querySelector('input[name="NewPassword"]');
+                const newPassword = newPasswordInput ? newPasswordInput.value : '';
+                const confirmPassword = e.target.value;
+                
+                if (newPassword !== confirmPassword) {
+                    e.target.setCustomValidity('Las contraseñas no coinciden');
+                } else {
+                    e.target.setCustomValidity('');
+                }
+            });
+        }
     }
 
     uploadProfilePhoto() {
@@ -65,6 +76,11 @@ class AuthProfileManager {
                 document.getElementById('profileImage').outerHTML = 
                     '<img id="profileImage" src="' + data.photoUrl + '?t=' + new Date().getTime() + '" alt="Foto de perfil" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">';
                 
+                // Agregar botón de eliminar si no existe y no es la imagen por defecto
+                if (!data.photoUrl.includes('user_default.png') && !document.querySelector('button[onclick="deleteProfilePhoto()"]')) {
+                    this.addDeleteButton();
+                }
+                
                 // Mostrar mensaje de éxito
                 this.showAlert('success', 'Foto de perfil actualizada exitosamente');
             } else {
@@ -83,25 +99,58 @@ class AuthProfileManager {
         fileInput.value = '';
     }
 
+    addDeleteButton() {
+        // Buscar el contenedor de la imagen
+        const profileImageContainer = document.getElementById('profileImage').parentElement;
+        
+        // Verificar si ya existe el botón
+        if (profileImageContainer.querySelector('button[onclick="deleteProfilePhoto()"]')) {
+            return; // Ya existe, no agregar duplicado
+        }
+        
+        // Crear el botón de eliminar
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'btn btn-sm btn-danger position-absolute';
+        deleteButton.style.cssText = 'bottom: 5px; right: 5px;';
+        deleteButton.setAttribute('onclick', 'deleteProfilePhoto()');
+        deleteButton.setAttribute('title', 'Eliminar foto');
+        deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+        
+        // Agregar el botón al contenedor
+        profileImageContainer.appendChild(deleteButton);
+        
+        console.log('Botón de eliminar agregado dinámicamente');
+    }
+
     deleteProfilePhoto() {
         if (!confirm('¿Está seguro de que desea eliminar su foto de perfil?')) {
             return;
         }
+
+        console.log('Iniciando eliminación de foto de perfil...');
 
         // Mostrar indicador de carga
         const profileImage = document.getElementById('profileImage');
         const originalContent = profileImage.outerHTML;
         profileImage.outerHTML = '<div id="profileImage" class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; margin: 0 auto;"><div class="spinner-border text-primary" role="status"></div></div>';
 
+        // Crear FormData con el token antiforgery
+        const formData = new FormData();
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        console.log('Token encontrado:', token ? 'Sí' : 'No');
+        formData.append('__RequestVerificationToken', token);
+
         fetch('/Auth/DeleteProfilePhoto', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-            }
+            body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Respuesta del servidor:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('Datos recibidos:', data);
             if (data.success) {
                 // Actualizar imagen de perfil con la imagen por defecto
                 document.getElementById('profileImage').outerHTML = 
@@ -127,6 +176,7 @@ class AuthProfileManager {
             }
         })
         .catch(error => {
+            console.error('Error en la petición:', error);
             // Restaurar imagen original
             document.getElementById('profileImage').outerHTML = originalContent;
             this.showAlert('danger', 'Error de conexión al eliminar la foto');
@@ -152,6 +202,14 @@ class AuthProfileManager {
 // Global functions for backward compatibility
 let authProfileManager;
 
+// Inicializar inmediatamente
+try {
+    authProfileManager = new AuthProfileManager();
+    console.log('AuthProfileManager inicializado inmediatamente');
+} catch (error) {
+    console.log('Error al inicializar inmediatamente, esperando DOM:', error);
+}
+
 function uploadProfilePhoto() {
     if (authProfileManager) {
         authProfileManager.uploadProfilePhoto();
@@ -159,12 +217,27 @@ function uploadProfilePhoto() {
 }
 
 function deleteProfilePhoto() {
+    console.log('deleteProfilePhoto called, authProfileManager:', authProfileManager);
     if (authProfileManager) {
         authProfileManager.deleteProfilePhoto();
+    } else {
+        console.error('authProfileManager no está inicializado');
+        alert('Error: El sistema no está listo. Por favor, recargue la página.');
     }
 }
 
 // Initialize when DOM is loaded
 $(document).ready(function() {
+    console.log('Inicializando AuthProfileManager...');
     authProfileManager = new AuthProfileManager();
+    console.log('AuthProfileManager inicializado:', authProfileManager);
+});
+
+// También inicializar con vanilla JavaScript por si jQuery no está listo
+document.addEventListener('DOMContentLoaded', function() {
+    if (!authProfileManager) {
+        console.log('Inicializando AuthProfileManager con vanilla JS...');
+        authProfileManager = new AuthProfileManager();
+        console.log('AuthProfileManager inicializado con vanilla JS:', authProfileManager);
+    }
 });

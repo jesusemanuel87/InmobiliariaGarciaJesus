@@ -1,0 +1,52 @@
+/* Profile page styles */
+
+/* Modal de confirmación para eliminar foto de perfil */
+#deletePhotoModal .modal-header {
+    border-bottom: 1px solid #dc3545;
+}
+
+#deletePhotoModal .alert-warning {
+    border-left: 4px solid #ffc107;
+}
+
+#deletePhotoModal .bg-light {
+    background-color: #f8f9fa !important;
+    border: 1px solid #e9ecef;
+}
+
+#deletePhotoModal .form-check-input:checked {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+#deletePhotoModal .btn-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Estilos para la foto de perfil */
+.profile-photo-container {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-photo-container .btn {
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #deletePhotoModal .modal-dialog {
+        margin: 1rem;
+    }
+    
+    #deletePhotoModal .row > div {
+        margin-bottom: 0.5rem;
+    }
+}

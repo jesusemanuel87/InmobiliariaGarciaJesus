@@ -1,0 +1,59 @@
+@model InmobiliariaGarciaJesus.Models.ProfileViewModel
+
+<!-- Modal de Confirmación para Eliminar Foto de Perfil -->
+<div class="modal fade" id="deletePhotoModal" tabindex="-1" aria-labelledby="deletePhotoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deletePhotoModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <div><strong>¡Atención!</strong> Esta acción no se puede deshacer.</div>
+                </div>
+                
+                <p class="mb-3">¿Está seguro que desea eliminar su foto de perfil?</p>
+                
+                <div class="bg-light p-3 rounded mb-3">
+                    <div class="row">
+                        <div class="col-4">
+                            <strong>Usuario:</strong><br>
+                            <span id="deleteModal-usuario">@Model.NombreUsuario</span>
+                        </div>
+                        <div class="col-4">
+                            <strong>Rol:</strong><br>
+                            <span class="badge bg-@(Model.Rol == InmobiliariaGarciaJesus.Models.RolUsuario.Administrador ? "danger" : 
+                                                   Model.Rol == InmobiliariaGarciaJesus.Models.RolUsuario.Empleado ? "warning" :
+                                                   Model.Rol == InmobiliariaGarciaJesus.Models.RolUsuario.Propietario ? "primary" : "success")">
+                                @Model.Rol
+                            </span>
+                        </div>
+                        <div class="col-4">
+                            <strong>Acción:</strong><br>
+                            <span class="text-danger">Eliminar foto de perfil</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="confirmDeletePhoto">
+                    <label class="form-check-label" for="confirmDeletePhoto">
+                        Confirmo que deseo eliminar mi foto de perfil
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeletePhotoBtn" disabled>
+                    <i class="fas fa-trash me-1"></i>Eliminar Foto de Perfil
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

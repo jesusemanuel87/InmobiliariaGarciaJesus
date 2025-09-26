@@ -265,6 +265,13 @@
     </div>
 </div>
 
+<!-- Modal de Confirmación para Eliminar Foto de Perfil -->
+@await Html.PartialAsync("_DeletePhotoModal", Model)
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Auth/profile.css" />
+}
+
 @section Scripts {
     <script src="~/js/Auth/profile.js"></script>
 }

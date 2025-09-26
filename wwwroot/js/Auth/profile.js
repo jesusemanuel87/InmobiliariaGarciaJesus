@@ -124,10 +124,53 @@ class AuthProfileManager {
     }
 
     deleteProfilePhoto() {
-        if (!confirm('¿Está seguro de que desea eliminar su foto de perfil?')) {
-            return;
-        }
+        // Mostrar modal de confirmación en lugar de confirm() simple
+        this.showDeletePhotoModal();
+    }
 
+    showDeletePhotoModal() {
+        // Resetear el checkbox
+        const checkbox = document.getElementById('confirmDeletePhoto');
+        const confirmBtn = document.getElementById('confirmDeletePhotoBtn');
+        
+        checkbox.checked = false;
+        confirmBtn.disabled = true;
+        
+        // Configurar event listeners
+        this.setupDeleteModalListeners();
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('deletePhotoModal'));
+        modal.show();
+    }
+
+    setupDeleteModalListeners() {
+        const checkbox = document.getElementById('confirmDeletePhoto');
+        const confirmBtn = document.getElementById('confirmDeletePhotoBtn');
+        
+        // Remover listeners previos para evitar duplicados
+        checkbox.removeEventListener('change', this.handleCheckboxChange);
+        confirmBtn.removeEventListener('click', this.handleConfirmDelete);
+        
+        // Agregar nuevos listeners
+        this.handleCheckboxChange = () => {
+            confirmBtn.disabled = !checkbox.checked;
+        };
+        
+        this.handleConfirmDelete = () => {
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deletePhotoModal'));
+            modal.hide();
+            
+            // Proceder con la eliminación
+            this.executeDeleteProfilePhoto();
+        };
+        
+        checkbox.addEventListener('change', this.handleCheckboxChange);
+        confirmBtn.addEventListener('click', this.handleConfirmDelete);
+    }
+
+    executeDeleteProfilePhoto() {
         console.log('Iniciando eliminación de foto de perfil...');
 
         // Mostrar indicador de carga

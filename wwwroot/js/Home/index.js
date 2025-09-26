@@ -1,7 +1,7 @@
 $(document).ready(function() {
     // Inicializar dropdowns de provincia y localidad
-    var provinciaActual = $('#provinciaActual').val() || 'San Luis';
-    var localidadActual = $('#localidadActual').val() || 'San Luis';
+    var provinciaActual = $('#provinciaActual').val() || '';
+    var localidadActual = $('#localidadActual').val() || '';
     
     georefService.inicializarDropdowns('provinciaFilter', 'localidadFilter', provinciaActual, localidadActual);
     
@@ -88,8 +88,8 @@ function updateRangeSlider() {
 }
 
 function limpiarFiltros() {
-    $('#provinciaFilter').val('San Luis');
-    $('#localidadFilter').val('San Luis');
+    $('#provinciaFilter').val('');
+    $('#localidadFilter').val('');
     $('input[name="fechaDesde"]').val('');
     $('input[name="fechaHasta"]').val('');
     
@@ -99,8 +99,8 @@ function limpiarFiltros() {
     $('#precioMin').val(minPrice);
     $('#precioMax').val(maxPrice);
     
-    // Recargar localidades para San Luis
-    georefService.cargarLocalidades('San Luis', document.getElementById('localidadFilter'), 'San Luis');
+    // Limpiar localidades cuando no hay provincia seleccionada
+    document.getElementById('localidadFilter').innerHTML = '<option value="">Seleccione primero una provincia</option>';
     
     // Submit form
     $('#filtrosForm').submit();

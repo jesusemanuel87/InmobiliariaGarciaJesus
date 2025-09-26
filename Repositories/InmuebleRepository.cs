@@ -151,14 +151,16 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
-            var query = @"INSERT INTO Inmuebles (Direccion, Ambientes, Superficie, Latitud, Longitud, 
+            var query = @"INSERT INTO Inmuebles (Direccion, Provincia, Localidad, Ambientes, Superficie, Latitud, Longitud, 
                          PropietarioId, Tipo, Precio, Estado, Uso, FechaCreacion) 
-                         VALUES (@Direccion, @Ambientes, @Superficie, @Latitud, @Longitud, 
+                         VALUES (@Direccion, @Provincia, @Localidad, @Ambientes, @Superficie, @Latitud, @Longitud, 
                          @PropietarioId, @Tipo, @Precio, @Estado, @Uso, @FechaCreacion);
                          SELECT LAST_INSERT_ID();";
             
             using var command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@Direccion", inmueble.Direccion);
+            command.Parameters.AddWithValue("@Provincia", inmueble.Provincia);
+            command.Parameters.AddWithValue("@Localidad", inmueble.Localidad);
             command.Parameters.AddWithValue("@Ambientes", inmueble.Ambientes);
             command.Parameters.AddWithValue("@Superficie", inmueble.Superficie);
             command.Parameters.AddWithValue("@Latitud", inmueble.Latitud ?? (object)DBNull.Value);
@@ -180,7 +182,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             await connection.OpenAsync();
             
             var query = @"UPDATE Inmuebles 
-                         SET Direccion = @Direccion, Ambientes = @Ambientes, Superficie = @Superficie, 
+                         SET Direccion = @Direccion, Provincia = @Provincia, Localidad = @Localidad, Ambientes = @Ambientes, Superficie = @Superficie, 
                              Latitud = @Latitud, Longitud = @Longitud, PropietarioId = @PropietarioId, 
                              Tipo = @Tipo, Precio = @Precio, Estado = @Estado, Uso = @Uso 
                          WHERE Id = @Id";
@@ -188,6 +190,8 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@Id", inmueble.Id);
             command.Parameters.AddWithValue("@Direccion", inmueble.Direccion);
+            command.Parameters.AddWithValue("@Provincia", inmueble.Provincia);
+            command.Parameters.AddWithValue("@Localidad", inmueble.Localidad);
             command.Parameters.AddWithValue("@Ambientes", inmueble.Ambientes);
             command.Parameters.AddWithValue("@Superficie", inmueble.Superficie);
             command.Parameters.AddWithValue("@Latitud", inmueble.Latitud ?? (object)DBNull.Value);

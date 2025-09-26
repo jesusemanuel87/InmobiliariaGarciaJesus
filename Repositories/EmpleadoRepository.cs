@@ -21,7 +21,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             
             const string query = @"SELECT Id, Nombre, Apellido, Dni, Telefono, Email, FotoPerfil, Rol, FechaIngreso, 
                                          Observaciones, FechaCreacion, FechaModificacion, Estado 
-                                         FROM Empleados WHERE Estado = 1 ORDER BY Apellido, Nombre";
+                                         FROM Empleados ORDER BY Apellido, Nombre";
             
             using var command = new MySqlCommand(query, connection);
             using var reader = await command.ExecuteReaderAsync();
@@ -139,7 +139,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
-            string query = "SELECT COUNT(*) FROM Empleados WHERE Email = @Email AND Estado = 1";
+            string query = "SELECT COUNT(*) FROM Empleados WHERE Email = @Email";
             if (excludeId.HasValue)
             {
                 query += " AND Id != @ExcludeId";
@@ -161,7 +161,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
-            string query = "SELECT COUNT(*) FROM Empleados WHERE Dni = @Dni AND Estado = 1";
+            string query = "SELECT COUNT(*) FROM Empleados WHERE Dni = @Dni";
             if (excludeId.HasValue)
             {
                 query += " AND Id != @ExcludeId";

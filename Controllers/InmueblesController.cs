@@ -280,8 +280,8 @@ namespace InmobiliariaGarciaJesus.Controllers
         {
             try
             {
-                var propietarios = await _propietarioRepository.GetAllAsync();
-                ViewBag.PropietarioId = propietarios.ToList();
+                var propietarios = await _propietarioRepository.GetAllAsync(p => p.Estado);
+                ViewBag.Propietarios = propietarios.ToList();
                 return View();
             }
             catch (Exception ex)
@@ -294,7 +294,7 @@ namespace InmobiliariaGarciaJesus.Controllers
         // POST: Inmuebles/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Direccion,Ambientes,Superficie,Latitud,Longitud,PropietarioId,Tipo,Precio,Uso")] Inmueble inmueble)
+        public async Task<IActionResult> Create([Bind("Direccion,Ambientes,Superficie,Latitud,Longitud,PropietarioId,Tipo,Precio,Uso,Provincia,Localidad")] Inmueble inmueble)
         {
             if (ModelState.IsValid)
             {
@@ -375,7 +375,7 @@ namespace InmobiliariaGarciaJesus.Controllers
         // POST: Inmuebles/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Direccion,Ambientes,Superficie,Latitud,Longitud,PropietarioId,Tipo,Precio,Uso,FechaCreacion,Estado")] Inmueble inmueble)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Direccion,Ambientes,Superficie,Latitud,Longitud,PropietarioId,Tipo,Precio,Uso,FechaCreacion,Estado,Provincia,Localidad")] Inmueble inmueble)
         {
             if (id != inmueble.Id)
             {

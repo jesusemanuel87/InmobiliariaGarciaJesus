@@ -95,9 +95,9 @@ namespace InmobiliariaGarciaJesus.Repositories
                          i.Nombre as InquilinoNombre, i.Apellido as InquilinoApellido, i.Dni as InquilinoDni,
                          i.Telefono as InquilinoTelefono, i.Email as InquilinoEmail
                          FROM Usuarios u
-                         LEFT JOIN Empleados e ON u.EmpleadoId = e.Id
-                         LEFT JOIN Propietarios p ON u.PropietarioId = p.Id
-                         LEFT JOIN Inquilinos i ON u.InquilinoId = i.Id
+                         LEFT JOIN Empleados e ON u.EmpleadoId = e.Id AND e.Estado = 1
+                         LEFT JOIN Propietarios p ON u.PropietarioId = p.Id AND p.Estado = 1
+                         LEFT JOIN Inquilinos i ON u.InquilinoId = i.Id AND i.Estado = 1
                          WHERE u.Email = @Email AND u.Estado = 1";
             
             using var command = new MySqlCommand(query, connection);
@@ -127,9 +127,9 @@ namespace InmobiliariaGarciaJesus.Repositories
                          i.Nombre as InquilinoNombre, i.Apellido as InquilinoApellido, i.Dni as InquilinoDni,
                          i.Telefono as InquilinoTelefono, i.Email as InquilinoEmail
                          FROM Usuarios u
-                         LEFT JOIN Empleados e ON u.EmpleadoId = e.Id
-                         LEFT JOIN Propietarios p ON u.PropietarioId = p.Id
-                         LEFT JOIN Inquilinos i ON u.InquilinoId = i.Id
+                         LEFT JOIN Empleados e ON u.EmpleadoId = e.Id AND e.Estado = 1
+                         LEFT JOIN Propietarios p ON u.PropietarioId = p.Id AND p.Estado = 1
+                         LEFT JOIN Inquilinos i ON u.InquilinoId = i.Id AND i.Estado = 1
                          WHERE u.NombreUsuario = @Username AND u.Estado = 1";
             
             using var command = new MySqlCommand(query, connection);

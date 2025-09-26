@@ -61,7 +61,7 @@
 }
 
 .range-max {
-    z-index: 2;
+    z-index: 3;
 }
 
 .range-input::-webkit-slider-thumb {

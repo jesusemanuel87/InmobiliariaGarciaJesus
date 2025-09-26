@@ -125,6 +125,9 @@ class GeorefService {
             // Cargar localidades por defecto si hay provincia seleccionada
             if (provinciaDefault) {
                 await this.cargarLocalidades(provinciaDefault, localidadSelect, localidadDefault);
+            } else {
+                // Si no hay provincia por defecto, mostrar mensaje apropiado
+                localidadSelect.innerHTML = '<option value="">Seleccione primero una provincia</option>';
             }
 
         } catch (error) {
@@ -137,7 +140,7 @@ class GeorefService {
      * Poblar el select de provincias
      */
     poblarSelectProvincias(select, provincias, defaultValue = null) {
-        select.innerHTML = '<option value="">Seleccionar provincia...</option>';
+        select.innerHTML = '<option value="">Todas las provincias</option>';
         
         // Ordenar provincias alfabéticamente
         provincias.sort((a, b) => a.nombre.localeCompare(b.nombre));
@@ -180,7 +183,7 @@ class GeorefService {
      * Poblar el select de localidades
      */
     poblarSelectLocalidades(select, localidades, defaultValue = null) {
-        select.innerHTML = '<option value="">Seleccionar localidad...</option>';
+        select.innerHTML = '<option value="">Todas las localidades</option>';
         
         // Ordenar localidades alfabéticamente
         localidades.sort((a, b) => a.nombre.localeCompare(b.nombre));

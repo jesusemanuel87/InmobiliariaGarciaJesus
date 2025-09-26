@@ -95,6 +95,27 @@ namespace InmobiliariaGarciaJesus.Services
                     return (false, "Credenciales inválidas", null);
                 }
 
+                // Validar que si es empleado/administrador, el empleado esté activo
+                if ((usuario.Rol == RolUsuario.Empleado || usuario.Rol == RolUsuario.Administrador) && 
+                    (usuario.Empleado == null || !usuario.Empleado.Estado))
+                {
+                    return (false, "Credenciales inválidas", null);
+                }
+
+                // Validar que si es propietario, el propietario esté activo
+                if (usuario.Rol == RolUsuario.Propietario && 
+                    (usuario.Propietario == null || !usuario.Propietario.Estado))
+                {
+                    return (false, "Credenciales inválidas", null);
+                }
+
+                // Validar que si es inquilino, el inquilino esté activo
+                if (usuario.Rol == RolUsuario.Inquilino && 
+                    (usuario.Inquilino == null || !usuario.Inquilino.Estado))
+                {
+                    return (false, "Credenciales inválidas", null);
+                }
+
                 // Actualizar último acceso
                 await _usuarioRepository.UpdateLastAccessAsync(usuario.Id);
                 usuario.UltimoAcceso = DateTime.Now;

@@ -18,7 +18,7 @@ public class HomeController : Controller
         _inmuebleRepository = inmuebleRepository;
     }
 
-    public async Task<IActionResult> Index(string? provincia = "San Luis", string? localidad = "San Luis", 
+    public async Task<IActionResult> Index(string? provincia = null, string? localidad = null, 
         DateTime? fechaDesde = null, DateTime? fechaHasta = null, decimal? precioMin = null, decimal? precioMax = null)
     {
         try

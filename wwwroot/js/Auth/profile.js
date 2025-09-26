@@ -83,6 +83,56 @@ class AuthProfileManager {
         fileInput.value = '';
     }
 
+    deleteProfilePhoto() {
+        if (!confirm('¿Está seguro de que desea eliminar su foto de perfil?')) {
+            return;
+        }
+
+        // Mostrar indicador de carga
+        const profileImage = document.getElementById('profileImage');
+        const originalContent = profileImage.outerHTML;
+        profileImage.outerHTML = '<div id="profileImage" class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; margin: 0 auto;"><div class="spinner-border text-primary" role="status"></div></div>';
+
+        fetch('/Auth/DeleteProfilePhoto', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Actualizar imagen de perfil con la imagen por defecto
+                document.getElementById('profileImage').outerHTML = 
+                    '<img id="profileImage" src="' + data.photoUrl + '?t=' + new Date().getTime() + '" alt="Foto de perfil" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">';
+                
+                // Remover el botón de eliminar si existe
+                const deleteButton = document.querySelector('button[onclick="deleteProfilePhoto()"]');
+                if (deleteButton) {
+                    deleteButton.remove();
+                }
+                
+                // Mostrar mensaje de éxito
+                this.showAlert('success', 'Foto de perfil eliminada exitosamente');
+                
+                // Recargar la página después de 2 segundos para actualizar la vista
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                // Restaurar imagen original
+                document.getElementById('profileImage').outerHTML = originalContent;
+                this.showAlert('danger', data.message || 'Error al eliminar la foto');
+            }
+        })
+        .catch(error => {
+            // Restaurar imagen original
+            document.getElementById('profileImage').outerHTML = originalContent;
+            this.showAlert('danger', 'Error de conexión al eliminar la foto');
+        });
+    }
+
     showAlert(type, message) {
         const alertHtml = `
             <div class="alert alert-${type} alert-dismissible fade show" role="alert">
@@ -105,6 +155,12 @@ let authProfileManager;
 function uploadProfilePhoto() {
     if (authProfileManager) {
         authProfileManager.uploadProfilePhoto();
+    }
+}
+
+function deleteProfilePhoto() {
+    if (authProfileManager) {
+        authProfileManager.deleteProfilePhoto();
     }
 }
 

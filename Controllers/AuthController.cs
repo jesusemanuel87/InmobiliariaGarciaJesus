@@ -364,6 +364,55 @@ namespace InmobiliariaGarciaJesus.Controllers
             return Json(new { success = false, message = message });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AuthorizeMultipleRoles(RolUsuario.Propietario, RolUsuario.Inquilino, RolUsuario.Empleado, RolUsuario.Administrador)]
+        public async Task<IActionResult> DeleteProfilePhoto()
+        {
+            var usuarioId = AuthService.GetUsuarioId(User);
+            if (!usuarioId.HasValue)
+            {
+                return Json(new { success = false, message = "Usuario no autenticado" });
+            }
+
+            try
+            {
+                var usuario = await _usuarioService.GetUsuarioByIdAsync(usuarioId.Value);
+                if (usuario != null)
+                {
+                    // Eliminar archivo físico si existe (no eliminar la imagen por defecto)
+                    if (!string.IsNullOrEmpty(usuario.FotoPerfil) && 
+                        !usuario.FotoPerfil.Contains("user_default.png"))
+                    {
+                        _profilePhotoService.DeleteProfilePhoto(usuario.FotoPerfil);
+                    }
+
+                    // Actualizar usuario para usar imagen por defecto (null en BD)
+                    var updateSuccess = await _usuarioService.UpdateProfilePhotoAsync(usuarioId.Value, null);
+                    if (updateSuccess)
+                    {
+                        // Refrescar claims para mostrar la imagen por defecto inmediatamente
+                        await RefreshUserClaimsAsync(usuarioId.Value);
+                        
+                        var defaultPhotoUrl = _profilePhotoService.GetDefaultProfilePhoto();
+                        TempData["SuccessMessage"] = "Foto de perfil eliminada exitosamente";
+                        return Json(new { success = true, message = "Foto eliminada exitosamente", photoUrl = defaultPhotoUrl });
+                    }
+                    else
+                    {
+                        return Json(new { success = false, message = "Error al actualizar la foto en la base de datos" });
+                    }
+                }
+
+                return Json(new { success = false, message = "Usuario no encontrado" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al eliminar foto de perfil para usuario {UserId}", usuarioId);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
         private async Task RefreshUserClaimsAsync(int usuarioId)
         {
             try

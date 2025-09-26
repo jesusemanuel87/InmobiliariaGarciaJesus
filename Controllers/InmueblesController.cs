@@ -40,7 +40,6 @@ namespace InmobiliariaGarciaJesus.Controllers
                 var inmuebles = await _inmuebleRepository.GetAllAsync();
                 var inmueblesQuery = inmuebles.AsQueryable();
 
-                // Restricción por rol: Los inquilinos solo ven inmuebles activos
                 var userRole = HttpContext.Session.GetString("UserRole");
                 
                 // Establecer valores por defecto si no se han especificado filtros
@@ -49,8 +48,6 @@ namespace InmobiliariaGarciaJesus.Controllers
                 if (isFirstLoad)
                 {
                     // Valores por defecto
-                    provincia = provincia ?? "San Luis";
-                    localidad = localidad ?? "San Luis";
                     disponibilidad = disponibilidad ?? new[] { "Disponible", "Reservado" };
                     
                     if (userRole == "Administrador" || userRole == "Empleado")
@@ -58,7 +55,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                         estado = estado ?? "Activo";
                     }
                 }
-
+                
                 if (userRole == "Inquilino")
                 {
                     inmueblesQuery = inmueblesQuery.Where(i => i.Estado == EstadoInmueble.Activo);
@@ -601,6 +598,7 @@ namespace InmobiliariaGarciaJesus.Controllers
         private string DeterminarDisponibilidad(Inmueble inmueble, IEnumerable<Contrato> contratos, DateTime fechaActual)
         {
             // Debug: Log para inmueble ID 1
+           /*
             if (inmueble.Id == 1)
             {
                 Console.WriteLine($"DEBUG - Inmueble ID 1: Disponible={inmueble.Disponible}, FechaActual={fechaActual:yyyy-MM-dd}");
@@ -611,6 +609,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                     Console.WriteLine($"DEBUG - Contrato: Estado={c.Estado}, Inicio={c.FechaInicio:yyyy-MM-dd}, Fin={c.FechaFin:yyyy-MM-dd}");
                 }
             }
+            */
 
             // Si el inmueble está marcado como no disponible en la base
             if (!inmueble.Disponible)
@@ -655,7 +654,7 @@ namespace InmobiliariaGarciaJesus.Controllers
             }
 
             // Si no tiene contratos activos ni futuros, está disponible
-            if (inmueble.Id == 1) Console.WriteLine($"DEBUG - ID 1: Sin contratos - DISPONIBLE");
+          //  if (inmueble.Id == 1) Console.WriteLine($"DEBUG - ID 1: Sin contratos - DISPONIBLE");
             return "Disponible";
         }
     }

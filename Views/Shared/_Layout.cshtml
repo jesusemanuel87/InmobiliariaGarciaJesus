@@ -149,17 +149,9 @@
                                     @{
                                         var userPhotoUrl = User.FindFirst("FotoPerfil")?.Value;
                                         var userRole = User.FindFirst("RoleDescription")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+                                        var displayPhotoUrl = !string.IsNullOrEmpty(userPhotoUrl) ? userPhotoUrl : "/uploads/profiles/user_default.png";
                                     }
-                                    @if (!string.IsNullOrEmpty(userPhotoUrl))
-                                    {
-                                        <img src="@userPhotoUrl" alt="Foto de perfil" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
-                                    }
-                                    else
-                                    {
-                                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                            <i class="fas fa-user text-white" style="font-size: 14px;"></i>
-                                        </div>
-                                    }
+                                    <img src="@displayPhotoUrl" alt="Foto de perfil" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
                                     <div class="d-flex flex-column text-start">
                                         <span style="font-size: 14px; line-height: 1.1;">@User.Identity.Name</span>
                                         @if (!string.IsNullOrEmpty(userRole))

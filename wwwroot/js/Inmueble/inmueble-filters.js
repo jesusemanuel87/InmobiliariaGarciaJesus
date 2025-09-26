@@ -59,6 +59,7 @@ class InmueblesFilters {
                     
                     // No auto-submit para permitir selección múltiple
                     // El usuario debe hacer clic en "Buscar" o presionar Enter
+                    
                 });
             });
 
@@ -194,11 +195,9 @@ class InmueblesFilters {
                 option.value = provincia.nombre;
                 option.textContent = provincia.nombre;
                 
-                // Seleccionar si coincide con la provincia actual o es primera carga con San Luis
-                if (provincia.nombre === this.provinciaActual || 
-                    (isFirstLoad && !this.provinciaActual && provincia.nombre === 'San Luis')) {
+                // Seleccionar solo si coincide con la provincia actual (no forzar San Luis por defecto)
+                if (provincia.nombre === this.provinciaActual) {
                     option.selected = true;
-                    this.provinciaActual = provincia.nombre; // Actualizar para usar en localidades
                 }
                 
                 this.filtroProvincia.appendChild(option);
@@ -236,15 +235,13 @@ class InmueblesFilters {
                 option.value = localidad.nombre;
                 option.textContent = localidad.nombre;
                 
-                // Seleccionar si coincide con la localidad actual o es primera carga con San Luis
-                if (localidad.nombre === this.localidadActual || 
-                    (isFirstLoad && !this.localidadActual && localidad.nombre === 'San Luis')) {
+                // Seleccionar solo si coincide con la localidad actual (no forzar ninguna por defecto)
+                if (localidad.nombre === this.localidadActual) {
                     option.selected = true;
                 }
                 
                 this.filtroLocalidad.appendChild(option);
             });
-
         } catch (error) {
             console.error('Error loading localidades:', error);
             this.filtroLocalidad.innerHTML = '<option value="">Error cargando localidades</option>';
@@ -328,8 +325,7 @@ class InmueblesFilters {
                 this.filtroEstado.value = 'Activo';
             }
             
-            // Provincia y Localidad se establecerán cuando se carguen desde la API
-            // (San Luis por defecto)
+            // Provincia y Localidad mostrarán "Todas" por defecto
         }
     }
 

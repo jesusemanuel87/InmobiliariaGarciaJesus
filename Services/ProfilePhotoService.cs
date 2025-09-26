@@ -92,16 +92,10 @@ namespace InmobiliariaGarciaJesus.Services
             }
         }
 
-        public string GetDefaultProfilePhoto(RolUsuario rol)
+        public string GetDefaultProfilePhoto(RolUsuario? rol = null)
         {
-            return rol switch
-            {
-                RolUsuario.Administrador => "/images/default-admin.png",
-                RolUsuario.Empleado => "/images/default-employee.png",
-                RolUsuario.Propietario => "/images/default-owner.png",
-                RolUsuario.Inquilino => "/images/default-tenant.png",
-                _ => "/images/default-user.png"
-            };
+            // Usar la imagen por defecto única para todos los roles
+            return "/uploads/profiles/user_default.png";
         }
 
         public bool IsValidImageFile(IFormFile file)

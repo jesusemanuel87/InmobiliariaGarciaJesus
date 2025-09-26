@@ -31,19 +31,24 @@
                     <div class="row">
                         <div class="col-md-4 text-center">
                             <div class="mb-3 position-relative">
-                                @if (!string.IsNullOrEmpty(Model.FotoPerfil))
-                                {
-                                    <img id="profileImage" src="@Model.FotoPerfil" alt="Foto de perfil" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                                @{
+                                    var photoUrl = !string.IsNullOrEmpty(Model.FotoPerfil) ? Model.FotoPerfil : "/uploads/profiles/user_default.png";
                                 }
-                                else
-                                {
-                                    <div id="profileImage" class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; margin: 0 auto;">
-                                        <i class="fas fa-user fa-3x text-white"></i>
-                                    </div>
-                                }
-                                <button type="button" class="btn btn-sm btn-primary position-absolute" style="bottom: 0; right: 50%; transform: translateX(50%);" onclick="document.getElementById('profilePhotoInput').click();">
+                                <img id="profileImage" src="@photoUrl" alt="Foto de perfil" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                                
+                                <!-- Botón para cambiar foto -->
+                                <button type="button" class="btn btn-sm btn-primary position-absolute" style="bottom: 0; right: 25%; transform: translateX(50%);" onclick="document.getElementById('profilePhotoInput').click();" title="Cambiar foto">
                                     <i class="fas fa-camera"></i>
                                 </button>
+                                
+                                <!-- Botón para eliminar foto (solo si no es la imagen por defecto) -->
+                                @if (!string.IsNullOrEmpty(Model.FotoPerfil) && !Model.FotoPerfil.Contains("user_default.png"))
+                                {
+                                    <button type="button" class="btn btn-sm btn-danger position-absolute" style="bottom: 0; right: -25%; transform: translateX(-50%);" onclick="deleteProfilePhoto()" title="Eliminar foto">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                }
+                                
                                 <form id="profilePhotoForm" enctype="multipart/form-data" style="display: none;">
                                     <input type="file" id="profilePhotoInput" name="profilePhoto" accept="image/*" onchange="uploadProfilePhoto()">
                                 </form>

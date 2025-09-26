@@ -1,6 +1,7 @@
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Repositories;
 using InmobiliariaGarciaJesus.Services;
+using InmobiliariaGarciaJesus.Middleware;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,9 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    // Agregar identificador único del servidor para invalidar cookies al reiniciar
+    options.Cookie.Name = $"InmobiliariaSession_{Environment.ProcessId}_{DateTime.Now.Ticks}";
 });
 
 // Configurar autenticación con cookies
@@ -29,6 +33,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = false; // Desactivar extensión automática
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        // Agregar identificador único del servidor para invalidar cookies al reiniciar
+        options.Cookie.Name = $"InmobiliariaAuth_{Environment.ProcessId}_{DateTime.Now.Ticks}";
     });
 
 
@@ -103,6 +110,10 @@ app.UseRouting();
 
 app.UseSession(); // Habilitar sesiones
 app.UseAuthentication();
+
+// Middleware personalizado para validar consistencia de sesión
+app.UseMiddleware<SessionValidationMiddleware>();
+
 app.UseAuthorization();
 
 app.MapStaticAssets();

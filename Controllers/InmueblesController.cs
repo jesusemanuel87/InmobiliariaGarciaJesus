@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Repositories;
 using InmobiliariaGarciaJesus.Services;
+using InmobiliariaGarciaJesus.Extensions;
 using System.Collections.Generic;
 using InmobiliariaGarciaJesus.Attributes;
 
@@ -40,7 +41,11 @@ namespace InmobiliariaGarciaJesus.Controllers
                 var inmuebles = await _inmuebleRepository.GetAllAsync();
                 var inmueblesQuery = inmuebles.AsQueryable();
 
-                var userRole = HttpContext.Session.GetString("UserRole");
+                // Validar sesión antes de continuar
+                var sessionValidation = this.RedirectToLoginIfInvalidSession();
+                if (sessionValidation != null) return sessionValidation;
+
+                var userRole = this.GetUserRole();
                 
                 // Establecer valores por defecto si no se han especificado filtros
                 bool isFirstLoad = !Request.Query.Any();

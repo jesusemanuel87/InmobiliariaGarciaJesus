@@ -30,11 +30,17 @@ namespace InmobiliariaGarciaJesus.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login(string? returnUrl = null)
+        public IActionResult Login(string? returnUrl = null, string? message = null)
         {
             if (User.Identity?.IsAuthenticated == true)
             {
                 return RedirectToAction("Index", "Home");
+            }
+
+            // Mostrar mensaje si la sesión expiró
+            if (message == "session_expired")
+            {
+                TempData["ErrorMessage"] = "Su sesión ha expirado debido al reinicio del servidor. Por favor, inicie sesión nuevamente.";
             }
 
             ViewData["ReturnUrl"] = returnUrl;
@@ -388,7 +394,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                     }
 
                     // Actualizar usuario para usar imagen por defecto (null en BD)
-                    var updateSuccess = await _usuarioService.UpdateProfilePhotoAsync(usuarioId.Value, null);
+                    var updateSuccess = await _usuarioService.UpdateProfilePhotoAsync(usuarioId.Value, null!);
                     if (updateSuccess)
                     {
                         // Refrescar claims para mostrar la imagen por defecto inmediatamente

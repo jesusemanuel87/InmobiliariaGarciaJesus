@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 08-09-2025 a las 17:59:48
+-- Tiempo de generación: 26-09-2025 a las 21:35:36
 -- Versión del servidor: 10.4.21-MariaDB
 -- Versión de PHP: 8.0.11
 
@@ -20,15 +20,7 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `inmobiliaria`
 --
--- Paso 1: Eliminar completamente la base de datos
-DROP DATABASE IF EXISTS `inmobiliaria`;
 
--- Paso 2: Crear nueva base de datos
-CREATE DATABASE `inmobiliaria` 
-DEFAULT CHARACTER SET utf8mb4 
-COLLATE utf8mb4_unicode_ci;
-
-USE `inmobiliaria`;
 -- --------------------------------------------------------
 
 --
@@ -50,12 +42,12 @@ CREATE TABLE `configuraciones` (
 --
 
 INSERT INTO `configuraciones` (`Id`, `Clave`, `Valor`, `Descripcion`, `Tipo`, `FechaCreacion`, `FechaModificacion`) VALUES
-(1, 'MESES_MINIMOS_6', 'True', 'Opción de 6 meses de alquiler mínimo', 1, '2025-08-31 13:34:01', '2025-09-07 14:19:51'),
-(2, 'MESES_MINIMOS_12', 'True', 'Opción de 12 meses de alquiler mínimo', 1, '2025-08-31 13:34:01', '2025-09-07 14:19:51'),
-(3, 'MESES_MINIMOS_18', 'True', 'Opción de 18 meses de alquiler mínimo', 1, '2025-08-31 13:34:01', '2025-09-07 14:19:51'),
-(4, 'MESES_MINIMOS_24', 'True', 'Opción de 24 meses de alquiler mínimo', 1, '2025-08-31 13:34:01', '2025-09-07 14:19:51'),
-(5, 'MESES_MINIMOS_30', 'True', 'Opción de 30 meses de alquiler mínimo', 1, '2025-08-31 13:34:01', '2025-09-07 14:19:51'),
-(6, 'MESES_MINIMOS_36', 'True', 'Opción de 36 meses de alquiler mínimo', 1, '2025-08-31 13:34:01', '2025-09-07 14:19:51'),
+(1, 'MESES_MINIMOS_6', 'True', 'Opción de 6 meses de alquiler mínimo', 1, '2025-08-31 13:34:01', '2025-09-26 15:45:06'),
+(2, 'MESES_MINIMOS_12', 'True', 'Opción de 12 meses de alquiler mínimo', 1, '2025-08-31 13:34:01', '2025-09-26 15:45:06'),
+(3, 'MESES_MINIMOS_18', 'True', 'Opción de 18 meses de alquiler mínimo', 1, '2025-08-31 13:34:01', '2025-09-26 15:45:06'),
+(4, 'MESES_MINIMOS_24', 'True', 'Opción de 24 meses de alquiler mínimo', 1, '2025-08-31 13:34:01', '2025-09-26 15:45:06'),
+(5, 'MESES_MINIMOS_30', 'True', 'Opción de 30 meses de alquiler mínimo', 1, '2025-08-31 13:34:01', '2025-09-26 15:45:06'),
+(6, 'MESES_MINIMOS_36', 'True', 'Opción de 36 meses de alquiler mínimo', 1, '2025-08-31 13:34:01', '2025-09-26 15:45:06'),
 (7, 'MULTA_TERMINACION_TEMPRANA', '2', 'Meses de multa si se cumplió menos de la mitad del contrato', 2, '2025-08-31 13:34:01', '2025-08-31 13:34:01'),
 (8, 'MULTA_TERMINACION_TARDIA', '1', 'Meses de multa si se cumplió más de la mitad del contrato', 3, '2025-08-31 13:34:01', '2025-09-07 13:48:10'),
 (9, 'INTERES_VENCIMIENTO_10_20', '10', 'Porcentaje de interés para vencimientos de 10-20 días', 4, '2025-08-31 13:34:01', '2025-08-31 13:34:01'),
@@ -105,7 +97,10 @@ INSERT INTO `contratos` (`Id`, `FechaInicio`, `FechaFin`, `Precio`, `InquilinoId
 (15, '2025-09-01', '2026-03-31', '250000.00', 1, 3, 'Finalizado', '2025-09-06 20:36:25', NULL, NULL, NULL, NULL, NULL),
 (16, '2025-09-01', '2026-03-31', '50000.00', 2, 2, 'Finalizado', '2025-09-06 20:42:05', NULL, NULL, NULL, NULL, NULL),
 (17, '2025-09-06', '2026-03-31', '100000.00', 2, 1, 'Finalizado', '2025-09-06 20:48:43', NULL, NULL, NULL, NULL, NULL),
-(18, '2025-09-01', '2026-03-31', '100000.00', 1, 1, 'Finalizado', '2025-09-07 11:18:16', NULL, NULL, NULL, NULL, NULL);
+(18, '2025-09-01', '2026-03-31', '100000.00', 1, 1, 'Finalizado', '2025-09-07 11:18:16', NULL, NULL, NULL, NULL, NULL),
+(19, '2025-10-01', '2027-04-30', '85000.00', 3, 1, 'Reservado', '2025-09-08 19:48:41', NULL, NULL, NULL, NULL, NULL),
+(20, '2025-09-15', '2027-03-31', '250000.00', 2, 3, 'Activo', '2025-09-15 06:38:08', NULL, NULL, NULL, NULL, NULL),
+(21, '2025-09-26', '2026-03-31', '300000.00', 6, 4, 'Activo', '2025-09-26 15:45:24', NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -135,7 +130,9 @@ CREATE TABLE `empleados` (
 --
 
 INSERT INTO `empleados` (`Id`, `Nombre`, `Apellido`, `Dni`, `Telefono`, `Email`, `FotoPerfil`, `Rol`, `FechaIngreso`, `Observaciones`, `Estado`, `FechaCreacion`, `FechaModificacion`, `FechaActualizacion`) VALUES
-(3, 'Admin', 'Sistema', '00000000', '0000000000', 'admin@inmobiliaria.com', NULL, 2, '2025-09-07', 'Usuario administrador del sistema', 1, '2025-09-08 00:44:01', '2025-09-07 21:44:01', '2025-09-08 00:47:53');
+(3, 'Admin', 'Sistema', '00000000', '0000000000', 'admin@inmobiliaria.com', NULL, 2, '2025-09-07', 'Usuario administrador del sistema', 1, '2025-09-08 00:44:01', '2025-09-07 21:44:01', '2025-09-08 00:47:53'),
+(4, 'empleado', 'empleado', '55666777', '2664555555', 'empleado@inmobiliaria.com', NULL, 1, '2025-09-14', NULL, 1, '2025-09-14 23:47:42', '2025-09-20 23:37:08', '2025-09-21 02:37:08'),
+(5, 'Empleado Test ', 'Inactivado', '55111222', '2661122334', 'empleado02@inmueble.com', NULL, 1, '2025-09-26', NULL, 0, '2025-09-26 21:27:42', '2025-09-26 15:31:12', '2025-09-26 18:31:12');
 
 -- --------------------------------------------------------
 
@@ -164,7 +161,8 @@ INSERT INTO `inmuebleimagenes` (`Id`, `InmuebleId`, `NombreArchivo`, `RutaArchiv
 (2, 1, '735808b4-bccc-42cb-9a39-a63c3c74fcb3.jpg', '/uploads/inmuebles/1/735808b4-bccc-42cb-9a39-a63c3c74fcb3.jpg', 1, NULL, 9377, 'image/jpeg', '2025-09-06 13:14:45', '2025-09-07 14:21:00'),
 (4, 2, '182d114e-0da6-4033-a63b-3faaef7d4f91.jpg', '/uploads/inmuebles/2/182d114e-0da6-4033-a63b-3faaef7d4f91.jpg', 1, 'casa4', 8064, 'image/jpeg', '2025-09-06 16:57:43', '2025-09-06 17:12:04'),
 (6, 3, '458b3fce-b86b-4df5-8ea9-0daa72fb73d4.jpg', '/uploads/inmuebles/3/458b3fce-b86b-4df5-8ea9-0daa72fb73d4.jpg', 1, NULL, 8995, 'image/jpeg', '2025-09-06 17:11:45', '2025-09-06 17:11:45'),
-(7, 1, '1a4046e9-e8df-4236-8aaf-6cd53bcd253f.jpg', '/uploads/inmuebles/1/1a4046e9-e8df-4236-8aaf-6cd53bcd253f.jpg', 0, NULL, 11144, 'image/jpeg', '2025-09-07 14:20:36', '2025-09-07 14:21:00');
+(7, 1, '1a4046e9-e8df-4236-8aaf-6cd53bcd253f.jpg', '/uploads/inmuebles/1/1a4046e9-e8df-4236-8aaf-6cd53bcd253f.jpg', 0, NULL, 11144, 'image/jpeg', '2025-09-07 14:20:36', '2025-09-07 14:21:00'),
+(8, 4, 'c03b7cb0-c832-4f98-915c-cb1c8e141762.jpg', '/uploads/inmuebles/4/c03b7cb0-c832-4f98-915c-cb1c8e141762.jpg', 1, NULL, 8995, 'image/jpeg', '2025-09-26 15:07:03', '2025-09-26 15:07:03');
 
 -- --------------------------------------------------------
 
@@ -196,7 +194,8 @@ CREATE TABLE `inmuebles` (
 INSERT INTO `inmuebles` (`Id`, `Direccion`, `Ambientes`, `Superficie`, `Latitud`, `Longitud`, `PropietarioId`, `Tipo`, `Precio`, `Estado`, `Uso`, `FechaCreacion`, `Localidad`, `Provincia`) VALUES
 (1, 'Mirador 1 Casa 22, San Luis', 4, '120.50', '-33.25743300', '-66.33420200', 1, 'Casa', '85000.00', 1, 'Residencial', '2025-08-23 15:40:21', 'San Luis', 'San Luis'),
 (2, 'Mirador 2 Depto 10, San Luis', 3, '75.00', '-33.25819600', '-66.33419100', 2, 'Oficina', '65000.00', 0, 'Comercial', '2025-08-23 15:40:21', 'San Luis', 'San Luis'),
-(3, 'Calle 51 número 1120', 2, '70.00', '-33.25819600', '-66.33419100', 1, 'Departamento', '250000.00', 1, 'Comercial', '2025-08-30 21:11:41', 'San Luis', 'San Luis');
+(3, 'Calle 51 número 1120', 2, '70.00', '-33.25819600', '-66.33419100', 1, 'Departamento', '250000.00', 1, 'Comercial', '2025-08-30 21:11:41', 'San Luis', 'San Luis'),
+(4, 'Las Heras 480', 5, '100.00', '-33.68324458', '-65.46910645', 8, 'Casa', '300000.00', 1, 'Residencial', '2025-09-26 15:05:31', 'Villa Mercedes', 'San Luis');
 
 -- --------------------------------------------------------
 
@@ -223,7 +222,10 @@ CREATE TABLE `inquilinos` (
 INSERT INTO `inquilinos` (`Id`, `DNI`, `Nombre`, `Apellido`, `Telefono`, `Email`, `Direccion`, `FechaCreacion`, `Estado`) VALUES
 (1, '30111222', 'Carlos', 'Rodríguez', '2651111111', 'carlos.rodriguez@email.com', 'Mitre 789, San Luis', '2025-08-23 15:40:20', 1),
 (2, '33000111', 'Ana', 'Martínez', '2652222222', 'ana.martinez@email.com', 'Belgrano 321, San Luis', '2025-08-23 15:40:20', 1),
-(3, '22222222', 'Jesus', 'Garcia', '2664123456', 'testinquilino@gmail.com', 'Mira 2', '2025-08-23 15:50:25', 0);
+(3, '22222222', 'Jesus Emanuel', 'Garcia', '2664123456', 'testinquilino@gmail.com', 'Mira 2', '2025-08-23 15:50:25', 0),
+(4, '32654789', 'Test', 'Modals', '2664567890', 'modal@inmuebles.com', 'Mira 3', '2025-09-12 11:20:27', 1),
+(5, '99888555', 'Propietario', 'Apellido Prop', '2664444444', 'propietario@inmueble.com', 'Juan Llerena 55, Villa Mercedes, San Luis', '2025-09-21 15:40:45', 1),
+(6, '33666777', 'Inquilino Test VM', 'Garcia', '2657774411', 'inquilino.vm@test.com', 'Belgrano 216', '2025-09-26 15:43:21', 1);
 
 -- --------------------------------------------------------
 
@@ -252,20 +254,62 @@ CREATE TABLE `pagos` (
 
 INSERT INTO `pagos` (`Id`, `Numero`, `FechaPago`, `ContratoId`, `Importe`, `Estado`, `FechaCreacion`, `metodo_pago`, `observaciones`, `Intereses`, `Multas`, `FechaVencimiento`) VALUES
 (1, 1, '2025-08-01', 5, '350000.00', 'Vencido', '2025-08-31 14:08:28', NULL, '.', '105000.00', '0.00', '2025-08-10 00:00:00'),
-(3, 3, '2025-09-01', 5, '350000.00', 'Pendiente', '2025-08-31 14:08:28', NULL, NULL, '0.00', '0.00', '2025-09-10 00:00:00'),
+(3, 3, '2025-09-12', 5, '350000.00', 'Pagado', '2025-08-31 14:08:28', 'Efectivo', NULL, '0.00', '0.00', '2025-09-10 00:00:00'),
 (4, 1, '2025-08-05', 1, '650000.00', 'Pagado', '2025-08-31 20:10:54', 'MercadoPago', NULL, '0.00', '0.00', '2025-08-10 00:00:00'),
-(5, 2, '2025-09-01', 1, '650000.00', 'Pendiente', '2025-08-31 20:11:23', NULL, NULL, '0.00', '0.00', '2025-09-10 00:00:00'),
+(5, 2, '2025-09-08', 1, '650000.00', 'Pagado', '2025-08-31 20:11:23', 'MercadoPago', NULL, '0.00', '0.00', '2025-09-10 00:00:00'),
 (6, 1, '2025-08-01', 6, '65000.00', 'Vencido', '2025-08-31 23:40:37', NULL, '.', '19500.00', '0.00', '2025-08-10 00:00:00'),
-(11, 6, '2025-09-01', 6, '65000.00', 'Pendiente', '2025-08-31 23:40:37', NULL, NULL, '0.00', '0.00', '2025-09-10 00:00:00'),
-(17, 6, '2025-09-01', 7, '250000.00', 'Pendiente', '2025-09-06 18:52:31', NULL, NULL, '0.00', '0.00', '2025-09-10 00:00:00'),
-(36, 1, '2025-09-01', 11, '65000.00', 'Pendiente', '2025-09-06 19:44:07', NULL, NULL, '0.00', '0.00', '2025-09-10 00:00:00'),
-(42, 1, '2025-09-01', 12, '85000.00', 'Pendiente', '2025-09-06 20:05:19', NULL, NULL, '0.00', '0.00', '2025-09-10 00:00:00'),
-(48, 1, '2025-09-01', 13, '250000.00', 'Pendiente', '2025-09-06 20:10:24', NULL, NULL, '0.00', '0.00', '2025-09-10 00:00:00'),
-(54, 1, '2025-09-01', 14, '100000.00', 'Pendiente', '2025-09-06 20:16:30', NULL, ' - Incluye multa por finalización temprana ($200.000)', '0.00', '0.00', '2025-09-10 00:00:00'),
-(60, 1, '2025-09-01', 15, '250000.00', 'Pendiente', '2025-09-06 20:36:25', NULL, ' - Incluye multa por finalización temprana ($500.000)', '0.00', '0.00', '2025-09-10 00:00:00'),
-(66, 1, '2025-09-01', 16, '50000.00', 'Pendiente', '2025-09-06 20:42:05', NULL, ' - Incluye multa por finalización temprana ($100.000)', '0.00', '0.00', '2025-09-10 00:00:00'),
-(72, 1, '2025-09-01', 17, '100000.00', 'Pendiente', '2025-09-06 20:48:43', NULL, ' - Incluye multa por finalización temprana ($200.000)', '0.00', '0.00', '2025-09-10 00:00:00'),
-(78, 1, '2025-09-07', 18, '100000.00', 'Pagado', '2025-09-07 11:18:16', 'MercadoPago', 'm', '0.00', '200000.00', '2025-09-10 00:00:00');
+(11, 6, '2025-09-01', 6, '65000.00', 'Vencido', '2025-08-31 23:40:37', NULL, NULL, '6500.00', '0.00', '2025-09-10 00:00:00'),
+(17, 6, '2025-09-01', 7, '250000.00', 'Vencido', '2025-09-06 18:52:31', NULL, NULL, '25000.00', '0.00', '2025-09-10 00:00:00'),
+(36, 1, '2025-09-01', 11, '65000.00', 'Vencido', '2025-09-06 19:44:07', NULL, NULL, '6500.00', '0.00', '2025-09-10 00:00:00'),
+(42, 1, '2025-09-01', 12, '85000.00', 'Vencido', '2025-09-06 20:05:19', NULL, NULL, '8500.00', '0.00', '2025-09-10 00:00:00'),
+(48, 1, '2025-09-01', 13, '250000.00', 'Vencido', '2025-09-06 20:10:24', NULL, NULL, '25000.00', '0.00', '2025-09-10 00:00:00'),
+(54, 1, '2025-09-01', 14, '100000.00', 'Vencido', '2025-09-06 20:16:30', NULL, ' - Incluye multa por finalización temprana ($200.000)', '10000.00', '0.00', '2025-09-10 00:00:00'),
+(60, 1, '2025-09-01', 15, '250000.00', 'Vencido', '2025-09-06 20:36:25', NULL, ' - Incluye multa por finalización temprana ($500.000)', '25000.00', '0.00', '2025-09-10 00:00:00'),
+(66, 1, '2025-09-01', 16, '50000.00', 'Vencido', '2025-09-06 20:42:05', NULL, ' - Incluye multa por finalización temprana ($100.000)', '5000.00', '0.00', '2025-09-10 00:00:00'),
+(72, 1, '2025-09-01', 17, '100000.00', 'Vencido', '2025-09-06 20:48:43', NULL, ' - Incluye multa por finalización temprana ($200.000)', '10000.00', '0.00', '2025-09-10 00:00:00'),
+(78, 1, '2025-09-07', 18, '100000.00', 'Pagado', '2025-09-07 11:18:16', 'MercadoPago', 'm', '0.00', '200000.00', '2025-09-10 00:00:00'),
+(84, 1, '2025-09-15', 19, '85000.00', 'Pagado', '2025-09-08 19:48:41', 'Efectivo', NULL, '0.00', '0.00', '2025-10-10 00:00:00'),
+(85, 2, '2025-11-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2025-11-10 00:00:00'),
+(86, 3, '2025-12-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2025-12-10 00:00:00'),
+(87, 4, '2026-01-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2026-01-10 00:00:00'),
+(88, 5, '2026-02-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2026-02-10 00:00:00'),
+(89, 6, '2026-03-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2026-03-10 00:00:00'),
+(90, 7, '2026-04-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2026-04-10 00:00:00'),
+(91, 8, '2026-05-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2026-05-10 00:00:00'),
+(92, 9, '2026-06-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2026-06-10 00:00:00'),
+(93, 10, '2026-07-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2026-07-10 00:00:00'),
+(94, 11, '2026-08-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2026-08-10 00:00:00'),
+(95, 12, '2026-09-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2026-09-10 00:00:00'),
+(96, 13, '2026-10-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2026-10-10 00:00:00'),
+(97, 14, '2026-11-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2026-11-10 00:00:00'),
+(98, 15, '2026-12-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2026-12-10 00:00:00'),
+(99, 16, '2027-01-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2027-01-10 00:00:00'),
+(100, 17, '2027-02-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2027-02-10 00:00:00'),
+(101, 18, '2027-03-01', 19, '85000.00', 'Pendiente', '2025-09-08 19:48:41', NULL, NULL, '0.00', '0.00', '2027-03-10 00:00:00'),
+(102, 1, '2025-09-01', 20, '250000.00', 'Vencido', '2025-09-15 06:38:08', NULL, NULL, '25000.00', '0.00', '2025-09-10 00:00:00'),
+(103, 2, '2025-10-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2025-10-10 00:00:00'),
+(104, 3, '2025-11-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2025-11-10 00:00:00'),
+(105, 4, '2025-12-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2025-12-10 00:00:00'),
+(106, 5, '2026-01-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2026-01-10 00:00:00'),
+(107, 6, '2026-02-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2026-02-10 00:00:00'),
+(108, 7, '2026-03-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2026-03-10 00:00:00'),
+(109, 8, '2026-04-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2026-04-10 00:00:00'),
+(110, 9, '2026-05-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2026-05-10 00:00:00'),
+(111, 10, '2026-06-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2026-06-10 00:00:00'),
+(112, 11, '2026-07-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2026-07-10 00:00:00'),
+(113, 12, '2026-08-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2026-08-10 00:00:00'),
+(114, 13, '2026-09-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2026-09-10 00:00:00'),
+(115, 14, '2026-10-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2026-10-10 00:00:00'),
+(116, 15, '2026-11-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2026-11-10 00:00:00'),
+(117, 16, '2026-12-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2026-12-10 00:00:00'),
+(118, 17, '2027-01-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2027-01-10 00:00:00'),
+(119, 18, '2027-02-01', 20, '250000.00', 'Pendiente', '2025-09-15 06:38:08', NULL, NULL, '0.00', '0.00', '2027-02-10 00:00:00'),
+(120, 1, '2025-09-01', 21, '300000.00', 'Vencido', '2025-09-26 15:45:24', NULL, NULL, '45000.00', '0.00', '2025-09-10 00:00:00'),
+(121, 2, '2025-10-01', 21, '300000.00', 'Pendiente', '2025-09-26 15:45:24', NULL, NULL, '0.00', '0.00', '2025-10-10 00:00:00'),
+(122, 3, '2025-11-01', 21, '300000.00', 'Pendiente', '2025-09-26 15:45:24', NULL, NULL, '0.00', '0.00', '2025-11-10 00:00:00'),
+(123, 4, '2025-12-01', 21, '300000.00', 'Pendiente', '2025-09-26 15:45:24', NULL, NULL, '0.00', '0.00', '2025-12-10 00:00:00'),
+(124, 5, '2026-01-01', 21, '300000.00', 'Pendiente', '2025-09-26 15:45:24', NULL, NULL, '0.00', '0.00', '2026-01-10 00:00:00'),
+(125, 6, '2026-02-01', 21, '300000.00', 'Pendiente', '2025-09-26 15:45:24', NULL, NULL, '0.00', '0.00', '2026-02-10 00:00:00');
 
 -- --------------------------------------------------------
 
@@ -290,10 +334,13 @@ CREATE TABLE `propietarios` (
 --
 
 INSERT INTO `propietarios` (`Id`, `DNI`, `Nombre`, `Apellido`, `Telefono`, `Email`, `Direccion`, `FechaCreacion`, `Estado`) VALUES
-(1, '35456987', 'José Maria', 'Pérez', '2657123456', 'jose.perez@email.com', 'Av. San Martín 123, San Luis', '2025-08-23 15:40:17', 1),
+(1, '35456987', 'José Maria', 'Pérez', '2657123456', 'jose.perez@email.com', 'Av. San Martín 1234, San Luis', '2025-08-23 15:40:17', 1),
 (2, '36987456', 'María', 'González', '2664896547', 'maria.gonzalez@email.com', 'Rivadavia 456, San Luis', '2025-08-23 15:40:17', 1),
 (3, '55555555', 'Omar', 'Propo', '2664789654', 'testpropietario@a.com', 'Casa s/n', '2025-08-23 17:12:59', 0),
-(4, '11222333', 'Test', 'Prueba', '2664112233', 'test@test.com', 'Direccion 123', '2025-09-07 11:28:08', 0);
+(4, '11222333', 'Test', 'Prueba', '2664112233', 'test@test.com', 'Direccion 123', '2025-09-07 11:28:08', 0),
+(5, '44555666', 'Ruben', 'Lopez', '2661111111', 'ruben@propietario.com', 'Colon 469', '2025-09-14 20:45:50', 1),
+(7, '99888555', 'Propietario', 'Apellido Prop', '2664444444', 'propietario@inmueble.com', NULL, '2025-09-20 14:09:38', 1),
+(8, '11444777', 'Rafa', 'Gomez', '2662222222', 'test02@inmueble.com', 'Mirador 3', '2025-09-21 15:54:03', 1);
 
 -- --------------------------------------------------------
 
@@ -321,7 +368,10 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`Id`, `NombreUsuario`, `Email`, `ClaveHash`, `FotoPerfil`, `Rol`, `FechaCreacion`, `UltimoAcceso`, `Estado`, `EmpleadoId`, `PropietarioId`, `InquilinoId`) VALUES
-(3, 'admin', 'admin@inmobiliaria.com', '$2a$11$n4zTqE601oaEZkLIo./fzOpbwOC/MCv2DF/z02HPHG50sNZGjdDJ.', '/uploads/profiles/user_3_b1193c52-3b4d-40ee-a601-4fdaaa59fc5e.jpg', 4, '2025-09-08 00:44:02', '2025-09-08 00:44:14', 1, 3, NULL, NULL);
+(3, 'admin', 'admin@inmobiliaria.com', '$2a$11$n4zTqE601oaEZkLIo./fzOpbwOC/MCv2DF/z02HPHG50sNZGjdDJ.', '/uploads/profiles/user_3_b1193c52-3b4d-40ee-a601-4fdaaa59fc5e.jpg', 4, '2025-09-08 00:44:02', '2025-09-26 18:35:09', 1, 3, NULL, NULL),
+(4, 'eempleado', 'empleado@inmobiliaria.com', '$2a$11$4Ohais3PBVswY2a1l25Co.u./Nu8.ARLnpQmFSJncdD/FRSUq556S', '/uploads/profiles/user_4_28b1a338-ceac-4f47-9aff-6715b2a48019.jpg', 3, '2025-09-14 23:47:42', '2025-09-26 18:57:30', 1, 4, NULL, NULL),
+(5, 'propietario', 'propietario@inmueble.com', '$2a$11$VUIUnDYQrnmUd5spL1rnGe4d1xCxiT.J9YFHMvbWbv2q9dTHBG/tS', '/uploads/profiles/user_default.png', 1, '2025-09-20 17:09:39', '2025-09-21 18:29:57', 1, NULL, 7, NULL),
+(7, 'einactivo', 'empleado02@inmueble.com', '$2a$11$qq6s2qy326e0zuKAHc.D7OTCqCAxZdNHVHQ2nHZHixTkPXcWgEsua', '/uploads/profiles/user_default.png', 3, '2025-09-26 18:27:42', '2025-09-26 18:31:28', 1, 5, NULL, NULL);
 
 --
 -- Disparadores `usuarios`
@@ -518,49 +568,49 @@ ALTER TABLE `configuraciones`
 -- AUTO_INCREMENT de la tabla `contratos`
 --
 ALTER TABLE `contratos`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT de la tabla `empleados`
 --
 ALTER TABLE `empleados`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `inmuebleimagenes`
 --
 ALTER TABLE `inmuebleimagenes`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `inmuebles`
 --
 ALTER TABLE `inmuebles`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `inquilinos`
 --
 ALTER TABLE `inquilinos`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=126;
 
 --
 -- AUTO_INCREMENT de la tabla `propietarios`
 --
 ALTER TABLE `propietarios`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Restricciones para tablas volcadas

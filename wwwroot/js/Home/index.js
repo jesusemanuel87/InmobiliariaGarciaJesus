@@ -92,6 +92,8 @@ function limpiarFiltros() {
     $('#localidadFilter').val('');
     $('input[name="fechaDesde"]').val('');
     $('input[name="fechaHasta"]').val('');
+    $('select[name="tipo"]').val('');
+    $('select[name="uso"]').val('');
     
     // Reset price inputs to original range
     const minPrice = parseFloat($('#precioMinimo').val()) || 0;

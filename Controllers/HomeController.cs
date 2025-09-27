@@ -24,7 +24,8 @@ public class HomeController : Controller
     }
 
     public async Task<IActionResult> Index(string? provincia = null, string? localidad = null, 
-        DateTime? fechaDesde = null, DateTime? fechaHasta = null, decimal? precioMin = null, decimal? precioMax = null)
+        DateTime? fechaDesde = null, DateTime? fechaHasta = null, decimal? precioMin = null, decimal? precioMax = null,
+        string? tipo = null, string? uso = null)
     {
         try
         {
@@ -59,6 +60,24 @@ public class HomeController : Controller
                 inmueblesFiltrados = inmueblesFiltrados.Where(i => i.Precio <= precioMax.Value);
             }
 
+            // Filtrar por tipo de inmueble
+            if (!string.IsNullOrEmpty(tipo))
+            {
+                if (Enum.TryParse<TipoInmueble>(tipo, out var tipoEnum))
+                {
+                    inmueblesFiltrados = inmueblesFiltrados.Where(i => i.Tipo == tipoEnum);
+                }
+            }
+
+            // Filtrar por uso del inmueble
+            if (!string.IsNullOrEmpty(uso))
+            {
+                if (Enum.TryParse<UsoInmueble>(uso, out var usoEnum))
+                {
+                    inmueblesFiltrados = inmueblesFiltrados.Where(i => i.Uso == usoEnum);
+                }
+            }
+
             // TODO: Implementar filtro por disponibilidad de fechas cuando esté disponible el servicio de contratos
 
             var resultado = inmueblesFiltrados.ToList();
@@ -70,6 +89,8 @@ public class HomeController : Controller
             ViewBag.FechaHasta = fechaHasta;
             ViewBag.PrecioMin = precioMin;
             ViewBag.PrecioMax = precioMax;
+            ViewBag.TipoSeleccionado = tipo;
+            ViewBag.UsoSeleccionado = uso;
 
             // Obtener rangos de precios para el slider basado en TODOS los inmuebles (no filtrados)
             // Esto mantiene el rango completo disponible para el slider

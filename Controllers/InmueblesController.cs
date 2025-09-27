@@ -211,9 +211,6 @@ namespace InmobiliariaGarciaJesus.Controllers
                 ViewBag.UserRole = userRole;
                 ViewBag.CanViewAllStates = userRole == "Empleado" || userRole == "Administrador";
                 
-                // Debug: Log del rol para verificar
-                Console.WriteLine($"DEBUG - UserRole: '{userRole}', CanViewAllStates: {ViewBag.CanViewAllStates}");
-                
                 ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
                 return View(inmueblesFiltrados);
             }
@@ -631,7 +628,6 @@ namespace InmobiliariaGarciaJesus.Controllers
 
             if (contratoActivo != null)
             {
-                if (inmueble.Id == 1) Console.WriteLine($"DEBUG - ID 1: Contrato ACTIVO encontrado");
                 return "NoDisponible";
             }
 
@@ -643,7 +639,6 @@ namespace InmobiliariaGarciaJesus.Controllers
 
             if (contratoFuturo != null)
             {
-                if (inmueble.Id == 1) Console.WriteLine($"DEBUG - ID 1: Contrato FUTURO encontrado - RESERVADO");
                 return "Reservado";
             }
 
@@ -654,12 +649,10 @@ namespace InmobiliariaGarciaJesus.Controllers
 
             if (contratoReservado != null)
             {
-                if (inmueble.Id == 1) Console.WriteLine($"DEBUG - ID 1: Contrato con estado RESERVADO encontrado");
                 return "Reservado";
             }
 
             // Si no tiene contratos activos ni futuros, está disponible
-          //  if (inmueble.Id == 1) Console.WriteLine($"DEBUG - ID 1: Sin contratos - DISPONIBLE");
             return "Disponible";
         }
     }

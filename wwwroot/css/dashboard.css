@@ -200,8 +200,29 @@
     left: 100%;
 }
 
+/* Cards clickeables */
+.dashboard-card[onclick] {
+    cursor: pointer;
+    user-select: none;
+}
+
+.dashboard-card[onclick]:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dashboard-card[onclick]:active {
+    transform: translateY(-3px);
+    transition: transform 0.1s ease;
+}
+
 /* Mejoras para accesibilidad */
 .dashboard-card:focus-within {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.dashboard-card[onclick]:focus {
     outline: 2px solid #007bff;
     outline-offset: 2px;
 }

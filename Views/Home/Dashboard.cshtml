@@ -22,184 +22,8 @@
                 </div>
             </div>
 
-            <!-- Cards del Dashboard -->
-            <div class="row g-4">
-                
-                <!-- Card: Propietarios -->
-                <div class="col-xl-3 col-lg-4 col-md-6">
-                    <div class="card dashboard-card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <div class="dashboard-icon mb-3">
-                                <i class="fas fa-user-tie"></i>
-                            </div>
-                            <h5 class="card-title">Propietarios</h5>
-                            <p class="card-text text-muted">Gestionar propietarios de inmuebles</p>
-                            <a href="@Url.Action("Index", "Propietarios")" class="btn btn-primary btn-dashboard">
-                                <i class="fas fa-arrow-right"></i> Acceder
-                            </a>
-                        </div>
-                        <div class="card-footer bg-transparent">
-                            <small class="text-muted">
-                                <i class="fas fa-users"></i> Administrar propietarios
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card: Inquilinos -->
-                <div class="col-xl-3 col-lg-4 col-md-6">
-                    <div class="card dashboard-card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <div class="dashboard-icon mb-3">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <h5 class="card-title">Inquilinos</h5>
-                            <p class="card-text text-muted">Gestionar inquilinos y arrendatarios</p>
-                            <a href="@Url.Action("Index", "Inquilinos")" class="btn btn-primary btn-dashboard">
-                                <i class="fas fa-arrow-right"></i> Acceder
-                            </a>
-                        </div>
-                        <div class="card-footer bg-transparent">
-                            <small class="text-muted">
-                                <i class="fas fa-user-friends"></i> Administrar inquilinos
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card: Inmuebles -->
-                <div class="col-xl-3 col-lg-4 col-md-6">
-                    <div class="card dashboard-card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <div class="dashboard-icon mb-3">
-                                <i class="fas fa-building"></i>
-                            </div>
-                            <h5 class="card-title">Inmuebles</h5>
-                            <p class="card-text text-muted">Administrar propiedades y inmuebles</p>
-                            <a href="@Url.Action("Index", "Inmuebles")" class="btn btn-primary btn-dashboard">
-                                <i class="fas fa-arrow-right"></i> Acceder
-                            </a>
-                        </div>
-                        <div class="card-footer bg-transparent">
-                            <small class="text-muted">
-                                <i class="fas fa-home"></i> Gestionar propiedades
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card: Contratos -->
-                <div class="col-xl-3 col-lg-4 col-md-6">
-                    <div class="card dashboard-card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <div class="dashboard-icon mb-3">
-                                <i class="fas fa-file-contract"></i>
-                            </div>
-                            <h5 class="card-title">Contratos</h5>
-                            <p class="card-text text-muted">Administrar contratos de alquiler</p>
-                            <a href="@Url.Action("Index", "Contratos")" class="btn btn-primary btn-dashboard">
-                                <i class="fas fa-arrow-right"></i> Acceder
-                            </a>
-                        </div>
-                        <div class="card-footer bg-transparent">
-                            <small class="text-muted">
-                                <i class="fas fa-handshake"></i> Gestionar contratos
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card: Pagos -->
-                <div class="col-xl-3 col-lg-4 col-md-6">
-                    <div class="card dashboard-card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <div class="dashboard-icon mb-3">
-                                <i class="fas fa-money-bill"></i>
-                            </div>
-                            <h5 class="card-title">Pagos</h5>
-                            <p class="card-text text-muted">Gestionar pagos y facturación</p>
-                            <a href="@Url.Action("Index", "Pagos")" class="btn btn-primary btn-dashboard">
-                                <i class="fas fa-arrow-right"></i> Acceder
-                            </a>
-                        </div>
-                        <div class="card-footer bg-transparent">
-                            <small class="text-muted">
-                                <i class="fas fa-dollar-sign"></i> Administrar pagos
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-                @if (User.IsInRole("Administrador"))
-                {
-                    <!-- Card: Empleados (Solo Administradores) -->
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <div class="card dashboard-card h-100 shadow-sm">
-                            <div class="card-body text-center">
-                                <div class="dashboard-icon mb-3">
-                                    <i class="fas fa-user-tie"></i>
-                                </div>
-                                <h5 class="card-title">Empleados</h5>
-                                <p class="card-text text-muted">Gestionar empleados del sistema</p>
-                                <a href="@Url.Action("Index", "Empleados")" class="btn btn-warning btn-dashboard">
-                                    <i class="fas fa-arrow-right"></i> Acceder
-                                </a>
-                            </div>
-                            <div class="card-footer bg-transparent">
-                                <small class="text-muted">
-                                    <i class="fas fa-crown"></i> Solo Administradores
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card: Configuración (Solo Administradores) -->
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <div class="card dashboard-card h-100 shadow-sm">
-                            <div class="card-body text-center">
-                                <div class="dashboard-icon mb-3">
-                                    <i class="fas fa-cog"></i>
-                                </div>
-                                <h5 class="card-title">Configuración</h5>
-                                <p class="card-text text-muted">Configurar parámetros del sistema</p>
-                                <a href="@Url.Action("Index", "Configuracion")" class="btn btn-warning btn-dashboard">
-                                    <i class="fas fa-arrow-right"></i> Acceder
-                                </a>
-                            </div>
-                            <div class="card-footer bg-transparent">
-                                <small class="text-muted">
-                                    <i class="fas fa-crown"></i> Solo Administradores
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                }
-
-                <!-- Card: Mi Perfil -->
-                <div class="col-xl-3 col-lg-4 col-md-6">
-                    <div class="card dashboard-card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <div class="dashboard-icon mb-3">
-                                <i class="fas fa-user-circle"></i>
-                            </div>
-                            <h5 class="card-title">Mi Perfil</h5>
-                            <p class="card-text text-muted">Actualizar información personal</p>
-                            <a href="@Url.Action("Profile", "Auth")" class="btn btn-secondary btn-dashboard">
-                                <i class="fas fa-arrow-right"></i> Acceder
-                            </a>
-                        </div>
-                        <div class="card-footer bg-transparent">
-                            <small class="text-muted">
-                                <i class="fas fa-edit"></i> Editar perfil
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
             <!-- Estadísticas Rápidas -->
-            <div class="row mt-5">
+            <div class="row mb-5">
                 <div class="col-12">
                     <h3 class="mb-4">
                         <i class="fas fa-chart-bar text-info"></i> Resumen Rápido
@@ -265,6 +89,158 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Cards del Dashboard -->
+            <div class="row g-4">
+                
+                <!-- Card: Propietarios -->
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="card dashboard-card h-100 shadow-sm" onclick="window.location.href='@Url.Action("Index", "Propietarios")'" style="cursor: pointer;">
+                        <div class="card-body text-center">
+                            <div class="dashboard-icon mb-3">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <h5 class="card-title">Propietarios</h5>
+                            <p class="card-text text-muted">Gestionar propietarios de inmuebles</p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <small class="text-muted">
+                                <i class="fas fa-users"></i> Administrar propietarios
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card: Inquilinos -->
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="card dashboard-card h-100 shadow-sm" onclick="window.location.href='@Url.Action("Index", "Inquilinos")'" style="cursor: pointer;">
+                        <div class="card-body text-center">
+                            <div class="dashboard-icon mb-3">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h5 class="card-title">Inquilinos</h5>
+                            <p class="card-text text-muted">Gestionar inquilinos y arrendatarios</p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <small class="text-muted">
+                                <i class="fas fa-user-friends"></i> Administrar inquilinos
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card: Inmuebles -->
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="card dashboard-card h-100 shadow-sm" onclick="window.location.href='@Url.Action("Index", "Inmuebles")'" style="cursor: pointer;">
+                        <div class="card-body text-center">
+                            <div class="dashboard-icon mb-3">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <h5 class="card-title">Inmuebles</h5>
+                            <p class="card-text text-muted">Administrar propiedades y inmuebles</p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <small class="text-muted">
+                                <i class="fas fa-home"></i> Gestionar propiedades
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card: Contratos -->
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="card dashboard-card h-100 shadow-sm" onclick="window.location.href='@Url.Action("Index", "Contratos")'" style="cursor: pointer;">
+                        <div class="card-body text-center">
+                            <div class="dashboard-icon mb-3">
+                                <i class="fas fa-file-contract"></i>
+                            </div>
+                            <h5 class="card-title">Contratos</h5>
+                            <p class="card-text text-muted">Administrar contratos de alquiler</p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <small class="text-muted">
+                                <i class="fas fa-handshake"></i> Gestionar contratos
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card: Pagos -->
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="card dashboard-card h-100 shadow-sm" onclick="window.location.href='@Url.Action("Index", "Pagos")'" style="cursor: pointer;">
+                        <div class="card-body text-center">
+                            <div class="dashboard-icon mb-3">
+                                <i class="fas fa-money-bill"></i>
+                            </div>
+                            <h5 class="card-title">Pagos</h5>
+                            <p class="card-text text-muted">Gestionar pagos y facturación</p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <small class="text-muted">
+                                <i class="fas fa-dollar-sign"></i> Administrar pagos
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                @if (User.IsInRole("Administrador"))
+                {
+                    <!-- Card: Empleados (Solo Administradores) -->
+                    <div class="col-xl-3 col-lg-4 col-md-6">
+                        <div class="card dashboard-card h-100 shadow-sm" onclick="window.location.href='@Url.Action("Index", "Empleados")'" style="cursor: pointer;">
+                            <div class="card-body text-center">
+                                <div class="dashboard-icon mb-3">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <h5 class="card-title">Empleados</h5>
+                                <p class="card-text text-muted">Gestionar empleados del sistema</p>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <small class="text-muted">
+                                    <i class="fas fa-crown"></i> Solo Administradores
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card: Configuración (Solo Administradores) -->
+                    <div class="col-xl-3 col-lg-4 col-md-6">
+                        <div class="card dashboard-card h-100 shadow-sm" onclick="window.location.href='@Url.Action("Index", "Configuracion")'" style="cursor: pointer;">
+                            <div class="card-body text-center">
+                                <div class="dashboard-icon mb-3">
+                                    <i class="fas fa-cog"></i>
+                                </div>
+                                <h5 class="card-title">Configuración</h5>
+                                <p class="card-text text-muted">Configurar parámetros del sistema</p>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <small class="text-muted">
+                                    <i class="fas fa-crown"></i> Solo Administradores
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Card: Mi Perfil -->
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="card dashboard-card h-100 shadow-sm" onclick="window.location.href='@Url.Action("Profile", "Auth")'" style="cursor: pointer;">
+                        <div class="card-body text-center">
+                            <div class="dashboard-icon mb-3">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <h5 class="card-title">Mi Perfil</h5>
+                            <p class="card-text text-muted">Actualizar información personal</p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <small class="text-muted">
+                                <i class="fas fa-edit"></i> Editar perfil
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>

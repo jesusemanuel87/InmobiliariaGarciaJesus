@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InmobiliariaGarciaJesus.Models
 {
@@ -67,6 +68,24 @@ namespace InmobiliariaGarciaJesus.Models
 
         [Display(Name = "Fecha de Creación")]
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
+
+        // Campos de auditoría
+        [Display(Name = "Creado Por")]
+        public int? CreadoPorId { get; set; }
+
+        [Display(Name = "Anulado Por")]
+        public int? AnuladoPorId { get; set; }
+
+        [Display(Name = "Fecha de Anulación")]
+        [DataType(DataType.DateTime)]
+        public DateTime? FechaAnulacion { get; set; }
+
+        // Navigation properties para auditoría
+        [ForeignKey("CreadoPorId")]
+        public virtual Usuario? CreadoPor { get; set; }
+
+        [ForeignKey("AnuladoPorId")]
+        public virtual Usuario? AnuladoPor { get; set; }
 
     }
 }

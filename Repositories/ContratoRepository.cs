@@ -77,7 +77,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             await connection.OpenAsync();
             
             var query = @"SELECT c.Id, c.FechaInicio, c.FechaFin, c.Precio, c.InquilinoId, c.InmuebleId, 
-                         c.Estado, c.FechaCreacion, c.MotivoCancelacion,
+                         c.Estado, c.FechaCreacion, c.MotivoCancelacion, c.CreadoPorId, c.TerminadoPorId, c.FechaTerminacion,
                          i.Nombre as InquilinoNombre, i.Apellido as InquilinoApellido, i.DNI as InquilinoDNI,
                          i.Telefono as InquilinoTelefono, i.Email as InquilinoEmail,
                          inm.Direccion as InmuebleDireccion, inm.TipoId as InmuebleTipo, inm.Ambientes as InmuebleAmbientes
@@ -104,6 +104,9 @@ namespace InmobiliariaGarciaJesus.Repositories
                     Estado = Enum.TryParse<EstadoContrato>(reader["Estado"]?.ToString(), out var estado) ? estado : EstadoContrato.Activo,
                     FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
                     MotivoCancelacion = reader["MotivoCancelacion"]?.ToString(),
+                    CreadoPorId = reader["CreadoPorId"] != DBNull.Value ? Convert.ToInt32(reader["CreadoPorId"]) : null,
+                    TerminadoPorId = reader["TerminadoPorId"] != DBNull.Value ? Convert.ToInt32(reader["TerminadoPorId"]) : null,
+                    FechaTerminacion = reader["FechaTerminacion"] != DBNull.Value ? Convert.ToDateTime(reader["FechaTerminacion"]) : null,
                     Inquilino = new Inquilino
                     {
                         Id = Convert.ToInt32(reader["InquilinoId"]),

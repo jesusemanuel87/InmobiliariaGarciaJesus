@@ -158,6 +158,9 @@
     </div>
 </div>
 
+<!-- Contenedor para el modal de auditoría -->
+<div id="auditoriaModalContainer"></div>
+
 @section Scripts {
     <!-- DataTables CSS and JS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
@@ -178,5 +181,30 @@
     <script src="~/js/Pagos/pagos-filters.js?v=@DateTime.Now.Ticks"></script>
     <script src="~/js/Pagos/pagos-manager.js?v=@DateTime.Now.Ticks"></script>
     <script src="~/js/Pagos/index.js?v=@DateTime.Now.Ticks"></script>
+    
+    <script>
+        // Variable global para el rol del usuario
+        window.userRole = '@(User.IsInRole("Administrador") ? "Administrador" : User.IsInRole("Empleado") ? "Empleado" : "Usuario")';
+        
+        // Función para cargar el modal de auditoría de pagos
+        function loadPagoAuditoriaModal(pagoId) {
+            fetch(`/Pagos/AuditoriaModal/${pagoId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al cargar información de auditoría');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    document.getElementById('auditoriaModalContainer').innerHTML = html;
+                    const modal = new bootstrap.Modal(document.getElementById('pagoAuditoriaModal'));
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cargar información de auditoría');
+                });
+        }
+    </script>
     
 }

@@ -60,7 +60,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = @"SELECT Id, Numero, FechaPago, ContratoId, Importe, Intereses, Multas, FechaVencimiento, Estado, FechaCreacion, metodo_pago, observaciones 
+            var query = @"SELECT Id, Numero, FechaPago, ContratoId, Importe, Intereses, Multas, FechaVencimiento, Estado, FechaCreacion, metodo_pago, observaciones, CreadoPorId, AnuladoPorId, FechaAnulacion
                          FROM pagos 
                          WHERE Id = @Id";
 
@@ -84,7 +84,10 @@ namespace InmobiliariaGarciaJesus.Repositories
                     Estado = Enum.TryParse<EstadoPago>(reader["Estado"]?.ToString(), out var estado) ? estado : EstadoPago.Pendiente,
                     FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
                     MetodoPago = reader["metodo_pago"] == DBNull.Value ? null : Enum.TryParse<MetodoPago>(reader["metodo_pago"]?.ToString(), out var metodo) ? metodo : (MetodoPago?)null,
-                    Observaciones = reader["observaciones"] == DBNull.Value ? null : reader["observaciones"]?.ToString()
+                    Observaciones = reader["observaciones"] == DBNull.Value ? null : reader["observaciones"]?.ToString(),
+                    CreadoPorId = reader["CreadoPorId"] != DBNull.Value ? Convert.ToInt32(reader["CreadoPorId"]) : null,
+                    AnuladoPorId = reader["AnuladoPorId"] != DBNull.Value ? Convert.ToInt32(reader["AnuladoPorId"]) : null,
+                    FechaAnulacion = reader["FechaAnulacion"] != DBNull.Value ? Convert.ToDateTime(reader["FechaAnulacion"]) : null
                 };
             }
 

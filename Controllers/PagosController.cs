@@ -13,12 +13,14 @@ namespace InmobiliariaGarciaJesus.Controllers
         private readonly PagoRepository _pagoRepository;
         private readonly IRepository<Contrato> _contratoRepository;
         private readonly IPagoService _pagoService;
+        private readonly UsuarioRepository _usuarioRepository;
 
-        public PagosController(PagoRepository pagoRepository, IRepository<Contrato> contratoRepository, IPagoService pagoService)
+        public PagosController(PagoRepository pagoRepository, IRepository<Contrato> contratoRepository, IPagoService pagoService, UsuarioRepository usuarioRepository)
         {
             _pagoRepository = pagoRepository;
             _contratoRepository = contratoRepository;
             _pagoService = pagoService;
+            _usuarioRepository = usuarioRepository;
         }
 
         // GET: Pagos
@@ -656,6 +658,65 @@ namespace InmobiliariaGarciaJesus.Controllers
             catch (Exception ex)
             {
                 return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        // GET: Pagos/AuditoriaModal/5
+        [HttpGet]
+        [AuthorizeRole(RolUsuario.Administrador)]
+        public async Task<IActionResult> AuditoriaModal(int id)
+        {
+            try
+            {
+                var pago = await _pagoRepository.GetByIdAsync(id);
+                if (pago == null)
+                {
+                    return NotFound();
+                }
+
+                // Obtener información de usuarios para auditoría
+                Usuario? creadoPor = null;
+                Usuario? anuladoPor = null;
+
+                if (pago.CreadoPorId.HasValue)
+                {
+                    creadoPor = await _usuarioRepository.GetByIdAsync(pago.CreadoPorId.Value);
+                }
+
+                if (pago.AnuladoPorId.HasValue)
+                {
+                    anuladoPor = await _usuarioRepository.GetByIdAsync(pago.AnuladoPorId.Value);
+                }
+
+                // Crear ViewModel de auditoría
+                var auditoriaViewModel = new PagoAuditoriaViewModel
+                {
+                    TipoEntidad = "Pago",
+                    EntidadId = pago.Id,
+                    NumeroPago = pago.Id,
+                    ContratoId = pago.ContratoId,
+                    Importe = pago.Importe,
+                    MetodoPago = pago.MetodoPago?.ToString(),
+                    FechaCreacion = pago.FechaCreacion,
+                    CreadoPor = creadoPor?.NombreUsuario ?? "Sistema",
+                    UsuarioCreador = creadoPor?.NombreUsuario,
+                    FechaAnulacion = pago.FechaAnulacion,
+                    AnuladoPor = anuladoPor?.NombreUsuario,
+                    UsuarioAnulador = anuladoPor?.NombreUsuario,
+                    EstadoActual = pago.Estado.ToString(),
+                    AccionRealizada = pago.FechaAnulacion.HasValue ? "Anulación del Pago" : null,
+                    FechaModificacion = pago.FechaAnulacion,
+                    ModificadoPor = anuladoPor?.NombreUsuario,
+                    UsuarioModificador = anuladoPor?.NombreUsuario,
+                    Observaciones = !string.IsNullOrEmpty(pago.Observaciones) ? pago.Observaciones : $"Pago de ${pago.Importe:N0} para contrato #{pago.ContratoId}"
+                };
+
+                return PartialView("_PagoAuditoriaModal", auditoriaViewModel);
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                return BadRequest("Error al cargar información de auditoría");
             }
         }
 

@@ -142,6 +142,16 @@ class PagosDataTablesConfig {
                             </button>`;
                     }
                     
+                    // Botón Auditoría - solo para administradores
+                    if (window.userRole === 'Administrador') {
+                        actions += `
+                            <button type="button" class="btn btn-sm btn-outline-info" 
+                                    onclick="loadPagoAuditoriaModal(${row.id})" 
+                                    title="Ver Auditoría">
+                                <i class="fas fa-history"></i>
+                            </button>`;
+                    }
+                    
                     actions += `</div>`;
                     return actions;
                 }

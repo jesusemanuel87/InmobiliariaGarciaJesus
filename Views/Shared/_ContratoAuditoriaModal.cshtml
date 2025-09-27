@@ -1,0 +1,171 @@
+@model InmobiliariaGarciaJesus.Models.ContratoAuditoriaViewModel
+
+<!-- Modal de Auditoría de Contrato -->
+<div class="modal fade" id="contratoAuditoriaModal" tabindex="-1" aria-labelledby="contratoAuditoriaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="contratoAuditoriaModalLabel">
+                    <i class="fas fa-file-contract me-2"></i>Auditoría del Contrato #@Model.NumeroContrato
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Información del Contrato -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>Información del Contrato
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <strong>Número:</strong> #@Model.NumeroContrato
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Inquilino:</strong> @(Model.NombreInquilino ?? "No especificado")
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Inmueble:</strong> @(Model.DireccionInmueble ?? "No especificado")
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-md-6">
+                                        <strong>Estado Actual:</strong> 
+                                        <span class="badge bg-info">@(Model.EstadoActual ?? "No especificado")</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Información de Creación -->
+                    <div class="col-md-6">
+                        <div class="card border-success h-100">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-plus-circle me-2"></i>Creación del Contrato
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-5">Fecha de Creación:</dt>
+                                    <dd class="col-sm-7">
+                                        <i class="fas fa-calendar me-1 text-success"></i>
+                                        @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+                                    </dd>
+
+                                    <dt class="col-sm-5">Creado por:</dt>
+                                    <dd class="col-sm-7">
+                                        <i class="fas fa-user me-1 text-success"></i>
+                                        @(Model.CreadoPor ?? "Sistema")
+                                    </dd>
+
+                                    @if (!string.IsNullOrEmpty(Model.UsuarioCreador))
+                                    {
+                                        <dt class="col-sm-5">Usuario:</dt>
+                                        <dd class="col-sm-7">
+                                            <span class="badge bg-success">@Model.UsuarioCreador</span>
+                                        </dd>
+                                    }
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de Terminación -->
+                    <div class="col-md-6">
+                        @if (Model.FechaTerminacion.HasValue || !string.IsNullOrEmpty(Model.TerminadoPor))
+                        {
+                            <div class="card border-danger h-100">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-times-circle me-2"></i>Terminación del Contrato
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        @if (Model.FechaTerminacion.HasValue)
+                                        {
+                                            <dt class="col-sm-5">Fecha de Terminación:</dt>
+                                            <dd class="col-sm-7">
+                                                <i class="fas fa-calendar me-1 text-danger"></i>
+                                                @Model.FechaTerminacion.Value.ToString("dd/MM/yyyy HH:mm")
+                                            </dd>
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(Model.TerminadoPor))
+                                        {
+                                            <dt class="col-sm-5">Terminado por:</dt>
+                                            <dd class="col-sm-7">
+                                                <i class="fas fa-user me-1 text-danger"></i>
+                                                @Model.TerminadoPor
+                                            </dd>
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(Model.UsuarioTerminador))
+                                        {
+                                            <dt class="col-sm-5">Usuario:</dt>
+                                            <dd class="col-sm-7">
+                                                <span class="badge bg-danger">@Model.UsuarioTerminador</span>
+                                            </dd>
+                                        }
+                                    </dl>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="card border-light h-100">
+                                <div class="card-body text-center text-muted d-flex flex-column justify-content-center">
+                                    <i class="fas fa-handshake fa-3x mb-3"></i>
+                                    <p class="mb-0">Contrato Activo</p>
+                                    <small>No se ha registrado terminación</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Observaciones -->
+                @if (!string.IsNullOrEmpty(Model.Observaciones))
+                {
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-comment me-2"></i>Observaciones
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-0">@Model.Observaciones</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Nota de Administrador -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            <strong>Información de Auditoría:</strong> Esta información solo es visible para administradores y permite mantener un registro completo de todas las acciones realizadas sobre este contrato para fines de control y cumplimiento.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

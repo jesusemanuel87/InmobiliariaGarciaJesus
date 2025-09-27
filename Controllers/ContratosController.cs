@@ -14,18 +14,21 @@ namespace InmobiliariaGarciaJesus.Controllers
         private readonly IRepository<Inmueble> _inmuebleRepository;
         private readonly IPagoService _pagoService;
         private readonly IRepository<Configuracion> _configuracionRepository;
+        private readonly UsuarioRepository _usuarioRepository;
 
         public ContratosController(IContratoService contratoService,
                                   IRepository<Inquilino> inquilinoRepository,
                                   IRepository<Inmueble> inmuebleRepository,
                                   IPagoService pagoService,
-                                  IRepository<Configuracion> configuracionRepository)
+                                  IRepository<Configuracion> configuracionRepository,
+                                  UsuarioRepository usuarioRepository)
         {
             _contratoService = contratoService;
             _inquilinoRepository = inquilinoRepository;
             _inmuebleRepository = inmuebleRepository;
             _pagoService = pagoService;
             _configuracionRepository = configuracionRepository;
+            _usuarioRepository = usuarioRepository;
         }
 
         // GET: Contratos
@@ -228,6 +231,13 @@ namespace InmobiliariaGarciaJesus.Controllers
                     }
                     else
                     {
+                        // Obtener el ID del usuario actual para auditoría
+                        var userIdClaim = User.FindFirst("UserId");
+                        if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                        {
+                            contrato.CreadoPorId = userId;
+                        }
+                        
                         var contratoCreado = await _contratoService.CreateContratoAsync(contrato);
                         
                         // Generar plan de pagos automáticamente
@@ -432,6 +442,18 @@ namespace InmobiliariaGarciaJesus.Controllers
                     esFinalizacionTemprana = modelo.EsFinalizacionTemprana
                 };
                 
+                // Obtener el ID del usuario actual para auditoría
+                var userIdClaim = User.FindFirst("UserId");
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    // Obtener el contrato y actualizar información de auditoría
+                    var contrato = await _contratoService.GetByIdAsync(modelo.ContratoId);
+                    if (contrato != null)
+                    {
+                        contrato.TerminadoPorId = userId;
+                        contrato.FechaTerminacion = DateTime.Now;
+                    }
+                }
                 
                 await _contratoService.FinalizarContratoAsync(modelo);
                 
@@ -511,6 +533,19 @@ namespace InmobiliariaGarciaJesus.Controllers
 
             try
             {
+                // Obtener el ID del usuario actual para auditoría
+                var userIdClaim = User.FindFirst("UserId");
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    // Obtener el contrato y actualizar información de auditoría
+                    var contrato = await _contratoService.GetByIdAsync(id);
+                    if (contrato != null)
+                    {
+                        contrato.TerminadoPorId = userId;
+                        contrato.FechaTerminacion = DateTime.Now;
+                    }
+                }
+                
                 await _contratoService.CancelarContratoAsync(id, motivo);
                 TempData["Success"] = "Contrato cancelado exitosamente.";
                 return RedirectToAction(nameof(Index));
@@ -520,6 +555,64 @@ namespace InmobiliariaGarciaJesus.Controllers
                 TempData["Error"] = "Error al cancelar el contrato: " + ex.Message;
                 var contrato = await _contratoService.GetByIdAsync(id);
                 return View(contrato);
+            }
+        }
+
+        // GET: Contratos/AuditoriaModal/5
+        [HttpGet]
+        [AuthorizeRole(RolUsuario.Administrador)]
+        public async Task<IActionResult> AuditoriaModal(int id)
+        {
+            try
+            {
+                var contrato = await _contratoService.GetByIdAsync(id);
+                if (contrato == null)
+                {
+                    return NotFound();
+                }
+
+                // Obtener información de usuarios para auditoría
+                Usuario? creadoPor = null;
+                Usuario? terminadoPor = null;
+
+                if (contrato.CreadoPorId.HasValue)
+                {
+                    creadoPor = await _usuarioRepository.GetByIdAsync(contrato.CreadoPorId.Value);
+                }
+
+                if (contrato.TerminadoPorId.HasValue)
+                {
+                    terminadoPor = await _usuarioRepository.GetByIdAsync(contrato.TerminadoPorId.Value);
+                }
+
+                // Crear ViewModel de auditoría
+                var auditoriaViewModel = new ContratoAuditoriaViewModel
+                {
+                    TipoEntidad = "Contrato",
+                    EntidadId = contrato.Id,
+                    NumeroContrato = contrato.Id,
+                    NombreInquilino = contrato.Inquilino != null ? $"{contrato.Inquilino.Nombre} {contrato.Inquilino.Apellido}" : "No especificado",
+                    DireccionInmueble = contrato.Inmueble?.Direccion ?? "No especificado",
+                    FechaCreacion = contrato.FechaCreacion,
+                    CreadoPor = creadoPor?.NombreUsuario ?? "Sistema",
+                    UsuarioCreador = creadoPor?.NombreUsuario,
+                    FechaTerminacion = contrato.FechaTerminacion,
+                    TerminadoPor = terminadoPor?.NombreUsuario,
+                    UsuarioTerminador = terminadoPor?.NombreUsuario,
+                    EstadoActual = contrato.Estado.ToString(),
+                    AccionRealizada = contrato.FechaTerminacion.HasValue ? "Terminación del Contrato" : null,
+                    FechaModificacion = contrato.FechaTerminacion,
+                    ModificadoPor = terminadoPor?.NombreUsuario,
+                    UsuarioModificador = terminadoPor?.NombreUsuario,
+                    Observaciones = $"Contrato por ${contrato.Precio:N0} desde {contrato.FechaInicio:dd/MM/yyyy} hasta {contrato.FechaFin:dd/MM/yyyy}"
+                };
+
+                return PartialView("_ContratoAuditoriaModal", auditoriaViewModel);
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                return BadRequest("Error al cargar información de auditoría");
             }
         }
     }

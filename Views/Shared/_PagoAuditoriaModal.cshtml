@@ -1,0 +1,175 @@
+@model InmobiliariaGarciaJesus.Models.PagoAuditoriaViewModel
+
+<!-- Modal de Auditoría de Pago -->
+<div class="modal fade" id="pagoAuditoriaModal" tabindex="-1" aria-labelledby="pagoAuditoriaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="pagoAuditoriaModalLabel">
+                    <i class="fas fa-money-bill-wave me-2"></i>Auditoría del Pago #@Model.NumeroPago
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Información del Pago -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>Información del Pago
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <strong>Número:</strong> #@Model.NumeroPago
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Contrato:</strong> #@Model.ContratoId
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Importe:</strong> 
+                                        <span class="text-success fw-bold">$@Model.Importe.ToString("N0")</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Método:</strong> @(Model.MetodoPago ?? "No especificado")
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-md-6">
+                                        <strong>Estado Actual:</strong> 
+                                        <span class="badge bg-info">@(Model.EstadoActual ?? "No especificado")</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Información de Creación -->
+                    <div class="col-md-6">
+                        <div class="card border-primary h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-plus-circle me-2"></i>Registro del Pago
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-5">Fecha de Registro:</dt>
+                                    <dd class="col-sm-7">
+                                        <i class="fas fa-calendar me-1 text-primary"></i>
+                                        @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+                                    </dd>
+
+                                    <dt class="col-sm-5">Registrado por:</dt>
+                                    <dd class="col-sm-7">
+                                        <i class="fas fa-user me-1 text-primary"></i>
+                                        @(Model.CreadoPor ?? "Sistema")
+                                    </dd>
+
+                                    @if (!string.IsNullOrEmpty(Model.UsuarioCreador))
+                                    {
+                                        <dt class="col-sm-5">Usuario:</dt>
+                                        <dd class="col-sm-7">
+                                            <span class="badge bg-primary">@Model.UsuarioCreador</span>
+                                        </dd>
+                                    }
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de Anulación -->
+                    <div class="col-md-6">
+                        @if (Model.FechaAnulacion.HasValue || !string.IsNullOrEmpty(Model.AnuladoPor))
+                        {
+                            <div class="card border-danger h-100">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-ban me-2"></i>Anulación del Pago
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        @if (Model.FechaAnulacion.HasValue)
+                                        {
+                                            <dt class="col-sm-5">Fecha de Anulación:</dt>
+                                            <dd class="col-sm-7">
+                                                <i class="fas fa-calendar me-1 text-danger"></i>
+                                                @Model.FechaAnulacion.Value.ToString("dd/MM/yyyy HH:mm")
+                                            </dd>
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(Model.AnuladoPor))
+                                        {
+                                            <dt class="col-sm-5">Anulado por:</dt>
+                                            <dd class="col-sm-7">
+                                                <i class="fas fa-user me-1 text-danger"></i>
+                                                @Model.AnuladoPor
+                                            </dd>
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(Model.UsuarioAnulador))
+                                        {
+                                            <dt class="col-sm-5">Usuario:</dt>
+                                            <dd class="col-sm-7">
+                                                <span class="badge bg-danger">@Model.UsuarioAnulador</span>
+                                            </dd>
+                                        }
+                                    </dl>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="card border-light h-100">
+                                <div class="card-body text-center text-muted d-flex flex-column justify-content-center">
+                                    <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                                    <p class="mb-0">Pago Válido</p>
+                                    <small>No se ha registrado anulación</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Observaciones -->
+                @if (!string.IsNullOrEmpty(Model.Observaciones))
+                {
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-comment me-2"></i>Observaciones
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-0">@Model.Observaciones</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Nota de Administrador -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            <strong>Información de Auditoría:</strong> Esta información solo es visible para administradores y permite mantener un registro completo de todas las transacciones y modificaciones realizadas sobre este pago para fines de control financiero y cumplimiento normativo.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -287,6 +287,15 @@
                                                             </a>
                                                         }
                                                     }
+                                                    
+                                                    @if (User.IsInRole("Administrador"))
+                                                    {
+                                                        <button type="button" class="btn btn-outline-info btn-sm ms-2" 
+                                                                onclick="loadAuditoriaModal(@item.Id)" 
+                                                                title="Ver Auditoría">
+                                                            <i class="fas fa-history me-1"></i>
+                                                        </button>
+                                                    }
                                                 </div>
                                             </td>
                                         </tr>
@@ -332,6 +341,9 @@
     </div>
 </div>
 
+<!-- Contenedor para el modal de auditoría -->
+<div id="auditoriaModalContainer"></div>
+
 @section Scripts {
     <!-- Pasar datos del servidor al JavaScript -->
     <script>
@@ -340,4 +352,26 @@
     
     <script src="~/js/Contrato/contrato-filters.js"></script>
     <script src="~/js/Contrato/index-contrato.js"></script>
+    
+    <script>
+        // Función para cargar el modal de auditoría
+        function loadAuditoriaModal(contratoId) {
+            fetch(`/Contratos/AuditoriaModal/${contratoId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al cargar información de auditoría');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    document.getElementById('auditoriaModalContainer').innerHTML = html;
+                    const modal = new bootstrap.Modal(document.getElementById('contratoAuditoriaModal'));
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cargar información de auditoría');
+                });
+        }
+    </script>
 }

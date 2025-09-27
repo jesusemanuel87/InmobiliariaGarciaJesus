@@ -1,0 +1,341 @@
+/* Estilos personalizados para gestión de tipos de inmueble */
+
+/* === CONTENEDOR PRINCIPAL === */
+.container-fluid {
+    padding: 20px;
+}
+
+/* === CARD PRINCIPAL === */
+.card {
+    border: none;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    border-radius: 10px 10px 0 0 !important;
+    padding: 20px;
+}
+
+.card-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+/* === ALERTAS === */
+#alertContainer {
+    margin-bottom: 20px;
+}
+
+#alertContainer .alert {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* === FILTROS === */
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.form-select,
+.form-control {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    transition: all 0.2s ease;
+}
+
+.form-select:focus,
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* === DATATABLES === */
+#tiposInmuebleTable {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#tiposInmuebleTable thead th {
+    background: #f8f9fa;
+    border: none;
+    font-weight: 600;
+    color: #495057;
+    padding: 15px 12px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+#tiposInmuebleTable tbody td {
+    padding: 12px;
+    vertical-align: middle;
+    border-top: 1px solid #e9ecef;
+}
+
+#tiposInmuebleTable tbody tr {
+    transition: all 0.2s ease;
+}
+
+#tiposInmuebleTable tbody tr:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+/* === BADGES === */
+.badge {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.badge.bg-success {
+    background-color: #28a745 !important;
+}
+
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+/* === BOTONES === */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.btn-group .btn {
+    border-radius: 4px;
+    margin: 0 1px;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+}
+
+/* === MODALES === */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 12px 12px 0 0;
+    padding: 20px;
+}
+
+.modal-title {
+    font-weight: 600;
+    color: #495057;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 15px 25px;
+}
+
+/* === FORMULARIOS === */
+.form-control.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.invalid-feedback {
+    display: block;
+    font-size: 0.875rem;
+    color: #dc3545;
+    margin-top: 5px;
+}
+
+/* === CARDS EN MODALES === */
+.modal .card {
+    border: 1px solid #e9ecef;
+    box-shadow: none;
+}
+
+.modal .card-header {
+    background: #f8f9fa;
+    color: #495057;
+    padding: 12px 15px;
+    font-size: 0.9rem;
+}
+
+.modal .card-header.bg-primary {
+    background: #007bff !important;
+    color: white !important;
+}
+
+.modal .card-header.bg-info {
+    background: #17a2b8 !important;
+    color: white !important;
+}
+
+.modal .card-body {
+    padding: 15px;
+}
+
+/* === LISTAS DE DEFINICIÓN === */
+.modal dl.row dt {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.modal dl.row dd {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* === SPINNER DE CARGA === */
+.spinner-border {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 10px;
+    }
+    
+    .card-header {
+        padding: 15px;
+    }
+    
+    .card-title {
+        font-size: 1.1rem;
+    }
+    
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        margin: 1px 0;
+        border-radius: 4px;
+    }
+    
+    .modal-body {
+        padding: 20px 15px;
+    }
+    
+    .modal-footer {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 576px) {
+    .modal-dialog {
+        margin: 10px;
+    }
+    
+    .modal-lg {
+        max-width: calc(100vw - 20px);
+    }
+    
+    .card-header .d-flex {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .card-header .btn {
+        width: 100%;
+    }
+}
+
+/* === ANIMACIONES === */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeIn 0.3s ease;
+}
+
+.alert {
+    animation: fadeIn 0.2s ease;
+}
+
+/* === UTILIDADES === */
+.text-primary {
+    color: #007bff !important;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.user-select-none {
+    user-select: none;
+}
+
+/* === DATATABLES CUSTOMIZACIÓN === */
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-radius: 4px;
+    margin: 0 2px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+}
+
+.dataTables_wrapper .dataTables_info {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* === TOOLTIPS === */
+.tooltip {
+    font-size: 0.8rem;
+}
+
+.tooltip-inner {
+    background-color: #333;
+    border-radius: 4px;
+    padding: 6px 10px;
+}

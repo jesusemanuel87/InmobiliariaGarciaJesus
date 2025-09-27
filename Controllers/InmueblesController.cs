@@ -13,6 +13,7 @@ namespace InmobiliariaGarciaJesus.Controllers
     {
         private readonly IRepository<Inmueble> _inmuebleRepository;
         private readonly IRepository<Propietario> _propietarioRepository;
+        private readonly TipoInmuebleRepository _tipoInmuebleRepository;
         private readonly IInmuebleImagenService _imagenService;
         private readonly InmuebleImagenRepository _imagenRepository;
         private readonly IConfiguration _configuration;
@@ -20,12 +21,14 @@ namespace InmobiliariaGarciaJesus.Controllers
         public InmueblesController(
             IRepository<Inmueble> inmuebleRepository, 
             IRepository<Propietario> propietarioRepository,
+            TipoInmuebleRepository tipoInmuebleRepository,
             IInmuebleImagenService imagenService,
             InmuebleImagenRepository imagenRepository,
             IConfiguration configuration)
         {
             _inmuebleRepository = inmuebleRepository;
             _propietarioRepository = propietarioRepository;
+            _tipoInmuebleRepository = tipoInmuebleRepository;
             _imagenService = imagenService;
             _imagenRepository = imagenRepository;
             _configuration = configuration;
@@ -40,6 +43,9 @@ namespace InmobiliariaGarciaJesus.Controllers
             {
                 var inmuebles = await _inmuebleRepository.GetAllAsync();
                 var inmueblesQuery = inmuebles.AsQueryable();
+                
+                // Obtener tipos de inmueble activos para el filtro
+                var tiposActivos = await _tipoInmuebleRepository.GetActivosAsync();
 
                 // Validar sesión antes de continuar
                 var sessionValidation = this.RedirectToLoginIfInvalidSession();
@@ -81,9 +87,11 @@ namespace InmobiliariaGarciaJesus.Controllers
                 // Aplicar otros filtros
                 if (!string.IsNullOrEmpty(tipo) && tipo != "Todos")
                 {
-                    if (Enum.TryParse<TipoInmueble>(tipo, out var tipoEnum))
+                    // Buscar el tipo por nombre en la lista de tipos activos
+                    var tipoEncontrado = tiposActivos.FirstOrDefault(t => t.Nombre.Equals(tipo, StringComparison.OrdinalIgnoreCase));
+                    if (tipoEncontrado != null)
                     {
-                        inmueblesQuery = inmueblesQuery.Where(i => i.Tipo == tipoEnum);
+                        inmueblesQuery = inmueblesQuery.Where(i => i.TipoId == tipoEncontrado.Id);
                     }
                 }
 
@@ -193,6 +201,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                 ViewBag.DisponibilidadSeleccionada = disponibilidad;
                 ViewBag.FechaDesde = fechaDesde?.ToString("yyyy-MM-dd");
                 ViewBag.FechaHasta = fechaHasta?.ToString("yyyy-MM-dd");
+                ViewBag.TiposInmueble = tiposActivos;
 
                 // Calcular rangos de precios
                 var todosConPrecio = inmuebles.Where(i => i.Precio.HasValue).ToList();
@@ -280,7 +289,10 @@ namespace InmobiliariaGarciaJesus.Controllers
             try
             {
                 var propietarios = await _propietarioRepository.GetAllAsync(p => p.Estado);
+                var tiposActivos = await _tipoInmuebleRepository.GetActivosAsync();
+                
                 ViewBag.Propietarios = propietarios.ToList();
+                ViewBag.TiposInmueble = tiposActivos;
                 return View();
             }
             catch (Exception ex)
@@ -293,7 +305,7 @@ namespace InmobiliariaGarciaJesus.Controllers
         // POST: Inmuebles/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Direccion,Ambientes,Superficie,Latitud,Longitud,PropietarioId,Tipo,Precio,Uso,Provincia,Localidad")] Inmueble inmueble)
+        public async Task<IActionResult> Create([Bind("Direccion,Ambientes,Superficie,Latitud,Longitud,PropietarioId,TipoId,Precio,Uso,Provincia,Localidad")] Inmueble inmueble)
         {
             if (ModelState.IsValid)
             {
@@ -313,7 +325,10 @@ namespace InmobiliariaGarciaJesus.Controllers
             }
 
             var propietarios = await _propietarioRepository.GetAllAsync(p => p.Estado);
+            var tiposActivos = await _tipoInmuebleRepository.GetActivosAsync();
+            
             ViewBag.Propietarios = propietarios;
+            ViewBag.TiposInmueble = tiposActivos;
             return View(inmueble);
         }
 
@@ -360,7 +375,10 @@ namespace InmobiliariaGarciaJesus.Controllers
                 }
 
                 var propietarios = await _propietarioRepository.GetAllAsync(p => p.Estado);
+                var tiposActivos = await _tipoInmuebleRepository.GetActivosAsync();
+                
                 ViewBag.Propietarios = propietarios;
+                ViewBag.TiposInmueble = tiposActivos;
                 ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
                 return View(inmueble);
             }
@@ -374,7 +392,7 @@ namespace InmobiliariaGarciaJesus.Controllers
         // POST: Inmuebles/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Direccion,Ambientes,Superficie,Latitud,Longitud,PropietarioId,Tipo,Precio,Uso,FechaCreacion,Estado,Provincia,Localidad")] Inmueble inmueble)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Direccion,Ambientes,Superficie,Latitud,Longitud,PropietarioId,TipoId,Precio,Uso,FechaCreacion,Estado,Provincia,Localidad")] Inmueble inmueble)
         {
             if (id != inmueble.Id)
             {
@@ -422,7 +440,10 @@ namespace InmobiliariaGarciaJesus.Controllers
             }
 
             var propietarios = await _propietarioRepository.GetAllAsync(p => p.Estado);
+            var tiposActivos = await _tipoInmuebleRepository.GetActivosAsync();
+            
             ViewBag.Propietarios = propietarios;
+            ViewBag.TiposInmueble = tiposActivos;
             return View(inmueble);
         }
 

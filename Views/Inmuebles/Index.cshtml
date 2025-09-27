@@ -75,12 +75,16 @@
                                 </label>
                                 <select name="tipo" id="filtroTipo" class="form-select">
                                     <option value="">Todos los tipos</option>
-                                    <option value="Casa">Casa</option>
-                                    <option value="Departamento">Departamento</option>
-                                    <option value="Local">Local</option>
-                                    <option value="Oficina">Oficina</option>
-                                    <option value="Galpon">Galpón</option>
-                                    <option value="Terreno">Terreno</option>
+                                    @{
+                                        var tiposInmueble = ViewBag.TiposInmueble as IEnumerable<dynamic>;
+                                    }
+                                    @if (tiposInmueble != null)
+                                    {
+                                        @foreach (var tipo in tiposInmueble)
+                                        {
+                                            <option value="@tipo.Nombre">@tipo.Nombre</option>
+                                        }
+                                    }
                                 </select>
                             </div>
                             <div class="col-md-2">
@@ -276,7 +280,7 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <span class="badge bg-info">@Html.DisplayFor(modelItem => item.Tipo)</span>
+                                                <span class="badge bg-info">@(item.Tipo?.Nombre ?? "Sin tipo")</span>
                                             </td>
                                             <td>@Html.DisplayFor(modelItem => item.Ambientes)</td>
                                             <td>

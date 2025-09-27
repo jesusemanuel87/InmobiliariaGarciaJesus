@@ -27,10 +27,23 @@ namespace InmobiliariaGarciaJesus.Services
                     await ProcessPaymentUpdates();
                     await Task.Delay(_period, stoppingToken);
                 }
+                catch (OperationCanceledException)
+                {
+                    // Cancelación normal del servicio, no es un error
+                    break;
+                }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error en el procesamiento automático de pagos");
-                    await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken); // Retry en 5 minutos
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken); // Retry en 5 minutos
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Cancelación durante el delay, salir del loop
+                        break;
+                    }
                 }
             }
         }

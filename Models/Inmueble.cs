@@ -57,7 +57,7 @@ namespace InmobiliariaGarciaJesus.Models
 
         [Required]
         [Display(Name = "Tipo")]
-        public TipoInmueble Tipo { get; set; } = TipoInmueble.Casa;
+        public int TipoId { get; set; } = 1; // Default: Casa
 
         [Required]
         [Display(Name = "Ambientes")]
@@ -97,6 +97,9 @@ namespace InmobiliariaGarciaJesus.Models
         // Navigation properties
         [ForeignKey("PropietarioId")]
         public virtual Propietario? Propietario { get; set; }
+
+        [ForeignKey("TipoId")] // public virtual EstadoInmueble Eastado { get; set; } 
+        public virtual dynamic? Tipo { get; set; }
 
         public virtual ICollection<Contrato>? Contratos { get; set; }
         

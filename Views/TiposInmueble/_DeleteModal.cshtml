@@ -1,0 +1,89 @@
+@model InmobiliariaGarciaJesus.Models.TipoInmuebleEntity
+
+<div class="modal fade" id="tipoInmuebleDeleteModal" tabindex="-1" aria-labelledby="tipoInmuebleDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="tipoInmuebleDeleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>¡Atención!</strong> Esta acción no se puede deshacer.
+                </div>
+
+                <p class="mb-3">¿Está seguro que desea eliminar el siguiente tipo de inmueble?</p>
+
+                <div class="card">
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">ID:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-secondary">#@Model.Id</span>
+                            </dd>
+
+                            <dt class="col-sm-4">Nombre:</dt>
+                            <dd class="col-sm-8">
+                                <strong class="text-danger">@Model.Nombre</strong>
+                            </dd>
+
+                            <dt class="col-sm-4">Estado:</dt>
+                            <dd class="col-sm-8">
+                                @if (Model.Estado)
+                                {
+                                    <span class="badge bg-success">Activo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactivo</span>
+                                }
+                            </dd>
+
+                            @if (!string.IsNullOrEmpty(Model.Descripcion))
+                            {
+                                <dt class="col-sm-4">Descripción:</dt>
+                                <dd class="col-sm-8">@Model.Descripcion</dd>
+                            }
+
+                            <dt class="col-sm-4">Creado:</dt>
+                            <dd class="col-sm-8">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Nota:</strong> Solo se pueden eliminar tipos que no estén siendo utilizados por ningún inmueble.
+                </div>
+
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="confirmDelete">
+                    <label class="form-check-label" for="confirmDelete">
+                        <strong>Confirmo que deseo eliminar este tipo de inmueble</strong>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteButton" 
+                        onclick="tiposInmuebleManager.confirmarEliminacion(@Model.Id)" disabled>
+                    <i class="fas fa-trash me-1"></i>Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Habilitar/deshabilitar botón de eliminar según checkbox
+    $(document).ready(function() {
+        $('#confirmDelete').on('change', function() {
+            $('#confirmDeleteButton').prop('disabled', !this.checked);
+        });
+    });
+</script>

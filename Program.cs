@@ -55,9 +55,9 @@ builder.Services.AddScoped<PropietarioRepository>();
 builder.Services.AddScoped<InquilinoRepository>();
 builder.Services.AddScoped<PagoRepository>();
 builder.Services.AddScoped<ConfiguracionRepository>();
-
-// Registrar repositorios de autenticación
 builder.Services.AddScoped<EmpleadoRepository>();
+builder.Services.AddScoped<InmuebleImagenRepository>();
+builder.Services.AddScoped<TipoInmuebleRepository>();
 builder.Services.AddScoped<UsuarioRepository>();
 
 

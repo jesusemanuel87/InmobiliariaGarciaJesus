@@ -12,15 +12,18 @@ public class HomeController : Controller
     private readonly InmuebleRepository _inmuebleRepository;
     private readonly InmuebleImagenRepository _inmuebleImagenRepository;
     private readonly ContratoRepository _contratoRepository;
+    private readonly TipoInmuebleRepository _tipoInmuebleRepository;
     private readonly IConfiguration _configuration;
 
     public HomeController(ILogger<HomeController> logger, InmuebleRepository inmuebleRepository, 
-        InmuebleImagenRepository inmuebleImagenRepository, ContratoRepository contratoRepository, IConfiguration configuration)
+        InmuebleImagenRepository inmuebleImagenRepository, ContratoRepository contratoRepository, 
+        TipoInmuebleRepository tipoInmuebleRepository, IConfiguration configuration)
     {
         _logger = logger;
         _inmuebleRepository = inmuebleRepository;
         _inmuebleImagenRepository = inmuebleImagenRepository;
         _contratoRepository = contratoRepository;
+        _tipoInmuebleRepository = tipoInmuebleRepository;
         _configuration = configuration;
     }
 
@@ -33,6 +36,9 @@ public class HomeController : Controller
             // Obtener inmuebles activos
             var inmuebles = await _inmuebleRepository.GetAllAsync();
             var inmueblesFiltrados = inmuebles.Where(i => i.Estado == EstadoInmueble.Activo).AsQueryable();
+            
+            // Obtener tipos de inmueble activos para el filtro
+            var tiposActivos = await _tipoInmuebleRepository.GetActivosAsync();
 
             // Obtener todos los contratos para verificar disponibilidad
             var contratos = await _contratoRepository.GetAllAsync();
@@ -67,9 +73,11 @@ public class HomeController : Controller
             // Filtrar por tipo de inmueble
             if (!string.IsNullOrEmpty(tipo))
             {
-                if (Enum.TryParse<TipoInmueble>(tipo, out var tipoEnum))
+                // Buscar el tipo por nombre en la lista de tipos activos
+                var tipoEncontrado = tiposActivos.FirstOrDefault(t => t.Nombre.Equals(tipo, StringComparison.OrdinalIgnoreCase));
+                if (tipoEncontrado != null)
                 {
-                    inmueblesFiltrados = inmueblesFiltrados.Where(i => i.Tipo == tipoEnum);
+                    inmueblesFiltrados = inmueblesFiltrados.Where(i => i.TipoId == tipoEncontrado.Id);
                 }
             }
 
@@ -98,6 +106,7 @@ public class HomeController : Controller
             ViewBag.PrecioMax = precioMax;
             ViewBag.TipoSeleccionado = tipo;
             ViewBag.UsoSeleccionado = uso;
+            ViewBag.TiposInmueble = tiposActivos;
 
             // Obtener rangos de precios para el slider basado en TODOS los inmuebles (no filtrados)
             // Esto mantiene el rango completo disponible para el slider

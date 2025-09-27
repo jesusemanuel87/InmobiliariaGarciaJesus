@@ -75,11 +75,21 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label asp-for="Tipo" class="form-label"></label>
-                                    <select asp-for="Tipo" class="form-select" asp-items="Html.GetEnumSelectList<InmobiliariaGarciaJesus.Models.TipoInmueble>()">
+                                    <label asp-for="TipoId" class="form-label">Tipo</label>
+                                    <select asp-for="TipoId" class="form-select">
                                         <option value="">Seleccionar tipo...</option>
+                                        @{
+                                            var tiposInmueble = ViewBag.TiposInmueble as IEnumerable<dynamic>;
+                                        }
+                                        @if (tiposInmueble != null)
+                                        {
+                                            @foreach (var tipo in tiposInmueble)
+                                            {
+                                                <option value="@tipo.Id">@tipo.Nombre</option>
+                                            }
+                                        }
                                     </select>
-                                    <span asp-validation-for="Tipo" class="text-danger"></span>
+                                    <span asp-validation-for="TipoId" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-4">

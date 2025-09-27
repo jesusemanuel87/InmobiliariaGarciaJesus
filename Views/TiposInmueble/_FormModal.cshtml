@@ -1,0 +1,81 @@
+@model InmobiliariaGarciaJesus.Models.TipoInmuebleEntity
+
+@{
+    bool isEdit = ViewBag.IsEdit ?? false;
+    string modalTitle = isEdit ? "Editar Tipo de Inmueble" : "Nuevo Tipo de Inmueble";
+    string submitButtonText = isEdit ? "Actualizar" : "Crear";
+}
+
+<div class="modal fade" id="tipoInmuebleFormModal" tabindex="-1" aria-labelledby="tipoInmuebleFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tipoInmuebleFormModalLabel">
+                    <i class="fas fa-@(isEdit ? "edit" : "plus") me-2"></i>@modalTitle
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="tipoInmuebleForm">
+                <div class="modal-body">
+                    <input type="hidden" id="tipoId" value="@Model.Id" />
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="tipoNombre" class="form-label">
+                                    <i class="fas fa-tag text-primary me-1"></i>Nombre del Tipo <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="tipoNombre" value="@Model.Nombre" 
+                                       placeholder="Ej: Casa, Departamento, Local..." maxlength="50" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="tipoEstado" class="form-label">
+                                    <i class="fas fa-toggle-on text-primary me-1"></i>Estado
+                                </label>
+                                <select class="form-select" id="tipoEstado">
+                                    <option value="true" selected="@Model.Estado">Activo</option>
+                                    <option value="false" selected="@(!Model.Estado)">Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tipoDescripcion" class="form-label">
+                            <i class="fas fa-align-left text-primary me-1"></i>Descripción
+                        </label>
+                        <textarea class="form-control" id="tipoDescripcion" rows="3" 
+                                  placeholder="Descripción opcional del tipo de inmueble..." maxlength="200">@Model.Descripcion</textarea>
+                        <div class="form-text">Máximo 200 caracteres</div>
+                    </div>
+
+                    @if (isEdit)
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Fecha de creación:</strong> @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="submitButton">
+                        <i class="fas fa-@(isEdit ? "save" : "plus") me-1"></i>@submitButtonText
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Configurar el formulario cuando se carga el modal
+    $(document).ready(function() {
+        tiposInmuebleModals.configurarFormulario();
+    });
+</script>

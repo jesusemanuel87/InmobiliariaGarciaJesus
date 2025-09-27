@@ -23,7 +23,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             var query = @"SELECT c.Id, c.FechaInicio, c.FechaFin, c.Precio, c.InquilinoId, c.InmuebleId, c.Estado, c.FechaCreacion,
                          i.Nombre as InquilinoNombre, i.Apellido as InquilinoApellido, i.DNI as InquilinoDNI,
                          i.Telefono as InquilinoTelefono, i.Email as InquilinoEmail,
-                         inm.Direccion as InmuebleDireccion, inm.Tipo as InmuebleTipo, inm.Ambientes as InmuebleAmbientes
+                         inm.Direccion as InmuebleDireccion, inm.TipoId as InmuebleTipo, inm.Ambientes as InmuebleAmbientes
                          FROM Contratos c
                          LEFT JOIN Inquilinos i ON c.InquilinoId = i.Id
                          LEFT JOIN Inmuebles inm ON c.InmuebleId = inm.Id";
@@ -56,7 +56,7 @@ namespace InmobiliariaGarciaJesus.Repositories
                     {
                         Id = Convert.ToInt32(reader["InmuebleId"]),
                         Direccion = reader["InmuebleDireccion"].ToString() ?? string.Empty,
-                        Tipo = Enum.TryParse<TipoInmueble>(reader["InmuebleTipo"]?.ToString(), out var tipo) ? tipo : TipoInmueble.Casa,
+                        TipoId = reader["InmuebleTipo"] == DBNull.Value ? 1 : Convert.ToInt32(reader["InmuebleTipo"]),
                         Ambientes = Convert.ToInt32(reader["InmuebleAmbientes"])
                     }
                 });
@@ -80,7 +80,7 @@ namespace InmobiliariaGarciaJesus.Repositories
                          c.Estado, c.FechaCreacion, c.MotivoCancelacion,
                          i.Nombre as InquilinoNombre, i.Apellido as InquilinoApellido, i.DNI as InquilinoDNI,
                          i.Telefono as InquilinoTelefono, i.Email as InquilinoEmail,
-                         inm.Direccion as InmuebleDireccion, inm.Tipo as InmuebleTipo, inm.Ambientes as InmuebleAmbientes
+                         inm.Direccion as InmuebleDireccion, inm.TipoId as InmuebleTipo, inm.Ambientes as InmuebleAmbientes
                          FROM contratos c
                          INNER JOIN inquilinos i ON c.InquilinoId = i.Id
                          INNER JOIN inmuebles inm ON c.InmuebleId = inm.Id
@@ -117,7 +117,7 @@ namespace InmobiliariaGarciaJesus.Repositories
                     {
                         Id = Convert.ToInt32(reader["InmuebleId"]),
                         Direccion = reader["InmuebleDireccion"].ToString() ?? string.Empty,
-                        Tipo = Enum.TryParse<TipoInmueble>(reader["InmuebleTipo"]?.ToString(), out var tipo) ? tipo : TipoInmueble.Casa,
+                        TipoId = reader["InmuebleTipo"] == DBNull.Value ? 1 : Convert.ToInt32(reader["InmuebleTipo"]),
                         Ambientes = Convert.ToInt32(reader["InmuebleAmbientes"])
                     }
                 };

@@ -20,10 +20,11 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
-            var query = @"SELECT i.Id, i.Direccion, i.Ambientes, i.Superficie, i.Latitud, i.Longitud, 
-                         i.PropietarioId, i.Tipo, i.Precio, i.Estado, i.Uso, i.FechaCreacion,
-                         i.Localidad, i.Provincia
-                         FROM Inmuebles i";
+            var query = @"SELECT i.Id, i.Direccion, i.Ambientes, i.Superficie, i.Latitud, i.Longitud, i.PropietarioId, i.TipoId, i.Precio, i.Estado, i.Uso, i.FechaCreacion, i.Localidad, i.Provincia,
+                         t.Nombre as TipoNombre
+                         FROM inmuebles i
+                         LEFT JOIN TiposInmueble t ON i.TipoId = t.Id
+                         WHERE i.Estado = 1";
             
             using var command = new MySqlCommand(query, connection);
             using var reader = await command.ExecuteReaderAsync();
@@ -39,14 +40,19 @@ namespace InmobiliariaGarciaJesus.Repositories
                     Latitud = reader["Latitud"] == DBNull.Value ? null : Convert.ToDecimal(reader["Latitud"]),
                     Longitud = reader["Longitud"] == DBNull.Value ? null : Convert.ToDecimal(reader["Longitud"]),
                     PropietarioId = Convert.ToInt32(reader["PropietarioId"]),
-                    Tipo = Enum.TryParse<TipoInmueble>(reader["Tipo"]?.ToString(), out var tipo) ? tipo : TipoInmueble.Casa,
+                    TipoId = Convert.ToInt32(reader["TipoId"]),
                     Precio = reader["Precio"] == DBNull.Value ? null : Convert.ToDecimal(reader["Precio"]),
                     Estado = Convert.ToBoolean(reader["Estado"]) ? EstadoInmueble.Activo : EstadoInmueble.Inactivo,
-                    Uso = Enum.TryParse<UsoInmueble>(reader["Uso"]?.ToString(), out var uso) ? uso : UsoInmueble.Residencial,
+                    Uso = reader["Uso"] == DBNull.Value ? UsoInmueble.Residencial : Enum.TryParse<UsoInmueble>(reader["Uso"]?.ToString(), out var uso) ? uso : UsoInmueble.Residencial,
                     FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
                     Localidad = reader["Localidad"]?.ToString(),
                     Provincia = reader["Provincia"]?.ToString(),
-                    Disponible = true // Default to available since column doesn't exist yet
+                    Disponible = true, // Default to available since column doesn't exist yet
+                    Tipo = reader["TipoNombre"] != DBNull.Value ? (dynamic)new 
+                    {
+                        Id = Convert.ToInt32(reader["TipoId"]),
+                        Nombre = reader["TipoNombre"]?.ToString() ?? "Sin tipo"
+                    } : null
                 };
                 inmuebles.Add(inmueble);
             }
@@ -57,8 +63,11 @@ namespace InmobiliariaGarciaJesus.Repositories
                 await LoadImagenesAsync(inmueble);
             }
             
+            // Los tipos ya se cargan con el JOIN en el query principal
+            
             return inmuebles;
         }
+        
         
         private async Task LoadImagenesAsync(Inmueble inmueble)
         {
@@ -104,10 +113,12 @@ namespace InmobiliariaGarciaJesus.Repositories
             await connection.OpenAsync();
             
             var query = @"SELECT i.Id, i.Direccion, i.Localidad, i.Provincia, i.Ambientes, i.Superficie, i.Latitud, i.Longitud, 
-                         i.PropietarioId, i.Tipo, i.Precio, i.Estado, i.Uso, i.FechaCreacion,
-                         p.Nombre, p.Apellido, p.Telefono, p.Email, p.Direccion as PropietarioDireccion
+                         i.PropietarioId, i.TipoId, i.Precio, i.Estado, i.Uso, i.FechaCreacion,
+                         p.Nombre, p.Apellido, p.Telefono, p.Email, p.Direccion as PropietarioDireccion,
+                         t.Nombre as TipoNombre
                          FROM inmuebles i
                          INNER JOIN propietarios p ON i.PropietarioId = p.Id
+                         LEFT JOIN TiposInmueble t ON i.TipoId = t.Id
                          WHERE i.Id = @Id";
             
             using var command = new MySqlCommand(query, connection);
@@ -128,10 +139,10 @@ namespace InmobiliariaGarciaJesus.Repositories
                     Latitud = reader["Latitud"] == DBNull.Value ? null : Convert.ToDecimal(reader["Latitud"]),
                     Longitud = reader["Longitud"] == DBNull.Value ? null : Convert.ToDecimal(reader["Longitud"]),
                     PropietarioId = Convert.ToInt32(reader["PropietarioId"]),
-                    Tipo = Enum.TryParse<TipoInmueble>(reader["Tipo"]?.ToString(), out var tipo) ? tipo : TipoInmueble.Casa,
+                    TipoId = Convert.ToInt32(reader["TipoId"]),
                     Precio = reader["Precio"] == DBNull.Value ? null : Convert.ToDecimal(reader["Precio"]),
                     Estado = Convert.ToBoolean(reader["Estado"]) ? EstadoInmueble.Activo : EstadoInmueble.Inactivo,
-                    Uso = Enum.TryParse<UsoInmueble>(reader["Uso"]?.ToString(), out var uso) ? uso : UsoInmueble.Residencial,
+                    Uso = reader["Uso"] == DBNull.Value ? UsoInmueble.Residencial : Enum.TryParse<UsoInmueble>(reader["Uso"]?.ToString(), out var uso) ? uso : UsoInmueble.Residencial,
                     FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
                     Propietario = new Propietario
                     {
@@ -141,7 +152,12 @@ namespace InmobiliariaGarciaJesus.Repositories
                         Telefono = reader["Telefono"]?.ToString(),
                         Email = reader["Email"].ToString() ?? string.Empty,
                         Direccion = reader["PropietarioDireccion"]?.ToString()
-                    }
+                    },
+                    Tipo = reader["TipoNombre"] != DBNull.Value ? (dynamic)new 
+                    {
+                        Id = Convert.ToInt32(reader["TipoId"]),
+                        Nombre = reader["TipoNombre"]?.ToString() ?? "Sin tipo"
+                    } : null
                 };
             }
             
@@ -154,9 +170,9 @@ namespace InmobiliariaGarciaJesus.Repositories
             await connection.OpenAsync();
             
             var query = @"INSERT INTO Inmuebles (Direccion, Provincia, Localidad, Ambientes, Superficie, Latitud, Longitud, 
-                         PropietarioId, Tipo, Precio, Estado, Uso, FechaCreacion) 
+                         PropietarioId, TipoId, Precio, Estado, Uso, FechaCreacion) 
                          VALUES (@Direccion, @Provincia, @Localidad, @Ambientes, @Superficie, @Latitud, @Longitud, 
-                         @PropietarioId, @Tipo, @Precio, @Estado, @Uso, @FechaCreacion);
+                         @PropietarioId, @TipoId, @Precio, @Estado, @Uso, @FechaCreacion);
                          SELECT LAST_INSERT_ID();";
             
             using var command = new MySqlCommand(query, connection);
@@ -168,7 +184,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             command.Parameters.AddWithValue("@Latitud", inmueble.Latitud ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Longitud", inmueble.Longitud ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@PropietarioId", inmueble.PropietarioId);
-            command.Parameters.AddWithValue("@Tipo", inmueble.Tipo.ToString());
+            command.Parameters.AddWithValue("@TipoId", inmueble.TipoId);
             command.Parameters.AddWithValue("@Precio", inmueble.Precio ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Estado", inmueble.Estado == EstadoInmueble.Activo ? 1 : 0);
             command.Parameters.AddWithValue("@Uso", inmueble.Uso.ToString());
@@ -186,7 +202,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             var query = @"UPDATE Inmuebles 
                          SET Direccion = @Direccion, Provincia = @Provincia, Localidad = @Localidad, Ambientes = @Ambientes, Superficie = @Superficie, 
                              Latitud = @Latitud, Longitud = @Longitud, PropietarioId = @PropietarioId, 
-                             Tipo = @Tipo, Precio = @Precio, Estado = @Estado, Uso = @Uso 
+                             TipoId = @TipoId, Precio = @Precio, Estado = @Estado, Uso = @Uso 
                          WHERE Id = @Id";
             
             using var command = new MySqlCommand(query, connection);
@@ -199,7 +215,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             command.Parameters.AddWithValue("@Latitud", inmueble.Latitud ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Longitud", inmueble.Longitud ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@PropietarioId", inmueble.PropietarioId);
-            command.Parameters.AddWithValue("@Tipo", inmueble.Tipo.ToString());
+            command.Parameters.AddWithValue("@TipoId", inmueble.TipoId);
             command.Parameters.AddWithValue("@Precio", inmueble.Precio ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Estado", inmueble.Estado == EstadoInmueble.Activo ? 1 : 0);
             command.Parameters.AddWithValue("@Uso", inmueble.Uso.ToString());
@@ -227,7 +243,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
-            var query = @"SELECT i.Id, i.Direccion, i.Tipo, i.Uso, i.Estado, i.Precio,
+            var query = @"SELECT i.Id, i.Direccion, i.TipoId, i.Uso, i.Estado, i.Precio,
                          c.Id as ContratoId, c.Estado as EstadoContrato
                          FROM inmuebles i
                          LEFT JOIN contratos c ON i.Id = c.InmuebleId AND c.Estado = 'Activo'
@@ -251,8 +267,18 @@ namespace InmobiliariaGarciaJesus.Repositories
                 {
                     Id = Convert.ToInt32(reader["Id"]),
                     Direccion = reader["Direccion"].ToString() ?? string.Empty,
-                    Tipo = Enum.TryParse<TipoInmueble>(reader["Tipo"]?.ToString(), out var tipo) ? tipo : TipoInmueble.Casa,
-                    Uso = Enum.TryParse<UsoInmueble>(reader["Uso"]?.ToString(), out var uso) ? uso : UsoInmueble.Residencial,
+                    Tipo = Convert.ToInt32(reader["TipoId"]) switch
+                    {
+                        1 => TipoInmueble.Casa,
+                        2 => TipoInmueble.Departamento,
+                        3 => TipoInmueble.Monoambiente,
+                        4 => TipoInmueble.Local,
+                        5 => TipoInmueble.Oficina,
+                        6 => TipoInmueble.Terreno,
+                        7 => TipoInmueble.Galpon,
+                        _ => TipoInmueble.Casa
+                    },
+                    Uso = reader["Uso"] == DBNull.Value ? UsoInmueble.Residencial : Enum.TryParse<UsoInmueble>(reader["Uso"]?.ToString(), out var uso) ? uso : UsoInmueble.Residencial,
                     Estado = (reader["Estado"]?.ToString()?.ToLower() == "activo" || reader["Estado"]?.ToString() == "1" || reader["Estado"]?.ToString()?.ToLower() == "true") ? EstadoInmueble.Activo : EstadoInmueble.Inactivo,
                     Precio = reader["Precio"] == DBNull.Value ? null : Convert.ToDecimal(reader["Precio"]),
                     TieneContrato = contratoId != DBNull.Value,

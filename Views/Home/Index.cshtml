@@ -74,14 +74,15 @@
                                 <option value="">Todos los tipos</option>
                                 @{
                                     var tipoSeleccionado = ViewBag.TipoSeleccionado as string;
+                                    var tiposInmueble = ViewBag.TiposInmueble as IEnumerable<dynamic>;
                                 }
-                                <option value="Casa" selected="@(tipoSeleccionado == "Casa")">Casa</option>
-                                <option value="Departamento" selected="@(tipoSeleccionado == "Departamento")">Departamento</option>
-                                <option value="Monoambiente" selected="@(tipoSeleccionado == "Monoambiente")">Monoambiente</option>
-                                <option value="Local" selected="@(tipoSeleccionado == "Local")">Local</option>
-                                <option value="Oficina" selected="@(tipoSeleccionado == "Oficina")">Oficina</option>
-                                <option value="Terreno" selected="@(tipoSeleccionado == "Terreno")">Terreno</option>
-                                <option value="Galpon" selected="@(tipoSeleccionado == "Galpon")">Galpón</option>
+                                @if (tiposInmueble != null)
+                                {
+                                    @foreach (var tipo in tiposInmueble)
+                                    {
+                                        <option value="@tipo.Nombre" selected="@(tipoSeleccionado == tipo.Nombre)">@tipo.Nombre</option>
+                                    }
+                                }
                             </select>
                         </div>
 
@@ -207,7 +208,7 @@
 
                             <!-- Type Badge -->
                             <div class="position-absolute top-0 start-0 m-2">
-                                <span class="badge bg-primary">@inmueble.Tipo</span>
+                                <span class="badge bg-primary">@(inmueble.Tipo?.Nombre ?? "Sin tipo")</span>
                             </div>
                         </div>
 

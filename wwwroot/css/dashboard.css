@@ -134,6 +134,32 @@
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
 }
 
+/* Cards de estadísticas clickeables */
+.card.bg-primary[onclick],
+.card.bg-success[onclick],
+.card.bg-warning[onclick],
+.card.bg-info[onclick] {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.card.bg-primary[onclick]:hover,
+.card.bg-success[onclick]:hover,
+.card.bg-warning[onclick]:hover,
+.card.bg-info[onclick]:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+.card.bg-primary[onclick]:active,
+.card.bg-success[onclick]:active,
+.card.bg-warning[onclick]:active,
+.card.bg-info[onclick]:active {
+    transform: translateY(-2px);
+    transition: transform 0.1s ease;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .dashboard-icon {

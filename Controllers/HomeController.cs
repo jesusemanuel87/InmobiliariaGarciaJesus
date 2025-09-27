@@ -13,17 +13,19 @@ public class HomeController : Controller
     private readonly InmuebleImagenRepository _inmuebleImagenRepository;
     private readonly ContratoRepository _contratoRepository;
     private readonly TipoInmuebleRepository _tipoInmuebleRepository;
+    private readonly PagoRepository _pagoRepository;
     private readonly IConfiguration _configuration;
 
     public HomeController(ILogger<HomeController> logger, InmuebleRepository inmuebleRepository, 
         InmuebleImagenRepository inmuebleImagenRepository, ContratoRepository contratoRepository, 
-        TipoInmuebleRepository tipoInmuebleRepository, IConfiguration configuration)
+        TipoInmuebleRepository tipoInmuebleRepository, PagoRepository pagoRepository, IConfiguration configuration)
     {
         _logger = logger;
         _inmuebleRepository = inmuebleRepository;
         _inmuebleImagenRepository = inmuebleImagenRepository;
         _contratoRepository = contratoRepository;
         _tipoInmuebleRepository = tipoInmuebleRepository;
+        _pagoRepository = pagoRepository;
         _configuration = configuration;
     }
 
@@ -132,9 +134,47 @@ public class HomeController : Controller
     }
 
     [Authorize(Roles = "Administrador,Empleado")]
-    public IActionResult Dashboard()
+    public async Task<IActionResult> Dashboard()
     {
-        return View();
+        try
+        {
+            // Obtener estadísticas del dashboard
+            var totalInmuebles = (await _inmuebleRepository.GetAllAsync()).Count();
+            var contratosActivos = (await _contratoRepository.GetAllAsync()).Count(c => c.Estado == EstadoContrato.Activo);
+            
+            // Obtener pagos pendientes (estado Pendiente)
+            var pagosPendientes = (await _pagoRepository.GetAllAsync()).Count(p => p.Estado == EstadoPago.Pendiente);
+            
+            // Calcular ingresos del mes actual
+            var mesActual = DateTime.Now.Month;
+            var añoActual = DateTime.Now.Year;
+            var ingresosMes = (await _pagoRepository.GetAllAsync())
+                .Where(p => p.Estado == EstadoPago.Pagado && 
+                           p.FechaPago.HasValue && 
+                           p.FechaPago.Value.Month == mesActual && 
+                           p.FechaPago.Value.Year == añoActual)
+                .Sum(p => p.Importe);
+
+            // Pasar datos a la vista
+            ViewBag.TotalInmuebles = totalInmuebles;
+            ViewBag.ContratosActivos = contratosActivos;
+            ViewBag.PagosPendientes = pagosPendientes;
+            ViewBag.IngresosMes = ingresosMes;
+
+            return View();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al cargar datos del dashboard");
+            
+            // Valores por defecto en caso de error
+            ViewBag.TotalInmuebles = 0;
+            ViewBag.ContratosActivos = 0;
+            ViewBag.PagosPendientes = 0;
+            ViewBag.IngresosMes = 0;
+
+            return View();
+        }
     }
 
     public IActionResult Privacy()

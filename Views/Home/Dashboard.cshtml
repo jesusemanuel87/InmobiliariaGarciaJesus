@@ -30,12 +30,12 @@
                     </h3>
                 </div>
                 <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card bg-primary text-white">
+                    <div class="card bg-primary text-white" onclick="window.location.href='@Url.Action("Index", "Inmuebles")'" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <div>
                                     <h6 class="card-title">Total Inmuebles</h6>
-                                    <h4 class="mb-0">--</h4>
+                                    <h4 class="mb-0">@ViewBag.TotalInmuebles</h4>
                                 </div>
                                 <div class="align-self-center">
                                     <i class="fas fa-building fa-2x opacity-75"></i>
@@ -45,12 +45,12 @@
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card bg-success text-white">
+                    <div class="card bg-success text-white" onclick="window.location.href='@Url.Action("Index", "Contratos")'" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <div>
                                     <h6 class="card-title">Contratos Activos</h6>
-                                    <h4 class="mb-0">--</h4>
+                                    <h4 class="mb-0">@ViewBag.ContratosActivos</h4>
                                 </div>
                                 <div class="align-self-center">
                                     <i class="fas fa-file-contract fa-2x opacity-75"></i>
@@ -60,12 +60,12 @@
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card bg-warning text-white">
+                    <div class="card bg-warning text-white" onclick="window.location.href='@Url.Action("Index", "Pagos")'" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <div>
                                     <h6 class="card-title">Pagos Pendientes</h6>
-                                    <h4 class="mb-0">--</h4>
+                                    <h4 class="mb-0">@ViewBag.PagosPendientes</h4>
                                 </div>
                                 <div class="align-self-center">
                                     <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
@@ -75,12 +75,12 @@
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card bg-info text-white">
+                    <div class="card bg-info text-white" onclick="window.location.href='@Url.Action("Index", "Pagos")'" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <div>
                                     <h6 class="card-title">Ingresos del Mes</h6>
-                                    <h4 class="mb-0">$--</h4>
+                                    <h4 class="mb-0">$@ViewBag.IngresosMes.ToString("N0")</h4>
                                 </div>
                                 <div class="align-self-center">
                                     <i class="fas fa-dollar-sign fa-2x opacity-75"></i>

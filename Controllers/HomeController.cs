@@ -6,20 +6,21 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 
 namespace InmobiliariaGarciaJesus.Controllers;
-
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
     private readonly InmuebleRepository _inmuebleRepository;
     private readonly InmuebleImagenRepository _inmuebleImagenRepository;
+    private readonly ContratoRepository _contratoRepository;
     private readonly IConfiguration _configuration;
 
     public HomeController(ILogger<HomeController> logger, InmuebleRepository inmuebleRepository, 
-        InmuebleImagenRepository inmuebleImagenRepository, IConfiguration configuration)
+        InmuebleImagenRepository inmuebleImagenRepository, ContratoRepository contratoRepository, IConfiguration configuration)
     {
         _logger = logger;
         _inmuebleRepository = inmuebleRepository;
         _inmuebleImagenRepository = inmuebleImagenRepository;
+        _contratoRepository = contratoRepository;
         _configuration = configuration;
     }
 
@@ -29,13 +30,16 @@ public class HomeController : Controller
     {
         try
         {
-            // Obtener inmuebles disponibles (activos y disponibles)
+            // Obtener inmuebles activos
             var inmuebles = await _inmuebleRepository.GetAllAsync();
-            
-            // Filtrar por estado activo y disponible
-            var inmueblesFiltrados = inmuebles.Where(i => 
-                i.Estado == EstadoInmueble.Activo && 
-                i.Disponible == true).AsQueryable();
+            var inmueblesFiltrados = inmuebles.Where(i => i.Estado == EstadoInmueble.Activo).AsQueryable();
+
+            // Obtener todos los contratos para verificar disponibilidad
+            var contratos = await _contratoRepository.GetAllAsync();
+            var fechaActual = DateTime.Now.Date;
+
+            // Si se especifican fechas, usar la fecha desde como referencia
+            var fechaReferencia = fechaDesde ?? fechaActual;
 
             // Aplicar filtros
             if (!string.IsNullOrEmpty(provincia) && provincia != "Todas")
@@ -78,9 +82,12 @@ public class HomeController : Controller
                 }
             }
 
-            // TODO: Implementar filtro por disponibilidad de fechas cuando esté disponible el servicio de contratos
-
-            var resultado = inmueblesFiltrados.ToList();
+            // Filtrar por disponibilidad basada en contratos y fechas
+            var resultado = inmueblesFiltrados.ToList().Where(inmueble => 
+            {
+                var disponibilidad = DeterminarDisponibilidad(inmueble, contratos, fechaReferencia, fechaHasta);
+                return disponibilidad == "Disponible";
+            }).ToList();
 
             // Pasar datos para los filtros
             ViewBag.ProvinciaSeleccionada = provincia;
@@ -179,5 +186,45 @@ public class HomeController : Controller
             _logger.LogError(ex, "Error al obtener imágenes del inmueble {InmuebleId}", id);
             return PartialView("_InmuebleImagenesModal", new List<InmuebleImagen>());
         }
+    }
+
+    private string DeterminarDisponibilidad(Inmueble inmueble, IEnumerable<Contrato> contratos, DateTime fechaDesde, DateTime? fechaHasta = null)
+    {
+        // Si el inmueble está marcado como no disponible en la base
+        if (!inmueble.Disponible)
+        {
+            return "NoDisponible";
+        }
+
+        // Si no se especifica fecha hasta, usar solo fecha desde
+        var fechaFin = fechaHasta ?? fechaDesde;
+
+        // Verificar si hay conflictos con contratos existentes en el rango de fechas solicitado
+        var contratosConflicto = contratos.Where(c => 
+            c.InmuebleId == inmueble.Id && 
+            c.Estado == EstadoContrato.Activo &&
+            // Verificar solapamiento de fechas
+            !(fechaFin < c.FechaInicio || fechaDesde > c.FechaFin)
+        );
+
+        if (contratosConflicto.Any())
+        {
+            return "NoDisponible";
+        }
+
+        // Verificar si tiene contratos reservados que afecten el período
+        var contratosReservados = contratos.Where(c => 
+            c.InmuebleId == inmueble.Id && 
+            c.Estado == EstadoContrato.Reservado &&
+            // Verificar solapamiento de fechas
+            !(fechaFin < c.FechaInicio || fechaDesde > c.FechaFin)
+        );
+
+        if (contratosReservados.Any())
+        {
+            return "Reservado";
+        }
+
+        return "Disponible";
     }
 }

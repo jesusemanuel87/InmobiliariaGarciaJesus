@@ -1,0 +1,226 @@
+@model InmobiliariaGarciaJesus.Models.Inmueble
+@using InmobiliariaGarciaJesus.Models
+
+<div class="modal fade" id="inmuebleDetailsModal" tabindex="-1" aria-labelledby="inmuebleDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="inmuebleDetailsModalLabel">
+                    <i class="fas fa-home me-2"></i>Detalles del Inmueble
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <!-- Galería de Imágenes -->
+                        <div class="col-12 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-images me-2"></i>Galería de Imágenes</h6>
+                                </div>
+                                <div class="card-body p-2">
+                                    <div id="modal-imagenes-container">
+                                        <!-- Las imágenes se cargarán aquí via AJAX -->
+                                        <div class="text-center py-3">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando imágenes...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información del Inmueble -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Información General</h6>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-4">Dirección:</dt>
+                                        <dd class="col-sm-8">
+                                            <i class="fas fa-map-marker-alt text-primary me-1"></i>
+                                            @Model.Direccion
+                                        </dd>
+
+                                        <dt class="col-sm-4">Localidad:</dt>
+                                        <dd class="col-sm-8">
+                                            @if (!string.IsNullOrEmpty(Model.Localidad))
+                                            {
+                                                <i class="fas fa-city text-primary me-1"></i>@Model.Localidad
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No especificado</span>
+                                            }
+                                        </dd>
+
+                                        <dt class="col-sm-4">Provincia:</dt>
+                                        <dd class="col-sm-8">
+                                            @if (!string.IsNullOrEmpty(Model.Provincia))
+                                            {
+                                                <i class="fas fa-flag text-primary me-1"></i>@Model.Provincia
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No especificado</span>
+                                            }
+                                        </dd>
+
+                                        <dt class="col-sm-4">Tipo:</dt>
+                                        <dd class="col-sm-8">
+                                            <span class="badge bg-info">@Model.Tipo</span>
+                                        </dd>
+
+                                        <dt class="col-sm-4">Uso:</dt>
+                                        <dd class="col-sm-8">
+                                            <span class="badge bg-secondary">@Model.Uso</span>
+                                        </dd>
+
+                                        <dt class="col-sm-4">Ambientes:</dt>
+                                        <dd class="col-sm-8">
+                                            <i class="fas fa-bed text-primary me-1"></i>@Model.Ambientes
+                                        </dd>
+
+                                        <dt class="col-sm-4">Superficie:</dt>
+                                        <dd class="col-sm-8">
+                                            @if (Model.Superficie.HasValue)
+                                            {
+                                                <i class="fas fa-ruler-combined text-primary me-1"></i>@Model.Superficie.Value.ToString("N0") <text>m²</text>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No especificado</span>
+                                            }
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Precio y Contacto -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-dollar-sign me-2"></i>Precio y Contacto</h6>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row mb-3">
+                                        <dt class="col-sm-4">Precio:</dt>
+                                        <dd class="col-sm-8">
+                                            @if (Model.Precio.HasValue)
+                                            {
+                                                <span class="text-success fw-bold fs-4">
+                                                    <i class="fas fa-dollar-sign me-1"></i>@Model.Precio.Value.ToString("N0")
+                                                </span>
+                                                <small class="text-muted d-block">por mes</small>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Consultar precio</span>
+                                            }
+                                        </dd>
+
+                                        <dt class="col-sm-4">Estado:</dt>
+                                        <dd class="col-sm-8">
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle me-1"></i>Disponible
+                                            </span>
+                                        </dd>
+                                    </dl>
+
+                                    <!-- Información de Contacto -->
+                                    <div class="alert alert-info">
+                                        <h6 class="alert-heading">
+                                            <i class="fas fa-phone me-2"></i>¿Te interesa este inmueble?
+                                        </h6>
+                                        <p class="mb-2">Contacta con nuestra inmobiliaria para más información y para coordinar una visita.</p>
+                                        <div class="d-grid gap-2">
+                                            <button class="btn btn-primary" onclick="contactarInmobiliaria()">
+                                                <i class="fas fa-envelope me-2"></i>Contactar Inmobiliaria
+                                            </button>
+                                            <button class="btn btn-outline-primary" onclick="solicitarVisita(@Model.Id)">
+                                                <i class="fas fa-calendar-alt me-2"></i>Solicitar Visita
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ubicación y Mapa -->
+                        @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
+                        {
+                            <div class="col-12 mt-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Ubicación</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <dl class="row">
+                                                    <dt class="col-sm-4">Coordenadas:</dt>
+                                                    <dd class="col-sm-8">
+                                                        <small>
+                                                            <strong>Lat:</strong> @Model.Latitud.Value.ToString("F6")<br>
+                                                            <strong>Lng:</strong> @Model.Longitud.Value.ToString("F6")
+                                                        </small>
+                                                    </dd>
+                                                </dl>
+                                                <div class="d-grid">
+                                                    <a href="@Model.GoogleMapsUrl" target="_blank" class="btn btn-outline-primary">
+                                                        <i class="fas fa-external-link-alt me-2"></i>Abrir en Google Maps
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div id="modal-map" style="height: 300px; width: 100%; border-radius: 8px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cerrar
+                </button>
+                @if (Model.GoogleMapsUrl != null)
+                {
+                    <a href="@Model.GoogleMapsUrl" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-map-marker-alt me-2"></i>Ver Ubicación
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Variables globales para el modal
+    window.modalInmuebleData = {
+        id: @Model.Id,
+        latitud: @(Model.Latitud?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "null"),
+        longitud: @(Model.Longitud?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "null"),
+        direccion: '@Html.Raw(Model.Direccion?.Replace("'", "\\'"))',
+        localidad: '@Html.Raw(Model.Localidad?.Replace("'", "\\'"))',
+        provincia: '@Html.Raw(Model.Provincia?.Replace("'", "\\'"))'
+    };
+
+    // Configurar Google Maps API Key
+    @if (!string.IsNullOrEmpty(ViewBag.GoogleMapsApiKey as string))
+    {
+        <text>
+        if (window.googleMapsService) {
+            window.googleMapsService.setApiKey('@ViewBag.GoogleMapsApiKey');
+        }
+        </text>
+    }
+</script>

@@ -11,11 +11,16 @@ public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
     private readonly InmuebleRepository _inmuebleRepository;
+    private readonly InmuebleImagenRepository _inmuebleImagenRepository;
+    private readonly IConfiguration _configuration;
 
-    public HomeController(ILogger<HomeController> logger, InmuebleRepository inmuebleRepository)
+    public HomeController(ILogger<HomeController> logger, InmuebleRepository inmuebleRepository, 
+        InmuebleImagenRepository inmuebleImagenRepository, IConfiguration configuration)
     {
         _logger = logger;
         _inmuebleRepository = inmuebleRepository;
+        _inmuebleImagenRepository = inmuebleImagenRepository;
+        _configuration = configuration;
     }
 
     public async Task<IActionResult> Index(string? provincia = null, string? localidad = null, 
@@ -104,5 +109,54 @@ public class HomeController : Controller
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    }
+
+    // Endpoint público para obtener detalles del inmueble en modal
+    [HttpGet]
+    public async Task<IActionResult> GetInmuebleDetails(int id)
+    {
+        try
+        {
+            var inmueble = await _inmuebleRepository.GetByIdAsync(id);
+            
+            if (inmueble == null || inmueble.Estado != EstadoInmueble.Activo)
+            {
+                return NotFound();
+            }
+
+            // Obtener Google Maps API Key
+            ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
+            
+            return PartialView("_InmuebleDetailsModal", inmueble);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener detalles del inmueble {InmuebleId}", id);
+            return StatusCode(500, "Error interno del servidor");
+        }
+    }
+
+    // Endpoint público para obtener imágenes del inmueble
+    [HttpGet]
+    public async Task<IActionResult> GetInmuebleImagenes(int id)
+    {
+        try
+        {
+            var inmueble = await _inmuebleRepository.GetByIdAsync(id);
+            
+            if (inmueble == null || inmueble.Estado != EstadoInmueble.Activo)
+            {
+                return NotFound();
+            }
+
+            var imagenes = await _inmuebleImagenRepository.GetByInmuebleIdAsync(id);
+            
+            return PartialView("_InmuebleImagenesModal", imagenes);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener imágenes del inmueble {InmuebleId}", id);
+            return PartialView("_InmuebleImagenesModal", new List<InmuebleImagen>());
+        }
     }
 }

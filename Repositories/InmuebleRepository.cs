@@ -103,7 +103,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             using var connection = new MySqlConnection(_connectionString);
             await connection.OpenAsync();
             
-            var query = @"SELECT i.Id, i.Direccion, i.Ambientes, i.Superficie, i.Latitud, i.Longitud, 
+            var query = @"SELECT i.Id, i.Direccion, i.Localidad, i.Provincia, i.Ambientes, i.Superficie, i.Latitud, i.Longitud, 
                          i.PropietarioId, i.Tipo, i.Precio, i.Estado, i.Uso, i.FechaCreacion,
                          p.Nombre, p.Apellido, p.Telefono, p.Email, p.Direccion as PropietarioDireccion
                          FROM inmuebles i
@@ -121,8 +121,10 @@ namespace InmobiliariaGarciaJesus.Repositories
                 {
                     Id = Convert.ToInt32(reader["Id"]),
                     Direccion = reader["Direccion"].ToString() ?? string.Empty,
+                    Localidad = reader["Localidad"]?.ToString(),
+                    Provincia = reader["Provincia"]?.ToString(),
                     Ambientes = Convert.ToInt32(reader["Ambientes"]),
-                    Superficie = Convert.ToDecimal(reader["Superficie"]),
+                    Superficie = reader["Superficie"] == DBNull.Value ? null : Convert.ToDecimal(reader["Superficie"]),
                     Latitud = reader["Latitud"] == DBNull.Value ? null : Convert.ToDecimal(reader["Latitud"]),
                     Longitud = reader["Longitud"] == DBNull.Value ? null : Convert.ToDecimal(reader["Longitud"]),
                     PropietarioId = Convert.ToInt32(reader["PropietarioId"]),

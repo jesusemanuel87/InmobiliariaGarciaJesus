@@ -122,8 +122,8 @@ function cambiarVista(vista) {
 }
 
 function verDetalles(inmuebleId) {
-    // Redirigir a la página de detalles del inmueble
-    window.location.href = '/Inmuebles/Details/' + inmuebleId;
+    // Mostrar modal con detalles del inmueble
+    mostrarModalDetalles(inmuebleId);
 }
 
 // Animación de carga de cards
@@ -137,3 +137,207 @@ function animarCards() {
 $(window).on('load', function() {
     animarCards();
 });
+
+// ===== FUNCIONES DEL MODAL DE DETALLES =====
+
+// Variable global para el manager del modal
+let modalInmuebleManager = null;
+
+// Función principal para mostrar el modal de detalles
+function mostrarModalDetalles(inmuebleId) {
+    // Mostrar loading
+    $('#inmuebleModalContainer').html(`
+        <div class="modal fade show" style="display: block; background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center py-5">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <h5>Cargando detalles del inmueble...</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `);
+
+    // Cargar el modal via AJAX
+    $.get('/Home/GetInmuebleDetails', { id: inmuebleId })
+        .done(function(data) {
+            $('#inmuebleModalContainer').html(data);
+            
+            // Mostrar el modal
+            const modal = new bootstrap.Modal(document.getElementById('inmuebleDetailsModal'));
+            modal.show();
+            
+            // Inicializar el manager del modal
+            if (window.modalInmuebleData) {
+                modalInmuebleManager = new ModalInmuebleManager(
+                    window.modalInmuebleData.id,
+                    window.modalInmuebleData.latitud,
+                    window.modalInmuebleData.longitud,
+                    window.modalInmuebleData.direccion,
+                    window.modalInmuebleData.localidad,
+                    window.modalInmuebleData.provincia
+                );
+            }
+
+            // Limpiar el contenedor cuando se cierre el modal
+            $('#inmuebleDetailsModal').on('hidden.bs.modal', function() {
+                $('#inmuebleModalContainer').empty();
+                modalInmuebleManager = null;
+            });
+        })
+        .fail(function(xhr) {
+            let errorMessage = 'Error al cargar los detalles del inmueble.';
+            if (xhr.status === 404) {
+                errorMessage = 'El inmueble solicitado no está disponible.';
+            }
+            
+            $('#inmuebleModalContainer').html(`
+                <div class="modal fade show" style="display: block; background: rgba(0,0,0,0.5);">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">Error</h5>
+                                <button type="button" class="btn-close btn-close-white" onclick="cerrarModalError()"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                                <h5>${errorMessage}</h5>
+                                <p class="text-muted">Por favor, intenta nuevamente más tarde.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" onclick="cerrarModalError()">Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `);
+        });
+}
+
+// Función para cerrar modal de error
+function cerrarModalError() {
+    $('#inmuebleModalContainer').empty();
+}
+
+// Manager para el modal de inmueble
+class ModalInmuebleManager {
+    constructor(inmuebleId, latitud, longitud, direccion, localidad, provincia) {
+        this.inmuebleId = inmuebleId;
+        this.latitud = latitud;
+        this.longitud = longitud;
+        this.direccion = direccion;
+        this.localidad = localidad;
+        this.provincia = provincia;
+        this.map = null;
+        this.init();
+    }
+
+    init() {
+        console.log('Inicializando ModalInmuebleManager para inmueble:', this.inmuebleId);
+        this.cargarImagenes();
+        this.initializeGoogleMaps();
+    }
+
+    cargarImagenes() {
+        $.get('/Home/GetInmuebleImagenes', { id: this.inmuebleId })
+            .done((data) => {
+                $('#modal-imagenes-container').html(data);
+            })
+            .fail(() => {
+                $('#modal-imagenes-container').html(`
+                    <div class="text-center py-4 text-danger">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <p>Error al cargar las imágenes</p>
+                    </div>
+                `);
+            });
+    }
+
+    initializeGoogleMaps() {
+        if (this.latitud && this.longitud) {
+            if (window.googleMapsService) {
+                window.googleMapsService.loadGoogleMaps(() => this.initMap());
+            } else {
+                console.warn('GoogleMapsService no está disponible');
+                $('#modal-map').html(`
+                    <div class="d-flex align-items-center justify-content-center h-100 bg-light rounded">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-map fa-2x mb-2"></i>
+                            <p class="mb-0">Mapa no disponible</p>
+                        </div>
+                    </div>
+                `);
+            }
+        }
+    }
+
+    initMap() {
+        try {
+            const location = { lat: parseFloat(this.latitud), lng: parseFloat(this.longitud) };
+            
+            this.map = new google.maps.Map(document.getElementById('modal-map'), {
+                zoom: 16,
+                center: location,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                styles: [
+                    {
+                        featureType: 'poi',
+                        elementType: 'labels',
+                        stylers: [{ visibility: 'off' }]
+                    }
+                ]
+            });
+            
+            const marker = new google.maps.Marker({
+                position: location,
+                map: this.map,
+                title: this.direccion,
+                animation: google.maps.Animation.DROP
+            });
+
+            const infoContent = `
+                <div style="max-width: 200px;">
+                    <strong>${this.direccion}</strong><br>
+                    ${this.localidad ? this.localidad : ''}
+                    ${this.provincia ? ', ' + this.provincia : ''}
+                </div>
+            `;
+
+            const infoWindow = new google.maps.InfoWindow({
+                content: infoContent
+            });
+
+            marker.addListener('click', () => {
+                infoWindow.open(this.map, marker);
+            });
+
+            // Mostrar info window por defecto
+            setTimeout(() => {
+                infoWindow.open(this.map, marker);
+            }, 500);
+
+        } catch (error) {
+            console.error('Error inicializando Google Maps:', error);
+            $('#modal-map').html(`
+                <div class="d-flex align-items-center justify-content-center h-100 bg-light rounded">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <p class="mb-0">Error al cargar el mapa</p>
+                    </div>
+                </div>
+            `);
+        }
+    }
+}
+
+// Funciones de contacto (placeholder)
+function contactarInmobiliaria() {
+    alert('Funcionalidad de contacto en desarrollo.\n\nPor favor, contacta directamente con la inmobiliaria García Jesús para más información.');
+}
+
+function solicitarVisita(inmuebleId) {
+    alert(`Funcionalidad de solicitud de visita en desarrollo.\n\nInmueble ID: ${inmuebleId}\n\nPor favor, contacta directamente con la inmobiliaria para coordinar una visita.`);
+}

@@ -16,6 +16,29 @@ namespace InmobiliariaGarciaJesus.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
+            // Rutas públicas que no requieren validación de sesión
+            var publicPaths = new[]
+            {
+                "/",
+                "/Home",
+                "/Home/Index",
+                "/Home/GetInmuebleDetails",
+                "/Home/GetInmuebleImagenes",
+                "/Home/Privacy",
+                "/Auth/Login",
+                "/Auth/Register"
+            };
+
+            var currentPath = context.Request.Path.Value?.ToLowerInvariant() ?? "";
+            var isPublicPath = publicPaths.Any(path => currentPath.StartsWith(path.ToLowerInvariant()));
+
+            // Si es una ruta pública, continuar sin validación
+            if (isPublicPath)
+            {
+                await _next(context);
+                return;
+            }
+
             // Solo validar si el usuario está autenticado
             if (context.User.Identity?.IsAuthenticated == true)
             {

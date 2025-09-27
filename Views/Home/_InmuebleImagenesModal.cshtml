@@ -1,0 +1,147 @@
+@model IEnumerable<InmobiliariaGarciaJesus.Models.InmuebleImagen>
+
+@if (Model.Any())
+{
+    <div id="imageCarousel" class="carousel slide" data-bs-ride="carousel">
+        <!-- Indicators -->
+        <div class="carousel-indicators">
+            @{
+                int index = 0;
+            }
+            @foreach (var imagen in Model)
+            {
+                <button type="button" data-bs-target="#imageCarousel" data-bs-slide-to="@index" 
+                        class="@(index == 0 ? "active" : "")" aria-current="@(index == 0 ? "true" : "false")" 
+                        aria-label="Imagen @(index + 1)"></button>
+                index++;
+            }
+        </div>
+
+        <!-- Carousel Items -->
+        <div class="carousel-inner">
+            @{
+                index = 0;
+            }
+            @foreach (var imagen in Model)
+            {
+                <div class="carousel-item @(index == 0 ? "active" : "")">
+                    <img src="@imagen.RutaArchivo" class="d-block w-100 carousel-image" 
+                         alt="@imagen.NombreArchivo" style="height: 350px; object-fit: contain; background-color: #f8f9fa;">
+                    @if (!string.IsNullOrEmpty(imagen.Descripcion))
+                    {
+                        <div class="carousel-caption d-none d-md-block">
+                            <p class="mb-0 bg-dark bg-opacity-75 rounded px-2 py-1">@imagen.Descripcion</p>
+                        </div>
+                    }
+                </div>
+                index++;
+            }
+        </div>
+
+        <!-- Controls -->
+        @if (Model.Count() > 1)
+        {
+            <button class="carousel-control-prev" type="button" data-bs-target="#imageCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Anterior</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#imageCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Siguiente</span>
+            </button>
+        }
+    </div>
+
+    <!-- Thumbnails -->
+    @if (Model.Count() > 1)
+    {
+        <div class="row mt-3 g-2">
+            @{
+                index = 0;
+            }
+            @foreach (var imagen in Model)
+            {
+                <div class="col-2">
+                    <img src="@imagen.RutaArchivo" class="img-thumbnail thumbnail-image" 
+                         alt="@imagen.NombreArchivo" style="height: 60px; object-fit: cover; cursor: pointer;"
+                         onclick="goToSlide(@index)">
+                </div>
+                index++;
+            }
+        </div>
+    }
+
+    <!-- Image Counter -->
+    <div class="text-center mt-2">
+        <small class="text-muted">
+            <i class="fas fa-images me-1"></i>@Model.Count() imagen@(Model.Count() > 1 ? "es" : "")
+        </small>
+    </div>
+}
+else
+{
+    <div class="text-center py-4">
+        <div class="mb-3">
+            <i class="fas fa-image fa-3x text-muted"></i>
+        </div>
+        <h6 class="text-muted">No hay imágenes disponibles</h6>
+        <p class="text-muted small mb-0">Este inmueble no tiene imágenes cargadas.</p>
+    </div>
+}
+
+<script>
+    // Función para ir a una imagen específica del carousel
+    function goToSlide(slideIndex) {
+        const carousel = new bootstrap.Carousel(document.getElementById('imageCarousel'));
+        carousel.to(slideIndex);
+    }
+
+    // Mejorar la experiencia visual de las thumbnails
+    $(document).ready(function() {
+        $('.thumbnail-image').hover(
+            function() {
+                $(this).addClass('border-primary');
+            },
+            function() {
+                $(this).removeClass('border-primary');
+            }
+        );
+
+        // Highlight thumbnail activo
+        $('#imageCarousel').on('slide.bs.carousel', function (e) {
+            $('.thumbnail-image').removeClass('border-primary border-2');
+            $('.thumbnail-image').eq(e.to).addClass('border-primary border-2');
+        });
+
+        // Highlight inicial
+        $('.thumbnail-image').first().addClass('border-primary border-2');
+    });
+</script>
+
+<style>
+    .carousel-image {
+        border-radius: 8px;
+    }
+    
+    .thumbnail-image {
+        transition: all 0.2s ease;
+    }
+    
+    .thumbnail-image:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    
+    .carousel-indicators {
+        margin-bottom: -20px;
+    }
+    
+    .carousel-indicators [data-bs-target] {
+        background-color: rgba(255,255,255,0.8);
+        border: 1px solid rgba(0,0,0,0.3);
+    }
+    
+    .carousel-indicators .active {
+        background-color: #0d6efd;
+    }
+</style>

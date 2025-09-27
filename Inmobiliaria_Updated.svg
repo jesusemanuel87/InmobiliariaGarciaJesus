@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000" style="background-color: #f8f9fa;">
+  <defs>
+    <style>
+      .entity-box { fill: #e3f2fd; stroke: #1976d2; stroke-width: 2; }
+      .entity-title { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: #1976d2; text-anchor: middle; }
+      .entity-field { font-family: Arial, sans-serif; font-size: 11px; fill: #333; }
+      .pk-field { font-weight: bold; fill: #d32f2f; }
+      .fk-field { font-style: italic; fill: #388e3c; }
+      .relationship-line { stroke: #666; stroke-width: 2; fill: none; }
+      .relationship-text { font-family: Arial, sans-serif; font-size: 10px; fill: #666; text-anchor: middle; }
+      .abstract-entity { fill: #fff3e0; stroke: #f57c00; stroke-width: 2; stroke-dasharray: 5,5; }
+    </style>
+  </defs>
+
+  <!-- PERSONA (Abstract Base Class) -->
+  <rect x="600" y="20" width="200" height="120" class="abstract-entity"/>
+  <text x="700" y="40" class="entity-title">PERSONA (Abstract)</text>
+  <text x="610" y="60" class="entity-field pk-field">+ Id (PK)</text>
+  <text x="610" y="75" class="entity-field">+ Nombre</text>
+  <text x="610" y="90" class="entity-field">+ Apellido</text>
+  <text x="610" y="105" class="entity-field">+ Dni (UNIQUE)</text>
+  <text x="610" y="120" class="entity-field">+ Email (UNIQUE)</text>
+  <text x="610" y="135" class="entity-field">+ Telefono</text>
+
+  <!-- PROPIETARIOS -->
+  <rect x="200" y="200" width="180" height="140" class="entity-box"/>
+  <text x="290" y="220" class="entity-title">PROPIETARIOS</text>
+  <text x="210" y="240" class="entity-field pk-field">+ Id (PK)</text>
+  <text x="210" y="255" class="entity-field">+ Direccion</text>
+  <text x="210" y="270" class="entity-field">+ FechaCreacion</text>
+  <text x="210" y="285" class="entity-field">+ Estado</text>
+  <text x="210" y="300" class="entity-field">+ (hereda de Persona)</text>
+
+  <!-- INQUILINOS -->
+  <rect x="1020" y="200" width="180" height="140" class="entity-box"/>
+  <text x="1110" y="220" class="entity-title">INQUILINOS</text>
+  <text x="1030" y="240" class="entity-field pk-field">+ Id (PK)</text>
+  <text x="1030" y="255" class="entity-field">+ Direccion</text>
+  <text x="1030" y="270" class="entity-field">+ FechaCreacion</text>
+  <text x="1030" y="285" class="entity-field">+ Estado</text>
+  <text x="1030" y="300" class="entity-field">+ (hereda de Persona)</text>
+
+  <!-- EMPLEADOS -->
+  <rect x="600" y="200" width="200" height="160" class="entity-box"/>
+  <text x="700" y="220" class="entity-title">EMPLEADOS</text>
+  <text x="610" y="240" class="entity-field pk-field">+ Id (PK)</text>
+  <text x="610" y="255" class="entity-field">+ Rol</text>
+  <text x="610" y="270" class="entity-field">+ FechaIngreso</text>
+  <text x="610" y="285" class="entity-field">+ Salario</text>
+  <text x="610" y="300" class="entity-field">+ Estado</text>
+  <text x="610" y="315" class="entity-field">+ FechaCreacion</text>
+  <text x="610" y="330" class="entity-field">+ FechaModificacion</text>
+  <text x="610" y="345" class="entity-field">+ (hereda de Persona)</text>
+
+  <!-- USUARIOS -->
+  <rect x="600" y="420" width="200" height="180" class="entity-box"/>
+  <text x="700" y="440" class="entity-title">USUARIOS</text>
+  <text x="610" y="460" class="entity-field pk-field">+ Id (PK)</text>
+  <text x="610" y="475" class="entity-field">+ NombreUsuario (UNIQUE)</text>
+  <text x="610" y="490" class="entity-field">+ Email (UNIQUE)</text>
+  <text x="610" y="505" class="entity-field">+ ClaveHash</text>
+  <text x="610" y="520" class="entity-field">+ FotoPerfil</text>
+  <text x="610" y="535" class="entity-field">+ Rol</text>
+  <text x="610" y="550" class="entity-field">+ FechaCreacion</text>
+  <text x="610" y="565" class="entity-field">+ UltimoAcceso</text>
+  <text x="610" y="580" class="entity-field">+ Estado</text>
+  <text x="610" y="595" class="entity-field fk-field">+ EmpleadoId (FK)</text>
+
+  <!-- TIPOS_INMUEBLE -->
+  <rect x="20" y="420" width="180" height="120" class="entity-box"/>
+  <text x="110" y="440" class="entity-title">TIPOS_INMUEBLE</text>
+  <text x="30" y="460" class="entity-field pk-field">+ Id (PK)</text>
+  <text x="30" y="475" class="entity-field">+ Nombre (UNIQUE)</text>
+  <text x="30" y="490" class="entity-field">+ Descripcion</text>
+  <text x="30" y="505" class="entity-field">+ Estado</text>
+  <text x="30" y="520" class="entity-field">+ FechaCreacion</text>
+
+  <!-- INMUEBLES -->
+  <rect x="200" y="420" width="180" height="220" class="entity-box"/>
+  <text x="290" y="440" class="entity-title">INMUEBLES</text>
+  <text x="210" y="460" class="entity-field pk-field">+ Id (PK)</text>
+  <text x="210" y="475" class="entity-field">+ Direccion</text>
+  <text x="210" y="490" class="entity-field">+ Ambientes</text>
+  <text x="210" y="505" class="entity-field">+ Superficie</text>
+  <text x="210" y="520" class="entity-field">+ Latitud</text>
+  <text x="210" y="535" class="entity-field">+ Longitud</text>
+  <text x="210" y="550" class="entity-field">+ Localidad</text>
+  <text x="210" y="565" class="entity-field">+ Provincia</text>
+  <text x="210" y="580" class="entity-field">+ Precio</text>
+  <text x="210" y="595" class="entity-field">+ Estado</text>
+  <text x="210" y="610" class="entity-field">+ Uso</text>
+  <text x="210" y="625" class="entity-field">+ Disponible</text>
+  <text x="210" y="640" class="entity-field fk-field">+ PropietarioId (FK)</text>
+  <text x="210" y="655" class="entity-field fk-field">+ TipoId (FK)</text>
+
+  <!-- INMUEBLE_IMAGENES -->
+  <rect x="20" y="700" width="180" height="160" class="entity-box"/>
+  <text x="110" y="720" class="entity-title">INMUEBLE_IMAGENES</text>
+  <text x="30" y="740" class="entity-field pk-field">+ Id (PK)</text>
+  <text x="30" y="755" class="entity-field">+ NombreArchivo</text>
+  <text x="30" y="770" class="entity-field">+ RutaArchivo</text>
+  <text x="30" y="785" class="entity-field">+ EsPortada</text>
+  <text x="30" y="800" class="entity-field">+ TamanoArchivo</text>
+  <text x="30" y="815" class="entity-field">+ TipoMime</text>
+  <text x="30" y="830" class="entity-field">+ FechaCreacion</text>
+  <text x="30" y="845" class="entity-field fk-field">+ InmuebleId (FK)</text>
+
+  <!-- CONTRATOS -->
+  <rect x="600" y="700" width="200" height="200" class="entity-box"/>
+  <text x="700" y="720" class="entity-title">CONTRATOS</text>
+  <text x="610" y="740" class="entity-field pk-field">+ Id (PK)</text>
+  <text x="610" y="755" class="entity-field">+ FechaInicio</text>
+  <text x="610" y="770" class="entity-field">+ FechaFin</text>
+  <text x="610" y="785" class="entity-field">+ Precio</text>
+  <text x="610" y="800" class="entity-field">+ Estado</text>
+  <text x="610" y="815" class="entity-field">+ FechaCreacion</text>
+  <text x="610" y="830" class="entity-field">+ FechaTerminacion</text>
+  <text x="610" y="845" class="entity-field fk-field">+ InquilinoId (FK)</text>
+  <text x="610" y="860" class="entity-field fk-field">+ InmuebleId (FK)</text>
+  <text x="610" y="875" class="entity-field fk-field">+ CreadoPorId (FK)</text>
+  <text x="610" y="890" class="entity-field fk-field">+ TerminadoPorId (FK)</text>
+
+  <!-- PAGOS -->
+  <rect x="1020" y="700" width="180" height="240" class="entity-box"/>
+  <text x="1110" y="720" class="entity-title">PAGOS</text>
+  <text x="1030" y="740" class="entity-field pk-field">+ Id (PK)</text>
+  <text x="1030" y="755" class="entity-field">+ Numero</text>
+  <text x="1030" y="770" class="entity-field">+ FechaPago</text>
+  <text x="1030" y="785" class="entity-field">+ FechaVencimiento</text>
+  <text x="1030" y="800" class="entity-field">+ Importe</text>
+  <text x="1030" y="815" class="entity-field">+ Intereses</text>
+  <text x="1030" y="830" class="entity-field">+ Multas</text>
+  <text x="1030" y="845" class="entity-field">+ Estado</text>
+  <text x="1030" y="860" class="entity-field">+ MetodoPago</text>
+  <text x="1030" y="875" class="entity-field">+ Observaciones</text>
+  <text x="1030" y="890" class="entity-field">+ FechaCreacion</text>
+  <text x="1030" y="905" class="entity-field">+ FechaAnulacion</text>
+  <text x="1030" y="920" class="entity-field fk-field">+ ContratoId (FK)</text>
+  <text x="1030" y="935" class="entity-field fk-field">+ CreadoPorId (FK)</text>
+
+  <!-- CONFIGURACION -->
+  <rect x="1220" y="420" width="160" height="140" class="entity-box"/>
+  <text x="1300" y="440" class="entity-title">CONFIGURACION</text>
+  <text x="1230" y="460" class="entity-field pk-field">+ Id (PK)</text>
+  <text x="1230" y="475" class="entity-field">+ Clave (UNIQUE)</text>
+  <text x="1230" y="490" class="entity-field">+ Valor</text>
+  <text x="1230" y="505" class="entity-field">+ Descripcion</text>
+  <text x="1230" y="520" class="entity-field">+ FechaCreacion</text>
+  <text x="1230" y="535" class="entity-field">+ FechaModificacion</text>
+
+  <!-- Inheritance Lines -->
+  <line x1="650" y1="140" x2="290" y2="200" class="relationship-line" stroke-dasharray="5,5"/>
+  <text x="470" y="170" class="relationship-text">hereda</text>
+  
+  <line x1="700" y1="140" x2="700" y2="200" class="relationship-line" stroke-dasharray="5,5"/>
+  <text x="720" y="170" class="relationship-text">hereda</text>
+  
+  <line x1="750" y1="140" x2="1110" y2="200" class="relationship-line" stroke-dasharray="5,5"/>
+  <text x="930" y="170" class="relationship-text">hereda</text>
+
+  <!-- Relationships -->
+  <!-- Empleado -> Usuario (1:1) -->
+  <line x1="700" y1="360" x2="700" y2="420" class="relationship-line"/>
+  <text x="720" y="390" class="relationship-text">1:1</text>
+
+  <!-- Propietario -> Inmueble (1:N) -->
+  <line x1="290" y1="340" x2="290" y2="420" class="relationship-line"/>
+  <text x="310" y="380" class="relationship-text">1:N</text>
+
+  <!-- TipoInmueble -> Inmueble (1:N) -->
+  <line x1="200" y1="480" x2="200" y2="480" class="relationship-line"/>
+  <text x="150" y="470" class="relationship-text">1:N</text>
+
+  <!-- Inmueble -> InmuebleImagen (1:N) -->
+  <line x1="200" y1="640" x2="110" y2="700" class="relationship-line"/>
+  <text x="155" y="670" class="relationship-text">1:N</text>
+
+  <!-- Inmueble -> Contrato (1:N) -->
+  <line x1="380" y1="530" x2="600" y2="800" class="relationship-line"/>
+  <text x="490" y="665" class="relationship-text">1:N</text>
+
+  <!-- Inquilino -> Contrato (1:N) -->
+  <line x1="1020" y1="270" x2="800" y2="700" class="relationship-line"/>
+  <text x="910" y="485" class="relationship-text">1:N</text>
+
+  <!-- Contrato -> Pago (1:N) -->
+  <line x1="800" y1="800" x2="1020" y2="820" class="relationship-line"/>
+  <text x="910" y="810" class="relationship-text">1:N</text>
+
+  <!-- Usuario -> Contrato (Auditoria) -->
+  <line x1="700" y1="600" x2="700" y2="700" class="relationship-line" stroke-dasharray="3,3"/>
+  <text x="720" y="650" class="relationship-text">auditoría</text>
+
+  <!-- Usuario -> Pago (Auditoria) -->
+  <line x1="800" y1="500" x2="1020" y2="800" class="relationship-line" stroke-dasharray="3,3"/>
+  <text x="910" y="650" class="relationship-text">auditoría</text>
+
+  <!-- Title -->
+  <text x="700" y="980" style="font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; fill: #1976d2; text-anchor: middle;">
+    Sistema Inmobiliaria García Jesús - Diagrama ER Actualizado
+  </text>
+</svg>

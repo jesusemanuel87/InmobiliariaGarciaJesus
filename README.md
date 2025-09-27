@@ -501,6 +501,11 @@ El sistema está **100% operativo** con todas las funcionalidades implementadas:
 - **Contraseña**: `admin123`
 - **Rol**: Administrador (acceso completo)
 
+### Usuario Empleado (Creado Automáticamente)
+- **Email**: `empleado@inmobiliaria.com`
+- **Contraseña**: `123456`
+- **Rol**: Empleado (acceso restringido)
+
 ### Creación de Usuarios
 - **Empleados**: Se crean desde el panel de administración con cuenta de usuario automática
 - **Propietarios/Inquilinos**: Pueden registrarse o ser creados por empleados/administradores

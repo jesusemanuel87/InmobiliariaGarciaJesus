@@ -26,6 +26,7 @@ SET time_zone = "+00:00";
 --
 -- Estructura de tabla para la tabla `configuraciones`
 --
+USE inmobiliaria;
 
 CREATE TABLE `configuraciones` (
   `Id` int(11) NOT NULL,
@@ -37,10 +38,20 @@ CREATE TABLE `configuraciones` (
   `FechaModificacion` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
+
+ALTER TABLE configuraciones
+  ADD COLUMN IF NOT EXISTS Clave VARCHAR(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  ADD COLUMN IF NOT EXISTS Valor VARCHAR(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  ADD COLUMN IF NOT EXISTS Descripcion VARCHAR(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS Tipo INT(11) NOT NULL,
+  ADD COLUMN IF NOT EXISTS FechaCreacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  ADD COLUMN IF NOT EXISTS FechaModificacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
 --
 -- Volcado de datos para la tabla `configuraciones`
 --
-
+delete from configuraciones;
 INSERT INTO `configuraciones` (`Id`, `Clave`, `Valor`, `Descripcion`, `Tipo`, `FechaCreacion`, `FechaModificacion`) VALUES
 (1, 'MESES_MINIMOS_6', 'True', 'Opción de 6 meses de alquiler mínimo', 1, '2025-08-31 13:34:01', '2025-09-26 15:45:06'),
 (2, 'MESES_MINIMOS_12', 'True', 'Opción de 12 meses de alquiler mínimo', 1, '2025-08-31 13:34:01', '2025-09-26 15:45:06'),

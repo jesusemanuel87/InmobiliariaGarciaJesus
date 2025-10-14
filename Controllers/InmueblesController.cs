@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using InmobiliariaGarciaJesus.Models;
+using InmobiliariaGarciaJesus.Models.Common;
 using InmobiliariaGarciaJesus.Repositories;
 using InmobiliariaGarciaJesus.Services;
 using InmobiliariaGarciaJesus.Extensions;
@@ -11,19 +12,21 @@ namespace InmobiliariaGarciaJesus.Controllers
     [AuthorizeMultipleRoles(RolUsuario.Empleado, RolUsuario.Administrador, RolUsuario.Propietario)]
     public class InmueblesController : Controller
     {
-        private readonly IRepository<Inmueble> _inmuebleRepository;
+        private readonly InmuebleRepository _inmuebleRepository;
         private readonly IRepository<Propietario> _propietarioRepository;
         private readonly TipoInmuebleRepository _tipoInmuebleRepository;
         private readonly IInmuebleImagenService _imagenService;
         private readonly InmuebleImagenRepository _imagenRepository;
+        private readonly ContratoRepository _contratoRepository;
         private readonly IConfiguration _configuration;
 
         public InmueblesController(
-            IRepository<Inmueble> inmuebleRepository, 
+            InmuebleRepository inmuebleRepository, 
             IRepository<Propietario> propietarioRepository,
             TipoInmuebleRepository tipoInmuebleRepository,
             IInmuebleImagenService imagenService,
             InmuebleImagenRepository imagenRepository,
+            ContratoRepository contratoRepository,
             IConfiguration configuration)
         {
             _inmuebleRepository = inmuebleRepository;
@@ -31,164 +34,119 @@ namespace InmobiliariaGarciaJesus.Controllers
             _tipoInmuebleRepository = tipoInmuebleRepository;
             _imagenService = imagenService;
             _imagenRepository = imagenRepository;
+            _contratoRepository = contratoRepository;
             _configuration = configuration;
         }
 
         // GET: Inmuebles
-        public async Task<IActionResult> Index(string? estado = null, string? tipo = null, string? uso = null, 
-            decimal? precioMin = null, decimal? precioMax = null, string? provincia = null, string? localidad = null,
-            string[]? disponibilidad = null, DateTime? fechaDesde = null, DateTime? fechaHasta = null)
+        public async Task<IActionResult> Index(
+            int page = 1,
+            string? estado = null, 
+            string? tipo = null, 
+            string? uso = null, 
+            decimal? precioMin = null, 
+            decimal? precioMax = null, 
+            string? provincia = null, 
+            string? localidad = null,
+            string[]? disponibilidad = null, 
+            DateTime? fechaDesde = null, 
+            DateTime? fechaHasta = null)
         {
             try
             {
-                var inmuebles = await _inmuebleRepository.GetAllAsync();
-                var inmueblesQuery = inmuebles.AsQueryable();
-                
-                // Obtener tipos de inmueble activos para el filtro
-                var tiposActivos = await _tipoInmuebleRepository.GetActivosAsync();
-
                 // Validar sesión antes de continuar
                 var sessionValidation = this.RedirectToLoginIfInvalidSession();
                 if (sessionValidation != null) return sessionValidation;
 
                 var userRole = this.GetUserRole();
                 
-                // Establecer valores por defecto si no se han especificado filtros
-                bool isFirstLoad = !Request.Query.Any();
+                // Obtener tipos de inmueble activos para el filtro
+                var tiposActivos = await _tipoInmuebleRepository.GetActivosAsync();
                 
-                if (isFirstLoad)
+                // Configuración de paginación (20 items para módulo interno)
+                const int pageSize = 20;
+                
+                // Establecer valores por defecto
+                bool isFirstLoad = !Request.Query.Any();
+                if (isFirstLoad && (userRole == "Administrador" || userRole == "Empleado"))
                 {
-                    // Valores por defecto
-                    disponibilidad = disponibilidad ?? new[] { "Disponible", "Reservado" };
-                    
-                    if (userRole == "Administrador" || userRole == "Empleado")
-                    {
-                        estado = estado ?? "Activo";
-                    }
+                    estado = estado ?? "Activo";
                 }
                 
+                // Determinar estado según rol
+                EstadoInmueble? estadoEnum = null;
                 if (userRole == "Inquilino")
                 {
-                    inmueblesQuery = inmueblesQuery.Where(i => i.Estado == EstadoInmueble.Activo);
-                    estado = "Activo"; // Forzar filtro para inquilinos
+                    estadoEnum = EstadoInmueble.Activo;
+                    estado = "Activo";
                 }
-                else
+                else if (!string.IsNullOrEmpty(estado) && estado != "Todos")
                 {
-                    // Para empleados y administradores, aplicar filtro de estado si se especifica
-                    if (!string.IsNullOrEmpty(estado) && estado != "Todos")
-                    {
-                        if (Enum.TryParse<EstadoInmueble>(estado, out var estadoEnum))
-                        {
-                            inmueblesQuery = inmueblesQuery.Where(i => i.Estado == estadoEnum);
-                        }
-                    }
+                    Enum.TryParse<EstadoInmueble>(estado, out var tempEstado);
+                    estadoEnum = tempEstado;
                 }
 
-                // Aplicar otros filtros
+                // Convertir tipo de string a ID
+                int? tipoId = null;
                 if (!string.IsNullOrEmpty(tipo) && tipo != "Todos")
                 {
-                    // Buscar el tipo por nombre en la lista de tipos activos
                     var tipoEncontrado = tiposActivos.FirstOrDefault(t => t.Nombre.Equals(tipo, StringComparison.OrdinalIgnoreCase));
-                    if (tipoEncontrado != null)
-                    {
-                        inmueblesQuery = inmueblesQuery.Where(i => i.TipoId == tipoEncontrado.Id);
-                    }
+                    tipoId = tipoEncontrado?.Id;
                 }
 
-                if (!string.IsNullOrEmpty(uso) && uso != "Todos")
+                // Convertir uso de string a enum
+                UsoInmueble? usoEnum = null;
+                if (!string.IsNullOrEmpty(uso) && uso != "Todos" && Enum.TryParse<UsoInmueble>(uso, out var tempUso))
                 {
-                    if (Enum.TryParse<UsoInmueble>(uso, out var usoEnum))
-                    {
-                        inmueblesQuery = inmueblesQuery.Where(i => i.Uso == usoEnum);
-                    }
+                    usoEnum = tempUso;
                 }
 
-                if (precioMin.HasValue)
-                {
-                    inmueblesQuery = inmueblesQuery.Where(i => i.Precio >= precioMin.Value);
-                }
+                // ✅ OPTIMIZACIÓN: Solo traer inmuebles de la página actual con filtros en SQL
+                var pagedResult = await _inmuebleRepository.GetPagedAsync(
+                    page: page,
+                    pageSize: pageSize,
+                    provincia: provincia != "Todas" ? provincia : null,
+                    localidad: localidad != "Todas" ? localidad : null,
+                    precioMin: precioMin,
+                    precioMax: precioMax,
+                    estado: estadoEnum,
+                    tipoId: tipoId,
+                    uso: usoEnum
+                );
 
-                if (precioMax.HasValue)
-                {
-                    inmueblesQuery = inmueblesQuery.Where(i => i.Precio <= precioMax.Value);
-                }
-
-                if (!string.IsNullOrEmpty(provincia) && provincia != "Todas")
-                {
-                    inmueblesQuery = inmueblesQuery.Where(i => 
-                        !string.IsNullOrEmpty(i.Provincia) && i.Provincia.Contains(provincia, StringComparison.OrdinalIgnoreCase));
-                }
-
-                if (!string.IsNullOrEmpty(localidad) && localidad != "Todas")
-                {
-                    inmueblesQuery = inmueblesQuery.Where(i => 
-                        !string.IsNullOrEmpty(i.Localidad) && i.Localidad.Contains(localidad, StringComparison.OrdinalIgnoreCase));
-                }
-
-                // Filtro por disponibilidad (multi-select)
-                if (disponibilidad != null && disponibilidad.Any())
-                {
-                    // Obtener contratos para determinar el estado real de disponibilidad
-                    var contratoRepository = HttpContext.RequestServices.GetRequiredService<IRepository<Contrato>>();
-                    var contratos = await contratoRepository.GetAllAsync();
-                    var fechaActual = DateTime.Now;
-
-                    var inmueblesConEstado = inmueblesQuery.Select(i => new
-                    {
-                        Inmueble = i,
-                        EstadoDisponibilidad = DeterminarDisponibilidad(i, contratos, fechaActual)
-                    }).ToList();
-
-                    // Filtrar por los estados seleccionados
-                    var inmueblesConDisponibilidad = inmueblesConEstado
-                        .Where(x => disponibilidad.Contains(x.EstadoDisponibilidad))
-                        .Select(x => x.Inmueble);
-
-                    inmueblesQuery = inmueblesConDisponibilidad.AsQueryable();
-                }
-
-                // Filtro por fechas de disponibilidad para alquiler
-                if (fechaDesde.HasValue || fechaHasta.HasValue)
-                {
-                    // Necesitamos verificar que el inmueble esté disponible en el rango de fechas
-                    // Esto requiere verificar que no haya contratos activos que se solapen con el rango
-                    var contratoRepository = HttpContext.RequestServices.GetRequiredService<IRepository<Contrato>>();
-                    var contratos = await contratoRepository.GetAllAsync();
-
-                    if (fechaDesde.HasValue && fechaHasta.HasValue)
-                    {
-                        // Filtrar inmuebles que NO tengan contratos activos en el rango de fechas
-                        var inmueblesConContratosEnRango = contratos
-                            .Where(c => c.Estado == EstadoContrato.Activo &&
-                                       c.FechaInicio <= fechaHasta.Value &&
-                                       c.FechaFin >= fechaDesde.Value)
-                            .Select(c => c.InmuebleId)
-                            .Distinct()
-                            .ToList();
-
-                        inmueblesQuery = inmueblesQuery.Where(i => !inmueblesConContratosEnRango.Contains(i.Id));
-                    }
-                }
-
-                var inmueblesFiltrados = inmueblesQuery.ToList();
+                // ✅ OPTIMIZACIÓN: Solo traer contratos de los inmuebles de la página actual
+                var inmuebleIds = pagedResult.Items.Select(i => i.Id).ToList();
+                var contratosRelevantes = await _contratoRepository.GetByInmuebleIdsAsync(inmuebleIds);
                 
-                // Cargar imágenes de portada y determinar disponibilidad para cada inmueble
-                var contratoRepositoryFinal = HttpContext.RequestServices.GetRequiredService<IRepository<Contrato>>();
-                var todosLosContratos = await contratoRepositoryFinal.GetAllAsync();
-                var fechaActualFinal = DateTime.Now;
+                var fechaActual = DateTime.Now;
                 var estadosDisponibilidad = new Dictionary<int, string>();
 
-                foreach (var inmueble in inmueblesFiltrados)
+                // Determinar disponibilidad solo de los 20 inmuebles actuales
+                foreach (var inmueble in pagedResult.Items)
                 {
-                    var imagenes = await _imagenRepository.GetByInmuebleIdAsync(inmueble.Id);
-                    inmueble.Imagenes = imagenes.ToList();
-                    
-                    // Determinar y guardar el estado de disponibilidad
-                    estadosDisponibilidad[inmueble.Id] = DeterminarDisponibilidad(inmueble, todosLosContratos, fechaActualFinal);
+                    estadosDisponibilidad[inmueble.Id] = DeterminarDisponibilidad(inmueble, contratosRelevantes, fechaActual);
                 }
+
+                // Aplicar filtro de disponibilidad si es necesario (en memoria, pero solo 20 items)
+                var inmueblesFiltrados = pagedResult.Items;
+                if (disponibilidad != null && disponibilidad.Any())
+                {
+                    inmueblesFiltrados = inmueblesFiltrados
+                        .Where(i => disponibilidad.Contains(estadosDisponibilidad[i.Id]))
+                        .ToList();
+                }
+
+                // Crear resultado paginado final
+                var resultadoFinal = new PagedResult<Inmueble>(
+                    inmueblesFiltrados,
+                    pagedResult.TotalCount,
+                    page,
+                    pageSize
+                );
 
                 // Pasar estados de disponibilidad a la vista
                 ViewBag.EstadosDisponibilidad = estadosDisponibilidad;
+                ViewBag.PagedResult = resultadoFinal;
 
                 // Pasar datos para los filtros
                 ViewBag.EstadoSeleccionado = estado;
@@ -203,18 +161,9 @@ namespace InmobiliariaGarciaJesus.Controllers
                 ViewBag.FechaHasta = fechaHasta?.ToString("yyyy-MM-dd");
                 ViewBag.TiposInmueble = tiposActivos;
 
-                // Calcular rangos de precios
-                var todosConPrecio = inmuebles.Where(i => i.Precio.HasValue).ToList();
-                if (todosConPrecio.Any())
-                {
-                    ViewBag.PrecioMinimo = todosConPrecio.Min(i => i.Precio!.Value);
-                    ViewBag.PrecioMaximo = todosConPrecio.Max(i => i.Precio!.Value);
-                }
-                else
-                {
-                    ViewBag.PrecioMinimo = 0;
-                    ViewBag.PrecioMaximo = 1000000;
-                }
+                // Rangos de precios (valores por defecto, podrían optimizarse con query específico)
+                ViewBag.PrecioMinimo = 0;
+                ViewBag.PrecioMaximo = 1000000;
 
                 // Información del rol para la vista
                 ViewBag.UserRole = userRole;
@@ -226,6 +175,8 @@ namespace InmobiliariaGarciaJesus.Controllers
             catch (Exception ex)
             {
                 TempData["Error"] = "Error al cargar los inmuebles: " + ex.Message;
+                ViewBag.PagedResult = new PagedResult<Inmueble>(new List<Inmueble>(), 0, 1, 20);
+                ViewBag.UserRole = this.GetUserRole();
                 return View(new List<Inmueble>());
             }
         }

@@ -1,5 +1,7 @@
 using InmobiliariaGarciaJesus.Models;
+using InmobiliariaGarciaJesus.Models.Common;
 using MySql.Data.MySqlClient;
+using System.Text;
 
 namespace InmobiliariaGarciaJesus.Repositories
 {
@@ -316,6 +318,198 @@ namespace InmobiliariaGarciaJesus.Repositories
             }
             
             return contratos;
+        }
+
+        /// <summary>
+        /// Obtiene contratos paginados con filtros aplicados a nivel de base de datos.
+        /// Soporta filtros por rol (inquilino, propietario) y múltiples criterios.
+        /// </summary>
+        public async Task<PagedResult<Contrato>> GetPagedAsync(
+            int page = 1,
+            int pageSize = 20,
+            int? inquilinoId = null,
+            int? propietarioId = null,
+            List<EstadoContrato>? estados = null,
+            string? inquilinoSearch = null,
+            string? inmuebleSearch = null,
+            decimal? precioMin = null,
+            decimal? precioMax = null,
+            DateTime? fechaInicioDesde = null,
+            DateTime? fechaInicioHasta = null,
+            DateTime? fechaFinDesde = null,
+            DateTime? fechaFinHasta = null,
+            DateTime? fechaCreacionDesde = null,
+            DateTime? fechaCreacionHasta = null)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+
+            using var connection = new MySqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // Construir WHERE dinámico
+            var whereConditions = new List<string>();
+            var parameters = new List<MySqlParameter>();
+
+            // Filtro por inquilino (para rol Inquilino)
+            if (inquilinoId.HasValue)
+            {
+                whereConditions.Add("c.InquilinoId = @InquilinoId");
+                parameters.Add(new MySqlParameter("@InquilinoId", inquilinoId.Value));
+            }
+
+            // Filtro por propietario (para rol Propietario)
+            if (propietarioId.HasValue)
+            {
+                whereConditions.Add("inm.PropietarioId = @PropietarioId");
+                parameters.Add(new MySqlParameter("@PropietarioId", propietarioId.Value));
+            }
+
+            // Filtro por estados (multiselect)
+            if (estados != null && estados.Any())
+            {
+                var estadosString = string.Join(",", estados.Select((_, i) => $"@Estado{i}"));
+                whereConditions.Add($"c.Estado IN ({estadosString})");
+                for (int i = 0; i < estados.Count; i++)
+                {
+                    parameters.Add(new MySqlParameter($"@Estado{i}", estados[i].ToString()));
+                }
+            }
+
+            // Búsqueda por inquilino (nombre o DNI)
+            if (!string.IsNullOrEmpty(inquilinoSearch))
+            {
+                whereConditions.Add("(CONCAT(inq.Nombre, ' ', inq.Apellido) LIKE @InquilinoSearch OR inq.DNI LIKE @InquilinoSearch)");
+                parameters.Add(new MySqlParameter("@InquilinoSearch", $"%{inquilinoSearch}%"));
+            }
+
+            // Búsqueda por inmueble (dirección)
+            if (!string.IsNullOrEmpty(inmuebleSearch))
+            {
+                whereConditions.Add("inm.Direccion LIKE @InmuebleSearch");
+                parameters.Add(new MySqlParameter("@InmuebleSearch", $"%{inmuebleSearch}%"));
+            }
+
+            // Filtros de precio
+            if (precioMin.HasValue)
+            {
+                whereConditions.Add("c.Precio >= @PrecioMin");
+                parameters.Add(new MySqlParameter("@PrecioMin", precioMin.Value));
+            }
+            if (precioMax.HasValue)
+            {
+                whereConditions.Add("c.Precio <= @PrecioMax");
+                parameters.Add(new MySqlParameter("@PrecioMax", precioMax.Value));
+            }
+
+            // Filtros de fecha de inicio
+            if (fechaInicioDesde.HasValue)
+            {
+                whereConditions.Add("c.FechaInicio >= @FechaInicioDesde");
+                parameters.Add(new MySqlParameter("@FechaInicioDesde", fechaInicioDesde.Value));
+            }
+            if (fechaInicioHasta.HasValue)
+            {
+                whereConditions.Add("c.FechaInicio <= @FechaInicioHasta");
+                parameters.Add(new MySqlParameter("@FechaInicioHasta", fechaInicioHasta.Value));
+            }
+
+            // Filtros de fecha de fin
+            if (fechaFinDesde.HasValue)
+            {
+                whereConditions.Add("c.FechaFin >= @FechaFinDesde");
+                parameters.Add(new MySqlParameter("@FechaFinDesde", fechaFinDesde.Value));
+            }
+            if (fechaFinHasta.HasValue)
+            {
+                whereConditions.Add("c.FechaFin <= @FechaFinHasta");
+                parameters.Add(new MySqlParameter("@FechaFinHasta", fechaFinHasta.Value));
+            }
+
+            // Filtros de fecha de creación
+            if (fechaCreacionDesde.HasValue)
+            {
+                whereConditions.Add("c.FechaCreacion >= @FechaCreacionDesde");
+                parameters.Add(new MySqlParameter("@FechaCreacionDesde", fechaCreacionDesde.Value));
+            }
+            if (fechaCreacionHasta.HasValue)
+            {
+                whereConditions.Add("c.FechaCreacion <= @FechaCreacionHasta");
+                parameters.Add(new MySqlParameter("@FechaCreacionHasta", fechaCreacionHasta.Value));
+            }
+
+            var whereClause = whereConditions.Any() ? $"WHERE {string.Join(" AND ", whereConditions)}" : "";
+
+            // Query para contar total de registros
+            var countQuery = $@"
+                SELECT COUNT(*) 
+                FROM Contratos c
+                LEFT JOIN Inquilinos inq ON c.InquilinoId = inq.Id
+                LEFT JOIN Inmuebles inm ON c.InmuebleId = inm.Id
+                {whereClause}";
+
+            int totalCount;
+            using (var countCommand = new MySqlCommand(countQuery, connection))
+            {
+                countCommand.Parameters.AddRange(parameters.ToArray());
+                totalCount = Convert.ToInt32(await countCommand.ExecuteScalarAsync());
+            }
+
+            // Query para obtener datos paginados
+            var offset = (page - 1) * pageSize;
+            var dataQuery = $@"
+                SELECT c.Id, c.FechaInicio, c.FechaFin, c.Precio, c.InquilinoId, c.InmuebleId, c.Estado, c.FechaCreacion,
+                       inq.Nombre as InquilinoNombre, inq.Apellido as InquilinoApellido, inq.DNI as InquilinoDNI,
+                       inq.Telefono as InquilinoTelefono, inq.Email as InquilinoEmail,
+                       inm.Direccion as InmuebleDireccion, inm.TipoId as InmuebleTipo, inm.Ambientes as InmuebleAmbientes
+                FROM Contratos c
+                LEFT JOIN Inquilinos inq ON c.InquilinoId = inq.Id
+                LEFT JOIN Inmuebles inm ON c.InmuebleId = inm.Id
+                {whereClause}
+                ORDER BY c.FechaCreacion DESC
+                LIMIT @PageSize OFFSET @Offset";
+
+            var contratos = new List<Contrato>();
+            using (var dataCommand = new MySqlCommand(dataQuery, connection))
+            {
+                dataCommand.Parameters.AddRange(parameters.Select(p => new MySqlParameter(p.ParameterName, p.Value)).ToArray());
+                dataCommand.Parameters.AddWithValue("@PageSize", pageSize);
+                dataCommand.Parameters.AddWithValue("@Offset", offset);
+
+                using var reader = await dataCommand.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    contratos.Add(new Contrato
+                    {
+                        Id = Convert.ToInt32(reader["Id"]),
+                        FechaInicio = Convert.ToDateTime(reader["FechaInicio"]),
+                        FechaFin = Convert.ToDateTime(reader["FechaFin"]),
+                        Precio = Convert.ToDecimal(reader["Precio"]),
+                        InquilinoId = Convert.ToInt32(reader["InquilinoId"]),
+                        InmuebleId = Convert.ToInt32(reader["InmuebleId"]),
+                        Estado = Enum.TryParse<EstadoContrato>(reader["Estado"]?.ToString(), out var estado) ? estado : EstadoContrato.Activo,
+                        FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                        Inquilino = new Inquilino
+                        {
+                            Id = Convert.ToInt32(reader["InquilinoId"]),
+                            Nombre = reader["InquilinoNombre"].ToString() ?? string.Empty,
+                            Apellido = reader["InquilinoApellido"].ToString() ?? string.Empty,
+                            Dni = reader["InquilinoDNI"].ToString() ?? string.Empty,
+                            Telefono = reader["InquilinoTelefono"]?.ToString(),
+                            Email = reader["InquilinoEmail"]?.ToString()
+                        },
+                        Inmueble = new Inmueble
+                        {
+                            Id = Convert.ToInt32(reader["InmuebleId"]),
+                            Direccion = reader["InmuebleDireccion"].ToString() ?? string.Empty,
+                            TipoId = reader["InmuebleTipo"] == DBNull.Value ? 0 : Convert.ToInt32(reader["InmuebleTipo"]),
+                            Ambientes = reader["InmuebleAmbientes"] == DBNull.Value ? 0 : Convert.ToInt32(reader["InmuebleAmbientes"])
+                        }
+                    });
+                }
+            }
+
+            return new PagedResult<Contrato>(contratos, totalCount, page, pageSize);
         }
     }
 }

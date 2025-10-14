@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using InmobiliariaGarciaJesus.Models;
+using InmobiliariaGarciaJesus.Models.Common;
 using InmobiliariaGarciaJesus.Repositories;
 using InmobiliariaGarciaJesus.Services;
 using InmobiliariaGarciaJesus.Attributes;
@@ -10,6 +11,7 @@ namespace InmobiliariaGarciaJesus.Controllers
     public class ContratosController : Controller
     {
         private readonly IContratoService _contratoService;
+        private readonly ContratoRepository _contratoRepository;
         private readonly IRepository<Inquilino> _inquilinoRepository;
         private readonly IRepository<Inmueble> _inmuebleRepository;
         private readonly IPagoService _pagoService;
@@ -17,6 +19,7 @@ namespace InmobiliariaGarciaJesus.Controllers
         private readonly UsuarioRepository _usuarioRepository;
 
         public ContratosController(IContratoService contratoService,
+                                  ContratoRepository contratoRepository,
                                   IRepository<Inquilino> inquilinoRepository,
                                   IRepository<Inmueble> inmuebleRepository,
                                   IPagoService pagoService,
@@ -24,6 +27,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                                   UsuarioRepository usuarioRepository)
         {
             _contratoService = contratoService;
+            _contratoRepository = contratoRepository;
             _inquilinoRepository = inquilinoRepository;
             _inmuebleRepository = inmuebleRepository;
             _pagoService = pagoService;
@@ -32,111 +36,80 @@ namespace InmobiliariaGarciaJesus.Controllers
         }
 
         // GET: Contratos
-        public async Task<IActionResult> Index(string[]? estado = null, string? inquilino = null, string? inmueble = null,
-            decimal? precioMin = null, decimal? precioMax = null, DateTime? fechaDesde = null, DateTime? fechaHasta = null,
-            DateTime? fechaInicioDesde = null, DateTime? fechaInicioHasta = null, DateTime? fechaFinDesde = null, DateTime? fechaFinHasta = null)
+        public async Task<IActionResult> Index(
+            int page = 1,
+            string[]? estado = null, 
+            string? inquilino = null, 
+            string? inmueble = null,
+            decimal? precioMin = null, 
+            decimal? precioMax = null, 
+            DateTime? fechaDesde = null, 
+            DateTime? fechaHasta = null,
+            DateTime? fechaInicioDesde = null, 
+            DateTime? fechaInicioHasta = null, 
+            DateTime? fechaFinDesde = null, 
+            DateTime? fechaFinHasta = null)
         {
             try
             {
-                var contratos = await _contratoService.GetAllAsync();
-                var contratosQuery = contratos.AsQueryable();
-
-                // Restricción por rol: Los inquilinos solo ven sus propios contratos
+                // Configuración de paginación (20 items para módulo interno)
+                const int pageSize = 20;
+                
+                // Obtener información del usuario
                 var userRole = HttpContext.Session.GetString("UserRole");
                 var userId = HttpContext.Session.GetString("UserId");
                 
-                // Establecer valores por defecto si no se han especificado filtros
+                // Establecer valores por defecto
                 bool isFirstLoad = !Request.Query.Any();
-                
                 if (isFirstLoad)
                 {
-                    // Valores por defecto: Activo y Reservado
                     estado = estado ?? new[] { "Activo", "Reservado" };
                 }
 
-                // Filtros por rol
+                // Determinar filtros por rol
+                int? inquilinoId = null;
+                int? propietarioId = null;
+                
                 if (userRole == "Inquilino" && int.TryParse(userId, out var inquilinoUserId))
                 {
-                    // Los inquilinos solo ven sus propios contratos
-                    contratosQuery = contratosQuery.Where(c => c.InquilinoId == inquilinoUserId);
+                    inquilinoId = inquilinoUserId;
                 }
                 else if (userRole == "Propietario" && int.TryParse(userId, out var propietarioUserId))
                 {
-                    // Los propietarios solo ven contratos de sus inmuebles
-                    contratosQuery = contratosQuery.Where(c => c.Inmueble != null && c.Inmueble.PropietarioId == propietarioUserId);
+                    propietarioId = propietarioUserId;
                 }
 
-                // Aplicar filtros
-                // Filtro por estado (multiselect)
+                // Convertir estados de string[] a List<EstadoContrato>
+                List<EstadoContrato>? estadosEnum = null;
                 if (estado != null && estado.Any() && !estado.Contains("Todos"))
                 {
-                    var estadosEnum = estado.Where(e => Enum.TryParse<EstadoContrato>(e, out _))
-                                           .Select(e => Enum.Parse<EstadoContrato>(e))
-                                           .ToList();
-                    if (estadosEnum.Any())
-                    {
-                        contratosQuery = contratosQuery.Where(c => estadosEnum.Contains(c.Estado));
-                    }
+                    estadosEnum = estado
+                        .Where(e => Enum.TryParse<EstadoContrato>(e, out _))
+                        .Select(e => Enum.Parse<EstadoContrato>(e))
+                        .ToList();
                 }
 
-                // Filtro por inquilino (búsqueda por nombre)
-                if (!string.IsNullOrEmpty(inquilino))
-                {
-                    contratosQuery = contratosQuery.Where(c => c.Inquilino != null && 
-                        (c.Inquilino.NombreCompleto.Contains(inquilino, StringComparison.OrdinalIgnoreCase) ||
-                         c.Inquilino.Dni.Contains(inquilino, StringComparison.OrdinalIgnoreCase)));
-                }
-
-                // Filtro por inmueble (búsqueda por dirección)
-                if (!string.IsNullOrEmpty(inmueble))
-                {
-                    contratosQuery = contratosQuery.Where(c => c.Inmueble != null && 
-                        c.Inmueble.Direccion.Contains(inmueble, StringComparison.OrdinalIgnoreCase));
-                }
-
-                // Filtro por precio
-                if (precioMin.HasValue)
-                {
-                    contratosQuery = contratosQuery.Where(c => c.Precio >= precioMin.Value);
-                }
-                if (precioMax.HasValue)
-                {
-                    contratosQuery = contratosQuery.Where(c => c.Precio <= precioMax.Value);
-                }
-
-                // Filtro por fecha de inicio del contrato
-                if (fechaInicioDesde.HasValue)
-                {
-                    contratosQuery = contratosQuery.Where(c => c.FechaInicio >= fechaInicioDesde.Value);
-                }
-                if (fechaInicioHasta.HasValue)
-                {
-                    contratosQuery = contratosQuery.Where(c => c.FechaInicio <= fechaInicioHasta.Value);
-                }
-
-                // Filtro por fecha de fin del contrato
-                if (fechaFinDesde.HasValue)
-                {
-                    contratosQuery = contratosQuery.Where(c => c.FechaFin >= fechaFinDesde.Value);
-                }
-                if (fechaFinHasta.HasValue)
-                {
-                    contratosQuery = contratosQuery.Where(c => c.FechaFin <= fechaFinHasta.Value);
-                }
-
-                // Filtro por fecha de creación
-                if (fechaDesde.HasValue)
-                {
-                    contratosQuery = contratosQuery.Where(c => c.FechaCreacion >= fechaDesde.Value);
-                }
-                if (fechaHasta.HasValue)
-                {
-                    contratosQuery = contratosQuery.Where(c => c.FechaCreacion <= fechaHasta.Value);
-                }
-
-                var contratosFiltrados = contratosQuery.OrderByDescending(c => c.FechaCreacion).ToList();
+                // ✅ OPTIMIZACIÓN: Solo traer contratos de la página actual con filtros en SQL
+                var pagedResult = await _contratoRepository.GetPagedAsync(
+                    page: page,
+                    pageSize: pageSize,
+                    inquilinoId: inquilinoId,
+                    propietarioId: propietarioId,
+                    estados: estadosEnum,
+                    inquilinoSearch: inquilino,
+                    inmuebleSearch: inmueble,
+                    precioMin: precioMin,
+                    precioMax: precioMax,
+                    fechaInicioDesde: fechaInicioDesde,
+                    fechaInicioHasta: fechaInicioHasta,
+                    fechaFinDesde: fechaFinDesde,
+                    fechaFinHasta: fechaFinHasta,
+                    fechaCreacionDesde: fechaDesde,
+                    fechaCreacionHasta: fechaHasta
+                );
 
                 // Pasar datos para los filtros
+                ViewBag.PagedResult = pagedResult;
                 ViewBag.Estados = estado;
                 ViewBag.Inquilino = inquilino;
                 ViewBag.Inmueble = inmueble;
@@ -149,10 +122,10 @@ namespace InmobiliariaGarciaJesus.Controllers
                 ViewBag.FechaFinDesde = fechaFinDesde;
                 ViewBag.FechaFinHasta = fechaFinHasta;
                 ViewBag.UserRole = userRole;
-                ViewBag.TotalContratos = contratos.Count();
-                ViewBag.ContratosFiltrados = contratosFiltrados.Count;
+                ViewBag.TotalContratos = pagedResult.TotalCount;
+                ViewBag.ContratosFiltrados = pagedResult.Items.Count();
 
-                return View(contratosFiltrados);
+                return View(pagedResult.Items.ToList());
             }
             catch (Exception ex)
             {

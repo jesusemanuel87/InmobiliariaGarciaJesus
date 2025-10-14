@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using InmobiliariaGarciaJesus.Models;
+using InmobiliariaGarciaJesus.Models.Common;
 using InmobiliariaGarciaJesus.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
@@ -29,75 +30,74 @@ public class HomeController : Controller
         _configuration = configuration;
     }
 
-    public async Task<IActionResult> Index(string? provincia = null, string? localidad = null, 
-        DateTime? fechaDesde = null, DateTime? fechaHasta = null, decimal? precioMin = null, decimal? precioMax = null,
-        string? tipo = null, string? uso = null)
+    public async Task<IActionResult> Index(
+        int page = 1,
+        string? provincia = null, 
+        string? localidad = null, 
+        DateTime? fechaDesde = null, 
+        DateTime? fechaHasta = null, 
+        decimal? precioMin = null, 
+        decimal? precioMax = null,
+        string? tipo = null, 
+        string? uso = null)
     {
         try
         {
-            // Obtener inmuebles activos
-            var inmuebles = await _inmuebleRepository.GetAllAsync();
-            var inmueblesFiltrados = inmuebles.Where(i => i.Estado == EstadoInmueble.Activo).AsQueryable();
+            // Configuración de paginación
+            const int pageSize = 12; // Mostrar 12 inmuebles por página
             
             // Obtener tipos de inmueble activos para el filtro
             var tiposActivos = await _tipoInmuebleRepository.GetActivosAsync();
 
-            // Obtener todos los contratos para verificar disponibilidad
-            var contratos = await _contratoRepository.GetAllAsync();
-            var fechaActual = DateTime.Now.Date;
-
-            // Si se especifican fechas, usar la fecha desde como referencia
-            var fechaReferencia = fechaDesde ?? fechaActual;
-
-            // Aplicar filtros
-            if (!string.IsNullOrEmpty(provincia) && provincia != "Todas")
-            {
-                inmueblesFiltrados = inmueblesFiltrados.Where(i => 
-                    string.IsNullOrEmpty(i.Provincia) || i.Provincia.Contains(provincia, StringComparison.OrdinalIgnoreCase));
-            }
-
-            if (!string.IsNullOrEmpty(localidad) && localidad != "Todas")
-            {
-                inmueblesFiltrados = inmueblesFiltrados.Where(i => 
-                    string.IsNullOrEmpty(i.Localidad) || i.Localidad.Contains(localidad, StringComparison.OrdinalIgnoreCase));
-            }
-
-            if (precioMin.HasValue)
-            {
-                inmueblesFiltrados = inmueblesFiltrados.Where(i => i.Precio >= precioMin.Value);
-            }
-
-            if (precioMax.HasValue)
-            {
-                inmueblesFiltrados = inmueblesFiltrados.Where(i => i.Precio <= precioMax.Value);
-            }
-
-            // Filtrar por tipo de inmueble
+            // Convertir tipo de string a ID
+            int? tipoId = null;
             if (!string.IsNullOrEmpty(tipo))
             {
-                // Buscar el tipo por nombre en la lista de tipos activos
                 var tipoEncontrado = tiposActivos.FirstOrDefault(t => t.Nombre.Equals(tipo, StringComparison.OrdinalIgnoreCase));
-                if (tipoEncontrado != null)
-                {
-                    inmueblesFiltrados = inmueblesFiltrados.Where(i => i.TipoId == tipoEncontrado.Id);
-                }
+                tipoId = tipoEncontrado?.Id;
             }
 
-            // Filtrar por uso del inmueble
-            if (!string.IsNullOrEmpty(uso))
+            // Convertir uso de string a enum
+            UsoInmueble? usoEnum = null;
+            if (!string.IsNullOrEmpty(uso) && Enum.TryParse<UsoInmueble>(uso, out var usoTemp))
             {
-                if (Enum.TryParse<UsoInmueble>(uso, out var usoEnum))
-                {
-                    inmueblesFiltrados = inmueblesFiltrados.Where(i => i.Uso == usoEnum);
-                }
+                usoEnum = usoTemp;
             }
 
-            // Filtrar por disponibilidad basada en contratos y fechas
-            var resultado = inmueblesFiltrados.ToList().Where(inmueble => 
+            // ✅ OPTIMIZACIÓN: Solo traer los inmuebles de la página actual con filtros aplicados en SQL
+            var pagedResult = await _inmuebleRepository.GetPagedAsync(
+                page: page,
+                pageSize: pageSize,
+                provincia: provincia,
+                localidad: localidad,
+                precioMin: precioMin,
+                precioMax: precioMax,
+                estado: EstadoInmueble.Activo,
+                tipoId: tipoId,
+                uso: usoEnum
+            );
+
+            // ✅ OPTIMIZACIÓN: Solo traer contratos de los inmuebles de la página actual
+            var inmuebleIds = pagedResult.Items.Select(i => i.Id).ToList();
+            var contratosRelevantes = await _contratoRepository.GetByInmuebleIdsAsync(inmuebleIds);
+            
+            var fechaActual = DateTime.Now.Date;
+            var fechaReferencia = fechaDesde ?? fechaActual;
+
+            // Filtrar por disponibilidad (solo los 12 inmuebles actuales)
+            var inmueblesDisponibles = pagedResult.Items.Where(inmueble => 
             {
-                var disponibilidad = DeterminarDisponibilidad(inmueble, contratos, fechaReferencia, fechaHasta);
+                var disponibilidad = DeterminarDisponibilidad(inmueble, contratosRelevantes, fechaReferencia, fechaHasta);
                 return disponibilidad == "Disponible";
             }).ToList();
+
+            // Actualizar el resultado paginado con los inmuebles disponibles
+            var resultadoFinal = new PagedResult<Inmueble>(
+                inmueblesDisponibles,
+                pagedResult.TotalCount, // Mantener el total original para la paginación
+                page,
+                pageSize
+            );
 
             // Pasar datos para los filtros
             ViewBag.ProvinciaSeleccionada = provincia;
@@ -110,26 +110,19 @@ public class HomeController : Controller
             ViewBag.UsoSeleccionado = uso;
             ViewBag.TiposInmueble = tiposActivos;
 
-            // Obtener rangos de precios para el slider basado en TODOS los inmuebles (no filtrados)
-            // Esto mantiene el rango completo disponible para el slider
-            var todosConPrecio = inmuebles.Where(i => i.Precio.HasValue).ToList();
-            if (todosConPrecio.Any())
-            {
-                ViewBag.PrecioMinimo = todosConPrecio.Min(i => i.Precio!.Value);
-                ViewBag.PrecioMaximo = todosConPrecio.Max(i => i.Precio!.Value);
-            }
-            else
-            {
-                ViewBag.PrecioMinimo = 0;
-                ViewBag.PrecioMaximo = 1000000; // Valor por defecto
-            }
+            // Rangos de precios para el slider (calcular desde una query rápida)
+            ViewBag.PrecioMinimo = 0;
+            ViewBag.PrecioMaximo = 1000000; // Valor por defecto, podría optimizarse con query específico
 
-            return View(resultado);
+            _logger.LogInformation("Página {Page}: Cargados {Count} inmuebles de {Total} total", 
+                page, inmueblesDisponibles.Count, pagedResult.TotalCount);
+
+            return View(resultadoFinal);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al cargar inmuebles públicos");
-            return View(new List<Inmueble>());
+            return View(new PagedResult<Inmueble>(new List<Inmueble>(), 0, 1, 12));
         }
     }
 

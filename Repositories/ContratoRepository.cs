@@ -274,5 +274,48 @@ namespace InmobiliariaGarciaJesus.Repositories
             
             return unavailableDates;
         }
+
+        /// <summary>
+        /// Obtiene contratos solo de los inmuebles especificados. 
+        /// Optimiza el rendimiento al evitar cargar todos los contratos.
+        /// </summary>
+        public async Task<IEnumerable<Contrato>> GetByInmuebleIdsAsync(IEnumerable<int> inmuebleIds)
+        {
+            if (!inmuebleIds.Any())
+            {
+                return new List<Contrato>();
+            }
+
+            var contratos = new List<Contrato>();
+            
+            using var connection = new MySqlConnection(_connectionString);
+            await connection.OpenAsync();
+            
+            var idsString = string.Join(",", inmuebleIds);
+            var query = $@"SELECT c.Id, c.FechaInicio, c.FechaFin, c.Precio, c.InquilinoId, c.InmuebleId, c.Estado, c.FechaCreacion
+                          FROM Contratos c
+                          WHERE c.InmuebleId IN ({idsString})
+                          AND (c.Estado = 'Activo' OR c.Estado = 'Reservado')";
+            
+            using var command = new MySqlCommand(query, connection);
+            using var reader = await command.ExecuteReaderAsync();
+            
+            while (await reader.ReadAsync())
+            {
+                contratos.Add(new Contrato
+                {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    FechaInicio = Convert.ToDateTime(reader["FechaInicio"]),
+                    FechaFin = Convert.ToDateTime(reader["FechaFin"]),
+                    Precio = Convert.ToDecimal(reader["Precio"]),
+                    InquilinoId = Convert.ToInt32(reader["InquilinoId"]),
+                    InmuebleId = Convert.ToInt32(reader["InmuebleId"]),
+                    Estado = Enum.TryParse<EstadoContrato>(reader["Estado"]?.ToString(), out var estado) ? estado : EstadoContrato.Activo,
+                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"])
+                });
+            }
+            
+            return contratos;
+        }
     }
 }

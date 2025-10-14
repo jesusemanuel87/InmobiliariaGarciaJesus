@@ -1,5 +1,7 @@
 using InmobiliariaGarciaJesus.Models;
+using InmobiliariaGarciaJesus.Models.Common;
 using MySql.Data.MySqlClient;
+using System.Text;
 
 namespace InmobiliariaGarciaJesus.Repositories
 {
@@ -289,6 +291,159 @@ namespace InmobiliariaGarciaJesus.Repositories
             }
             
             return inmuebles;
+        }
+
+        /// <summary>
+        /// Obtiene inmuebles paginados con filtros aplicados a nivel de base de datos.
+        /// Este método optimiza el rendimiento al traer solo los registros necesarios.
+        /// </summary>
+        public async Task<PagedResult<Inmueble>> GetPagedAsync(
+            int page = 1,
+            int pageSize = 12,
+            string? provincia = null,
+            string? localidad = null,
+            decimal? precioMin = null,
+            decimal? precioMax = null,
+            EstadoInmueble? estado = null,
+            int? tipoId = null,
+            UsoInmueble? uso = null)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 12;
+
+            using var connection = new MySqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // Construir WHERE dinámico
+            var whereConditions = new List<string>();
+            var parameters = new List<MySqlParameter>();
+
+            // Filtro de estado
+            if (estado.HasValue)
+            {
+                whereConditions.Add("i.Estado = @Estado");
+                parameters.Add(new MySqlParameter("@Estado", estado.Value == EstadoInmueble.Activo ? 1 : 0));
+            }
+            else
+            {
+                // Por defecto solo mostrar activos
+                whereConditions.Add("i.Estado = 1");
+            }
+
+            // Filtro de provincia
+            if (!string.IsNullOrEmpty(provincia))
+            {
+                whereConditions.Add("i.Provincia LIKE @Provincia");
+                parameters.Add(new MySqlParameter("@Provincia", $"%{provincia}%"));
+            }
+
+            // Filtro de localidad
+            if (!string.IsNullOrEmpty(localidad))
+            {
+                whereConditions.Add("i.Localidad LIKE @Localidad");
+                parameters.Add(new MySqlParameter("@Localidad", $"%{localidad}%"));
+            }
+
+            // Filtro de precio mínimo
+            if (precioMin.HasValue)
+            {
+                whereConditions.Add("i.Precio >= @PrecioMin");
+                parameters.Add(new MySqlParameter("@PrecioMin", precioMin.Value));
+            }
+
+            // Filtro de precio máximo
+            if (precioMax.HasValue)
+            {
+                whereConditions.Add("i.Precio <= @PrecioMax");
+                parameters.Add(new MySqlParameter("@PrecioMax", precioMax.Value));
+            }
+
+            // Filtro de tipo
+            if (tipoId.HasValue)
+            {
+                whereConditions.Add("i.TipoId = @TipoId");
+                parameters.Add(new MySqlParameter("@TipoId", tipoId.Value));
+            }
+
+            // Filtro de uso
+            if (uso.HasValue)
+            {
+                whereConditions.Add("i.Uso = @Uso");
+                parameters.Add(new MySqlParameter("@Uso", uso.Value.ToString()));
+            }
+
+            var whereClause = whereConditions.Any() ? $"WHERE {string.Join(" AND ", whereConditions)}" : "";
+
+            // Query para contar total de registros
+            var countQuery = $@"
+                SELECT COUNT(*) 
+                FROM inmuebles i 
+                {whereClause}";
+
+            int totalCount;
+            using (var countCommand = new MySqlCommand(countQuery, connection))
+            {
+                countCommand.Parameters.AddRange(parameters.ToArray());
+                totalCount = Convert.ToInt32(await countCommand.ExecuteScalarAsync());
+            }
+
+            // Query para obtener datos paginados
+            var offset = (page - 1) * pageSize;
+            var dataQuery = $@"
+                SELECT i.Id, i.Direccion, i.Ambientes, i.Superficie, i.Latitud, i.Longitud, 
+                       i.PropietarioId, i.TipoId, i.Precio, i.Estado, i.Uso, i.FechaCreacion, 
+                       i.Localidad, i.Provincia,
+                       t.Nombre as TipoNombre
+                FROM inmuebles i
+                LEFT JOIN TiposInmueble t ON i.TipoId = t.Id
+                {whereClause}
+                ORDER BY i.FechaCreacion DESC
+                LIMIT @PageSize OFFSET @Offset";
+
+            var inmuebles = new List<Inmueble>();
+            using (var dataCommand = new MySqlCommand(dataQuery, connection))
+            {
+                dataCommand.Parameters.AddRange(parameters.Select(p => new MySqlParameter(p.ParameterName, p.Value)).ToArray());
+                dataCommand.Parameters.AddWithValue("@PageSize", pageSize);
+                dataCommand.Parameters.AddWithValue("@Offset", offset);
+
+                using var reader = await dataCommand.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    var inmueble = new Inmueble
+                    {
+                        Id = Convert.ToInt32(reader["Id"]),
+                        Direccion = reader["Direccion"].ToString() ?? string.Empty,
+                        Ambientes = Convert.ToInt32(reader["Ambientes"]),
+                        Superficie = reader["Superficie"] == DBNull.Value ? null : Convert.ToDecimal(reader["Superficie"]),
+                        Latitud = reader["Latitud"] == DBNull.Value ? null : Convert.ToDecimal(reader["Latitud"]),
+                        Longitud = reader["Longitud"] == DBNull.Value ? null : Convert.ToDecimal(reader["Longitud"]),
+                        PropietarioId = Convert.ToInt32(reader["PropietarioId"]),
+                        TipoId = Convert.ToInt32(reader["TipoId"]),
+                        Precio = reader["Precio"] == DBNull.Value ? null : Convert.ToDecimal(reader["Precio"]),
+                        Estado = Convert.ToBoolean(reader["Estado"]) ? EstadoInmueble.Activo : EstadoInmueble.Inactivo,
+                        Uso = reader["Uso"] == DBNull.Value ? UsoInmueble.Residencial : Enum.TryParse<UsoInmueble>(reader["Uso"]?.ToString(), out var usoEnum) ? usoEnum : UsoInmueble.Residencial,
+                        FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                        Localidad = reader["Localidad"]?.ToString(),
+                        Provincia = reader["Provincia"]?.ToString(),
+                        Disponible = true,
+                        Tipo = reader["TipoNombre"] != DBNull.Value ? (dynamic)new 
+                        {
+                            Id = Convert.ToInt32(reader["TipoId"]),
+                            Nombre = reader["TipoNombre"]?.ToString() ?? "Sin tipo"
+                        } : null
+                    };
+                    inmuebles.Add(inmueble);
+                }
+            }
+
+            // Cargar imágenes solo para los inmuebles de la página actual
+            foreach (var inmueble in inmuebles)
+            {
+                await LoadImagenesAsync(inmueble);
+            }
+
+            return new PagedResult<Inmueble>(inmuebles, totalCount, page, pageSize);
         }
     }
 }

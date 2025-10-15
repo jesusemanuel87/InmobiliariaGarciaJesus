@@ -1,4 +1,4 @@
-@model IEnumerable<InmobiliariaGarciaJesus.Models.Inmueble>
+@model InmobiliariaGarciaJesus.Models.Common.PagedResult<InmobiliariaGarciaJesus.Models.Inmueble>
 
 @{
     ViewData["Title"] = "Inmuebles";
@@ -208,11 +208,25 @@
                 </div>
             </div>
 
+            <!-- Info de paginación -->
+            @if (Model.TotalCount > 0)
+            {
+                <div class="alert alert-info d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-info-circle me-2"></i>
+                        Mostrando <strong>@Model.FirstItemIndex</strong> - <strong>@Model.LastItemIndex</strong> de <strong>@Model.TotalCount</strong> inmuebles
+                    </div>
+                    <div>
+                        <span class="badge bg-primary">Página @Model.Page de @Model.TotalPages</span>
+                    </div>
+                </div>
+            }
+
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-list me-2"></i>Resultados 
-                        <span class="badge bg-primary">@Model.Count() inmuebles</span>
+                        <span class="badge bg-primary">@Model.Items.Count() inmuebles en página actual</span>
                     </h5>
                     @if (ViewBag.UserRole == "Inquilino")
                     {
@@ -222,26 +236,26 @@
                     }
                 </div>
                 <div class="card-body">
-                    @if (Model.Any())
+                    @if (Model.Items.Any())
                     {
                         <div class="table-responsive">
                             <table class="table table-striped table-hover">
                                 <thead class="table-dark">
                                     <tr>
                                         <th>Imagen</th>
-                                        <th>@Html.DisplayNameFor(model => model.Direccion)</th>
+                                        <th>@Html.DisplayNameFor(model => model.Items.FirstOrDefault().Direccion)</th>
                                         <th>Ubicación</th>
-                                        <th>@Html.DisplayNameFor(model => model.Tipo)</th>
-                                        <th>@Html.DisplayNameFor(model => model.Ambientes)</th>
-                                        <th>@Html.DisplayNameFor(model => model.Precio)</th>
-                                        <th>@Html.DisplayNameFor(model => model.Uso)</th>
-                                        <th>@Html.DisplayNameFor(model => model.Estado)</th>
+                                        <th>@Html.DisplayNameFor(model => model.Items.FirstOrDefault().Tipo)</th>
+                                        <th>@Html.DisplayNameFor(model => model.Items.FirstOrDefault().Ambientes)</th>
+                                        <th>@Html.DisplayNameFor(model => model.Items.FirstOrDefault().Precio)</th>
+                                        <th>@Html.DisplayNameFor(model => model.Items.FirstOrDefault().Uso)</th>
+                                        <th>@Html.DisplayNameFor(model => model.Items.FirstOrDefault().Estado)</th>
                                         <th>Disponibilidad</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var item in Model)
+                                    @foreach (var item in Model.Items)
                                     {
                                         <tr>
                                             <td>
@@ -345,6 +359,154 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- Controles de paginación -->
+                        @if (Model.TotalPages > 1)
+                        {
+                            <nav aria-label="Paginación de inmuebles" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    <!-- Botón Anterior -->
+                                    @if (Model.HasPreviousPage)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@Url.Action("Index", new { 
+                                                page = Model.Page - 1,
+                                                estado = ViewBag.EstadoSeleccionado,
+                                                tipo = ViewBag.TipoSeleccionado,
+                                                uso = ViewBag.UsoSeleccionado,
+                                                provincia = ViewBag.ProvinciaSeleccionada,
+                                                localidad = ViewBag.LocalidadSeleccionada,
+                                                precioMin = ViewBag.PrecioMin,
+                                                precioMax = ViewBag.PrecioMax,
+                                                disponibilidad = ViewBag.DisponibilidadSeleccionada
+                                            })">
+                                                <i class="fas fa-chevron-left"></i> Anterior
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="fas fa-chevron-left"></i> Anterior</span>
+                                        </li>
+                                    }
+
+                                    <!-- Números de página -->
+                                    @{
+                                        var startPage = Math.Max(1, Model.Page - 2);
+                                        var endPage = Math.Min(Model.TotalPages, Model.Page + 2);
+                                        
+                                        // Ajustar si estamos cerca del inicio
+                                        if (Model.Page <= 3)
+                                        {
+                                            endPage = Math.Min(5, Model.TotalPages);
+                                        }
+                                        // Ajustar si estamos cerca del final
+                                        if (Model.Page > Model.TotalPages - 3)
+                                        {
+                                            startPage = Math.Max(1, Model.TotalPages - 4);
+                                        }
+                                    }
+
+                                    <!-- Primera página si no está visible -->
+                                    @if (startPage > 1)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@Url.Action("Index", new { 
+                                                page = 1,
+                                                estado = ViewBag.EstadoSeleccionado,
+                                                tipo = ViewBag.TipoSeleccionado,
+                                                uso = ViewBag.UsoSeleccionado,
+                                                provincia = ViewBag.ProvinciaSeleccionada,
+                                                localidad = ViewBag.LocalidadSeleccionada,
+                                                precioMin = ViewBag.PrecioMin,
+                                                precioMax = ViewBag.PrecioMax,
+                                                disponibilidad = ViewBag.DisponibilidadSeleccionada
+                                            })">1</a>
+                                        </li>
+                                        @if (startPage > 2)
+                                        {
+                                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                                        }
+                                    }
+
+                                    <!-- Páginas visibles -->
+                                    @for (int i = startPage; i <= endPage; i++)
+                                    {
+                                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                                            <a class="page-link" href="@Url.Action("Index", new { 
+                                                page = i,
+                                                estado = ViewBag.EstadoSeleccionado,
+                                                tipo = ViewBag.TipoSeleccionado,
+                                                uso = ViewBag.UsoSeleccionado,
+                                                provincia = ViewBag.ProvinciaSeleccionada,
+                                                localidad = ViewBag.LocalidadSeleccionada,
+                                                precioMin = ViewBag.PrecioMin,
+                                                precioMax = ViewBag.PrecioMax,
+                                                disponibilidad = ViewBag.DisponibilidadSeleccionada
+                                            })">@i</a>
+                                        </li>
+                                    }
+
+                                    <!-- Última página si no está visible -->
+                                    @if (endPage < Model.TotalPages)
+                                    {
+                                        @if (endPage < Model.TotalPages - 1)
+                                        {
+                                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                                        }
+                                        <li class="page-item">
+                                            <a class="page-link" href="@Url.Action("Index", new { 
+                                                page = Model.TotalPages,
+                                                estado = ViewBag.EstadoSeleccionado,
+                                                tipo = ViewBag.TipoSeleccionado,
+                                                uso = ViewBag.UsoSeleccionado,
+                                                provincia = ViewBag.ProvinciaSeleccionada,
+                                                localidad = ViewBag.LocalidadSeleccionada,
+                                                precioMin = ViewBag.PrecioMin,
+                                                precioMax = ViewBag.PrecioMax,
+                                                disponibilidad = ViewBag.DisponibilidadSeleccionada
+                                            })">@Model.TotalPages</a>
+                                        </li>
+                                    }
+
+                                    <!-- Botón Siguiente -->
+                                    @if (Model.HasNextPage)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@Url.Action("Index", new { 
+                                                page = Model.Page + 1,
+                                                estado = ViewBag.EstadoSeleccionado,
+                                                tipo = ViewBag.TipoSeleccionado,
+                                                uso = ViewBag.UsoSeleccionado,
+                                                provincia = ViewBag.ProvinciaSeleccionada,
+                                                localidad = ViewBag.LocalidadSeleccionada,
+                                                precioMin = ViewBag.PrecioMin,
+                                                precioMax = ViewBag.PrecioMax,
+                                                disponibilidad = ViewBag.DisponibilidadSeleccionada
+                                            })">
+                                                Siguiente <i class="fas fa-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link">Siguiente <i class="fas fa-chevron-right"></i></span>
+                                        </li>
+                                    }
+                                </ul>
+                            </nav>
+
+                            <!-- Info adicional en desarrollo -->
+                            @if (Context.GetEndpoint()?.Metadata?.GetMetadata<Microsoft.AspNetCore.Mvc.Infrastructure.IActionDescriptorCollectionProvider>() != null)
+                            {
+                                <div class="text-center text-muted small mt-3">
+                                    <i class="fas fa-bolt text-warning"></i>
+                                    <strong>Optimización Backend:</strong> Solo se cargaron @Model.Items.Count() inmuebles de @Model.TotalCount total
+                                </div>
+                            }
+                        }
                     }
                     else
                     {

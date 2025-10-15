@@ -170,14 +170,13 @@ namespace InmobiliariaGarciaJesus.Controllers
                 ViewBag.CanViewAllStates = userRole == "Empleado" || userRole == "Administrador";
                 
                 ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
-                return View(inmueblesFiltrados);
+                return View(resultadoFinal);
             }
             catch (Exception ex)
             {
                 TempData["Error"] = "Error al cargar los inmuebles: " + ex.Message;
-                ViewBag.PagedResult = new PagedResult<Inmueble>(new List<Inmueble>(), 0, 1, 20);
                 ViewBag.UserRole = this.GetUserRole();
-                return View(new List<Inmueble>());
+                return View(new PagedResult<Inmueble>(new List<Inmueble>(), 0, 1, 20));
             }
         }
 

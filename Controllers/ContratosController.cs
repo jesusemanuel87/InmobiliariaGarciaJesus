@@ -125,12 +125,12 @@ namespace InmobiliariaGarciaJesus.Controllers
                 ViewBag.TotalContratos = pagedResult.TotalCount;
                 ViewBag.ContratosFiltrados = pagedResult.Items.Count();
 
-                return View(pagedResult.Items.ToList());
+                return View(pagedResult);
             }
             catch (Exception ex)
             {
                 TempData["Error"] = "Error al cargar los contratos: " + ex.Message;
-                return View(new List<Contrato>());
+                return View(new PagedResult<Contrato>(new List<Contrato>(), 0, 1, 20));
             }
         }
 

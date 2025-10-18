@@ -69,9 +69,12 @@ class AuthRegisterManager {
                                 helpDiv.html('<i class="fas fa-check text-success"></i> Email disponible')
                                        .removeClass('text-danger').addClass('text-success');
                             } else {
-                                helpDiv.html('<i class="fas fa-times text-danger"></i> Email ya está en uso')
+                                helpDiv.html('<i class="fas fa-times text-danger"></i> Email ya registrado')
                                        .removeClass('text-success').addClass('text-danger');
                             }
+                        })
+                        .fail(() => {
+                            helpDiv.html('');
                         });
                 }, 500);
             } else {
@@ -92,12 +95,15 @@ class AuthRegisterManager {
                     $.post('/Auth/CheckUsernameAvailability', { username: username })
                         .done((data) => {
                             if (data.available) {
-                                helpDiv.html('<i class="fas fa-check text-success"></i> Nombre de usuario disponible')
+                                helpDiv.html('<i class="fas fa-check text-success"></i> Disponible')
                                        .removeClass('text-danger').addClass('text-success');
                             } else {
-                                helpDiv.html('<i class="fas fa-times text-danger"></i> Nombre de usuario ya está en uso')
+                                helpDiv.html('<i class="fas fa-times text-danger"></i> Ya está en uso')
                                        .removeClass('text-success').addClass('text-danger');
                             }
+                        })
+                        .fail(() => {
+                            helpDiv.html('');
                         });
                 }, 500);
             } else {

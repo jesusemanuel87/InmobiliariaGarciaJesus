@@ -141,7 +141,7 @@ namespace InmobiliariaGarciaJesus.Controllers
                 return View(model);
             }
 
-            TempData["SuccessMessage"] = "Usuario registrado exitosamente. Puede iniciar sesión.";
+            TempData["SuccessMessage"] = message; // Usar el mensaje del servicio que indica validación pendiente
             return RedirectToAction(nameof(Login));
         }
 

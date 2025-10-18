@@ -85,7 +85,7 @@ namespace InmobiliariaGarciaJesus.Services
             {
                 var usuario = await _usuarioRepository.GetByEmailAsync(email);
                 
-                if (usuario == null || !usuario.Estado)
+                if (usuario == null)
                 {
                     return (false, "Credenciales inválidas", null);
                 }
@@ -93,6 +93,12 @@ namespace InmobiliariaGarciaJesus.Services
                 if (!VerifyPassword(password, usuario.ClaveHash))
                 {
                     return (false, "Credenciales inválidas", null);
+                }
+
+                // Validar que el usuario esté activo DESPUÉS de validar contraseña
+                if (!usuario.Estado)
+                {
+                    return (false, "Su cuenta está pendiente de validación por un administrador. Por favor, espere a que su cuenta sea activada.", null);
                 }
 
                 // Validar que si es empleado/administrador, el empleado esté activo
@@ -148,16 +154,16 @@ namespace InmobiliariaGarciaJesus.Services
 
                 int? personaId = null;
                 
-                // Crear la persona según el tipo de usuario
+                // Obtener o crear la persona según el tipo de usuario
                 try
                 {
                     switch (model.TipoUsuario)
                     {
                         case RolUsuario.Propietario:
-                            personaId = await CreatePropietarioAsync(model);
+                            personaId = await GetOrCreatePropietarioAsync(model);
                             break;
                         case RolUsuario.Inquilino:
-                            personaId = await CreateInquilinoAsync(model);
+                            personaId = await GetOrCreateInquilinoAsync(model);
                             break;
                         case RolUsuario.Empleado:
                         case RolUsuario.Administrador:
@@ -166,23 +172,23 @@ namespace InmobiliariaGarciaJesus.Services
                 }
                 catch (InvalidOperationException ex)
                 {
-                    // Error específico de DNI duplicado u otros errores de validación
+                    // Error específico de validación (ej: DNI ya tiene usuario)
                     return (false, ex.Message, null);
                 }
 
                 if (!personaId.HasValue)
                 {
-                    return (false, "Error al crear la información personal", null);
+                    return (false, "Error al procesar la información personal", null);
                 }
 
-                // Crear el usuario
+                // Crear el usuario con estado INACTIVO por defecto
                 var usuario = new Usuario
                 {
                     NombreUsuario = model.NombreUsuario,
                     Email = model.Email,
                     ClaveHash = HashPassword(model.Password),
                     Rol = model.TipoUsuario,
-                    Estado = true
+                    Estado = false  // INACTIVO - Requiere validación de administrador
                 };
 
                 // Asignar el ID de la persona según el rol
@@ -198,8 +204,9 @@ namespace InmobiliariaGarciaJesus.Services
 
                 var usuarioId = await _usuarioRepository.CreateAsync(usuario);
                 
-                _logger.LogInformation("Usuario registrado exitosamente: {Email}, Rol: {Rol}", model.Email, model.TipoUsuario);
-                return (true, "Usuario registrado exitosamente", usuarioId);
+                _logger.LogInformation("Usuario registrado con estado INACTIVO: {Email}, Rol: {Rol}, DNI: {Dni}", 
+                    model.Email, model.TipoUsuario, model.Dni);
+                return (true, "Registro exitoso. Su cuenta será activada por un administrador", usuarioId);
             }
             catch (Exception ex)
             {
@@ -382,7 +389,7 @@ namespace InmobiliariaGarciaJesus.Services
             }
         }
 
-        private async Task<int?> CreatePropietarioAsync(RegisterViewModel model)
+        private async Task<int?> GetOrCreatePropietarioAsync(RegisterViewModel model)
         {
             if (string.IsNullOrEmpty(model.Nombre) || string.IsNullOrEmpty(model.Apellido) || 
                 string.IsNullOrEmpty(model.Dni) || string.IsNullOrEmpty(model.Telefono))
@@ -392,13 +399,29 @@ namespace InmobiliariaGarciaJesus.Services
 
             try
             {
-                // Verificar si ya existe un propietario con este DNI
-                var propietarios = await _propietarioRepository.GetAllAsync();
-                if (propietarios.Any(p => p.Dni == model.Dni))
+                // Buscar si ya existe un propietario con este DNI
+                var propietarioExistente = await _propietarioRepository.GetByDniAsync(model.Dni);
+                
+                if (propietarioExistente != null)
                 {
-                    throw new InvalidOperationException($"Ya existe un propietario registrado con el DNI {model.Dni}");
+                    // Si existe, verificar si ya tiene un usuario asociado como propietario
+                    var usuariosExistentes = await _usuarioRepository.GetUsuariosByPersonaAsync(
+                        propietarioExistente.Id, RolUsuario.Propietario);
+                    
+                    if (usuariosExistentes.Any())
+                    {
+                        throw new InvalidOperationException(
+                            $"Ya existe un usuario registrado como Propietario con el DNI {model.Dni}. " +
+                            "Si olvidó su contraseña, use la opción de recuperación.");
+                    }
+                    
+                    // Si NO tiene usuario, reutilizar el ID existente
+                    _logger.LogInformation("Reutilizando propietario existente con DNI {Dni} (Id: {Id})", 
+                        model.Dni, propietarioExistente.Id);
+                    return propietarioExistente.Id;
                 }
 
+                // Si NO existe, crear nuevo propietario con estado INACTIVO
                 var propietario = new Propietario
                 {
                     Nombre = model.Nombre,
@@ -406,26 +429,27 @@ namespace InmobiliariaGarciaJesus.Services
                     Dni = model.Dni,
                     Telefono = model.Telefono,
                     Email = model.Email,
-                    Estado = true
+                    Estado = false  // INACTIVO - Requiere validación de administrador
                 };
 
-                return await _propietarioRepository.CreateAsync(propietario);
+                var propietarioId = await _propietarioRepository.CreateAsync(propietario);
+                _logger.LogInformation("Nuevo propietario creado con estado INACTIVO: DNI {Dni} (Id: {Id})", 
+                    model.Dni, propietarioId);
+                return propietarioId;
+            }
+            catch (InvalidOperationException)
+            {
+                // Re-lanzar excepciones de validación
+                throw;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear propietario con DNI: {Dni}", model.Dni);
-                
-                // Si es un error de clave duplicada, lanzar excepción específica
-                if (ex.Message.Contains("Duplicate entry") && ex.Message.Contains("UK_propietarios_DNI"))
-                {
-                    throw new InvalidOperationException($"Ya existe un propietario registrado con el DNI {model.Dni}");
-                }
-                
+                _logger.LogError(ex, "Error al obtener o crear propietario con DNI: {Dni}", model.Dni);
                 throw;
             }
         }
 
-        private async Task<int?> CreateInquilinoAsync(RegisterViewModel model)
+        private async Task<int?> GetOrCreateInquilinoAsync(RegisterViewModel model)
         {
             if (string.IsNullOrEmpty(model.Nombre) || string.IsNullOrEmpty(model.Apellido) || 
                 string.IsNullOrEmpty(model.Dni) || string.IsNullOrEmpty(model.Telefono))
@@ -435,13 +459,29 @@ namespace InmobiliariaGarciaJesus.Services
 
             try
             {
-                // Verificar si ya existe un inquilino con este DNI
-                var inquilinos = await _inquilinoRepository.GetAllAsync();
-                if (inquilinos.Any(i => i.Dni == model.Dni))
+                // Buscar si ya existe un inquilino con este DNI
+                var inquilinoExistente = await _inquilinoRepository.GetByDniAsync(model.Dni);
+                
+                if (inquilinoExistente != null)
                 {
-                    throw new InvalidOperationException($"Ya existe un inquilino registrado con el DNI {model.Dni}");
+                    // Si existe, verificar si ya tiene un usuario asociado como inquilino
+                    var usuariosExistentes = await _usuarioRepository.GetUsuariosByPersonaAsync(
+                        inquilinoExistente.Id, RolUsuario.Inquilino);
+                    
+                    if (usuariosExistentes.Any())
+                    {
+                        throw new InvalidOperationException(
+                            $"Ya existe un usuario registrado como Inquilino con el DNI {model.Dni}. " +
+                            "Si olvidó su contraseña, use la opción de recuperación.");
+                    }
+                    
+                    // Si NO tiene usuario, reutilizar el ID existente
+                    _logger.LogInformation("Reutilizando inquilino existente con DNI {Dni} (Id: {Id})", 
+                        model.Dni, inquilinoExistente.Id);
+                    return inquilinoExistente.Id;
                 }
 
+                // Si NO existe, crear nuevo inquilino con estado INACTIVO
                 var inquilino = new Inquilino
                 {
                     Nombre = model.Nombre,
@@ -449,21 +489,22 @@ namespace InmobiliariaGarciaJesus.Services
                     Dni = model.Dni,
                     Telefono = model.Telefono,
                     Email = model.Email,
-                    Estado = true
+                    Estado = false  // INACTIVO - Requiere validación de administrador
                 };
 
-                return await _inquilinoRepository.CreateAsync(inquilino);
+                var inquilinoId = await _inquilinoRepository.CreateAsync(inquilino);
+                _logger.LogInformation("Nuevo inquilino creado con estado INACTIVO: DNI {Dni} (Id: {Id})", 
+                    model.Dni, inquilinoId);
+                return inquilinoId;
+            }
+            catch (InvalidOperationException)
+            {
+                // Re-lanzar excepciones de validación
+                throw;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear inquilino con DNI: {Dni}", model.Dni);
-                
-                // Si es un error de clave duplicada, lanzar excepción específica
-                if (ex.Message.Contains("Duplicate entry") && ex.Message.Contains("UK_inquilinos_DNI"))
-                {
-                    throw new InvalidOperationException($"Ya existe un inquilino registrado con el DNI {model.Dni}");
-                }
-                
+                _logger.LogError(ex, "Error al obtener o crear inquilino con DNI: {Dni}", model.Dni);
                 throw;
             }
         }

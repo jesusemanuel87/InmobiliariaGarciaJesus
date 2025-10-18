@@ -12,6 +12,16 @@
                     <h4><i class="fas fa-user-plus"></i> Crear Cuenta</h4>
                 </div>
                 <div class="card-body">
+                    <!-- Información sobre el proceso de validación -->
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle"></i> <strong>Información importante:</strong>
+                        <p class="mb-0 mt-2">
+                            Su cuenta será creada con estado <strong>Inactivo</strong> y deberá ser validada por un administrador antes de poder iniciar sesión.
+                            Recibirá una notificación cuando su cuenta sea activada.
+                        </p>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
                     <!-- Mostrar errores de validación de forma más visible -->
                     @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
                     {

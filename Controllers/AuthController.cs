@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using InmobiliariaGarciaJesus.Attributes;
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Services;
+using InmobiliariaGarciaJesus.Repositories;
 using AuthService = InmobiliariaGarciaJesus.Services.AuthenticationService;
 using System.Security.Claims;
 
@@ -16,17 +17,20 @@ namespace InmobiliariaGarciaJesus.Controllers
         private readonly AuthService _authenticationService;
         private readonly ProfilePhotoService _profilePhotoService;
         private readonly ILogger<AuthController> _logger;
+        private readonly UsuarioRepository _usuarioRepository;
 
         public AuthController(
             UsuarioService usuarioService,
             AuthService authenticationService,
             ProfilePhotoService profilePhotoService,
-            ILogger<AuthController> logger)
+            ILogger<AuthController> logger,
+            UsuarioRepository usuarioRepository)
         {
             _usuarioService = usuarioService;
             _authenticationService = authenticationService;
             _profilePhotoService = profilePhotoService;
             _logger = logger;
+            _usuarioRepository = usuarioRepository;
         }
 
         [HttpGet]
@@ -115,34 +119,49 @@ namespace InmobiliariaGarciaJesus.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model)
+        public async Task<IActionResult> Register(RegisterViewModel model, string? existingPassword, bool isMultiRole = false)
         {
+            // Si es modo multi-rol, eliminar validaciones de contraseña
+            if (isMultiRole && !string.IsNullOrEmpty(existingPassword))
+            {
+                ModelState.Remove("Password");
+                ModelState.Remove("ConfirmPassword");
+            }
+            
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            // Validar campos requeridos según el tipo de usuario
-            if (model.TipoUsuario == RolUsuario.Propietario || model.TipoUsuario == RolUsuario.Inquilino)
+            // Detectar si es modo multi-rol
+            if (isMultiRole && !string.IsNullOrEmpty(existingPassword))
             {
-                if (string.IsNullOrEmpty(model.Nombre) || string.IsNullOrEmpty(model.Apellido) ||
-                    string.IsNullOrEmpty(model.Dni) || string.IsNullOrEmpty(model.Telefono))
+                // Registro multi-rol: copiar datos de cuenta existente
+                var (success, message, usuarioId) = await _usuarioService.RegisterMultiRoleUsuarioAsync(model, existingPassword);
+
+                if (!success)
                 {
-                    ModelState.AddModelError(string.Empty, "Todos los campos personales son obligatorios");
+                    ModelState.AddModelError(string.Empty, message);
                     return View(model);
                 }
+
+                TempData["SuccessMessage"] = message;
+                return RedirectToAction(nameof(Login));
             }
-
-            var (success, message, usuarioId) = await _usuarioService.RegisterUsuarioAsync(model);
-
-            if (!success)
+            else
             {
-                ModelState.AddModelError(string.Empty, message);
-                return View(model);
-            }
+                // Registro normal
+                var (success, message, usuarioId) = await _usuarioService.RegisterUsuarioAsync(model);
 
-            TempData["SuccessMessage"] = message; // Usar el mensaje del servicio que indica validación pendiente
-            return RedirectToAction(nameof(Login));
+                if (!success)
+                {
+                    ModelState.AddModelError(string.Empty, message);
+                    return View(model);
+                }
+
+                TempData["SuccessMessage"] = message;
+                return RedirectToAction(nameof(Login));
+            }
         }
 
         [HttpPost]
@@ -260,53 +279,112 @@ namespace InmobiliariaGarciaJesus.Controllers
         [AuthorizeMultipleRoles(RolUsuario.Propietario, RolUsuario.Inquilino, RolUsuario.Empleado, RolUsuario.Administrador)]
         public async Task<IActionResult> SwitchRole(SwitchRoleViewModel model)
         {
-            var usuarioId = AuthService.GetUsuarioId(User);
-            if (!usuarioId.HasValue || usuarioId.Value != model.UsuarioId)
+            try
             {
-                return RedirectToAction(nameof(Login));
-            }
-
-            var (success, message) = await _usuarioService.SwitchRoleAsync(model.UsuarioId, model.NuevoRol);
-
-            if (success)
-            {
-                // Cerrar sesión y volver a iniciar con el nuevo rol
-                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                _logger.LogInformation("SwitchRole: UsuarioId={UsuarioId}, NuevoRol={NuevoRol}", model.UsuarioId, model.NuevoRol);
                 
-                var usuario = await _usuarioService.GetUsuarioByIdAsync(model.UsuarioId);
-                if (usuario != null)
+                var usuarioId = AuthService.GetUsuarioId(User);
+                if (!usuarioId.HasValue || usuarioId.Value != model.UsuarioId)
                 {
-                    var claimsPrincipal = await _authenticationService.CreateClaimsPrincipalAsync(usuario);
-                    if (claimsPrincipal != null)
-                    {
-                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
-                    }
+                    _logger.LogWarning("SwitchRole: Usuario no autorizado. UsuarioId del claim={ClaimId}, UsuarioId del modelo={ModelId}", 
+                        usuarioId, model.UsuarioId);
+                    TempData["ErrorMessage"] = "No tiene permisos para cambiar el rol de otro usuario";
+                    return RedirectToAction(nameof(Login));
                 }
 
-                TempData["SuccessMessage"] = message;
+                // Buscar el usuario con el nuevo rol (mismo email, diferente rol)
+                var usuarioActual = await _usuarioService.GetUsuarioByIdAsync(model.UsuarioId);
+                if (usuarioActual == null)
+                {
+                    _logger.LogError("SwitchRole: Usuario no encontrado. UsuarioId={UsuarioId}", model.UsuarioId);
+                    TempData["ErrorMessage"] = "Usuario no encontrado";
+                    return RedirectToAction(nameof(Login));
+                }
+
+                // Buscar el usuario con el mismo email y el nuevo rol
+                var todosUsuarios = await _usuarioRepository.GetAllAsync();
+                var usuarioNuevoRol = todosUsuarios.FirstOrDefault(u => 
+                    u.Email.Equals(usuarioActual.Email, StringComparison.OrdinalIgnoreCase) && 
+                    u.Rol == model.NuevoRol &&
+                    u.Estado);
+
+                if (usuarioNuevoRol == null)
+                {
+                    _logger.LogError("SwitchRole: No se encontró usuario con email={Email} y rol={Rol}", 
+                        usuarioActual.Email, model.NuevoRol);
+                    TempData["ErrorMessage"] = "No tiene permisos para cambiar a este rol";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                _logger.LogInformation("SwitchRole: Cambiando de usuario {IdAnterior} a usuario {IdNuevo}", 
+                    model.UsuarioId, usuarioNuevoRol.Id);
+
+                // Cerrar sesión actual
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                
+                // Crear claims del nuevo usuario
+                var claimsPrincipal = await _authenticationService.CreateClaimsPrincipalAsync(usuarioNuevoRol);
+                if (claimsPrincipal != null)
+                {
+                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+                    
+                    // Actualizar último acceso
+                    usuarioNuevoRol.UltimoAcceso = DateTime.Now;
+                    await _usuarioRepository.UpdateAsync(usuarioNuevoRol);
+                }
+
+                TempData["SuccessMessage"] = $"Rol cambiado exitosamente a {model.NuevoRol}";
                 
                 // Redirigir según el nuevo rol
                 return model.NuevoRol switch
                 {
-                    RolUsuario.Administrador or RolUsuario.Empleado => RedirectToAction("Index", "Propietarios"),
+                    RolUsuario.Administrador or RolUsuario.Empleado => RedirectToAction("Dashboard", "Home"),
                     RolUsuario.Propietario => RedirectToAction("MisInmuebles", "Inmuebles"),
                     RolUsuario.Inquilino => RedirectToAction("MiContrato", "Contratos"),
                     _ => RedirectToAction("Index", "Home")
                 };
             }
-            else
+            catch (Exception ex)
             {
-                TempData["ErrorMessage"] = message;
+                _logger.LogError(ex, "SwitchRole: Error inesperado. UsuarioId={UsuarioId}, NuevoRol={NuevoRol}", 
+                    model.UsuarioId, model.NuevoRol);
+                TempData["ErrorMessage"] = "Error al cambiar de rol: " + ex.Message;
                 return RedirectToAction(nameof(Profile));
             }
         }
 
         // Método para verificar si un email está disponible (AJAX)
+        // Detecta si email existe con rol diferente para activar modo multi-rol
         [HttpPost]
-        public async Task<IActionResult> CheckEmailAvailability(string email)
+        public async Task<IActionResult> CheckEmailAvailability(string email, int? rol)
         {
-            var exists = await _usuarioService.GetUsuarioByEmailAsync(email) != null;
-            return Json(new { available = !exists });
+            if (!rol.HasValue)
+            {
+                // Si no se especifica rol, validar globalmente (comportamiento anterior)
+                var exists = await _usuarioService.GetUsuarioByEmailAsync(email) != null;
+                return Json(new { available = !exists });
+            }
+            
+            var tipoUsuario = (RolUsuario)rol.Value;
+            
+            // Primero verificar si email existe con el MISMO rol (no permitido)
+            var existsWithSameRole = await _usuarioRepository.EmailExistsWithRoleAsync(email, tipoUsuario);
+            if (existsWithSameRole)
+            {
+                // Email + mismo rol → No disponible (error normal)
+                return Json(new { available = false, sameRole = true });
+            }
+            
+            // Verificar si email existe con DIFERENTE rol (activar modo multi-rol)
+            var existingUser = await _usuarioService.GetUsuarioByEmailAsync(email);
+            if (existingUser != null)
+            {
+                // Email existe con diferente rol → No disponible, pero activar validación multi-rol
+                return Json(new { available = false, existingEmail = true });
+            }
+            
+            // Email no existe → Disponible para registro normal
+            return Json(new { available = true });
         }
 
         // Método para verificar si un username está disponible (AJAX)
@@ -315,6 +393,73 @@ namespace InmobiliariaGarciaJesus.Controllers
         {
             var exists = await _usuarioService.GetUsuarioByUsernameAsync(username) != null;
             return Json(new { available = !exists });
+        }
+
+        // Método para validar email existente y obtener datos para multi-rol (AJAX)
+        [HttpPost]
+        public async Task<IActionResult> ValidateExistingEmailForMultiRole(string email, int rol, string password)
+        {
+            var tipoUsuario = (RolUsuario)rol;
+            var (exists, usuario, errorMessage) = await _usuarioService.ValidateExistingEmailForMultiRoleAsync(email, tipoUsuario, password);
+
+            if (!exists && errorMessage != null)
+            {
+                return Json(new { 
+                    success = false, 
+                    error = errorMessage 
+                });
+            }
+
+            if (!exists)
+            {
+                // Email no existe, continuar con registro normal
+                return Json(new { 
+                    success = false, 
+                    emailNotFound = true 
+                });
+            }
+
+            // Usuario validado, devolver datos para autocompletar
+            string nombre = "", apellido = "", dni = "", telefono = "";
+            
+            if (usuario == null)
+            {
+                return Json(new { success = false, error = "Error al obtener datos del usuario" });
+            }
+            
+            if (usuario.Propietario != null)
+            {
+                nombre = usuario.Propietario.Nombre;
+                apellido = usuario.Propietario.Apellido;
+                dni = usuario.Propietario.Dni;
+                telefono = usuario.Propietario.Telefono ?? "";
+            }
+            else if (usuario.Inquilino != null)
+            {
+                nombre = usuario.Inquilino.Nombre;
+                apellido = usuario.Inquilino.Apellido;
+                dni = usuario.Inquilino.Dni;
+                telefono = usuario.Inquilino.Telefono ?? "";
+            }
+            else if (usuario.Empleado != null)
+            {
+                nombre = usuario.Empleado.Nombre;
+                apellido = usuario.Empleado.Apellido;
+                dni = usuario.Empleado.Dni;
+                telefono = usuario.Empleado.Telefono;
+            }
+
+            return Json(new { 
+                success = true,
+                data = new {
+                    nombre,
+                    apellido,
+                    dni,
+                    telefono,
+                    existingUsername = usuario.NombreUsuario,
+                    suggestedUsername = $"{usuario.NombreUsuario}_{tipoUsuario.ToString().ToLower()}"
+                }
+            });
         }
 
         [HttpPost]
@@ -439,6 +584,96 @@ namespace InmobiliariaGarciaJesus.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al refrescar claims para usuario: {UsuarioId}", usuarioId);
+            }
+        }
+
+        // GET: Auth/CambioContrasenaObligatorio
+        [HttpGet]
+        public async Task<IActionResult> CambioContrasenaObligatorio()
+        {
+            var usuarioId = AuthService.GetUsuarioId(User);
+            if (!usuarioId.HasValue)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            var usuario = await _usuarioService.GetUsuarioByIdAsync(usuarioId.Value);
+            if (usuario == null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            // Si el usuario no requiere cambio, redirigir al perfil
+            if (!usuario.RequiereCambioClave)
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+            return View(usuario);
+        }
+
+        // POST: Auth/CambiarClave - Cambio de contraseña obligatorio
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CambiarClave(string newPassword, string confirmPassword)
+        {
+            var usuarioId = AuthService.GetUsuarioId(User);
+            if (!usuarioId.HasValue)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            if (string.IsNullOrEmpty(newPassword) || newPassword != confirmPassword)
+            {
+                TempData["ErrorMessage"] = "Las contraseñas no coinciden";
+                return RedirectToAction(nameof(CambioContrasenaObligatorio));
+            }
+
+            if (newPassword.Length < 6)
+            {
+                TempData["ErrorMessage"] = "La contraseña debe tener al menos 6 caracteres";
+                return RedirectToAction(nameof(CambioContrasenaObligatorio));
+            }
+
+            try
+            {
+                var usuario = await _usuarioService.GetUsuarioByIdAsync(usuarioId.Value);
+                if (usuario == null)
+                {
+                    return RedirectToAction(nameof(Login));
+                }
+
+                // Cambiar contraseña
+                usuario.ClaveHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                usuario.RequiereCambioClave = false;
+
+                var success = await _usuarioRepository.UpdateAsync(usuario);
+
+                if (success)
+                {
+                    _logger.LogInformation("Usuario {UsuarioId} cambió contraseña obligatoria exitosamente", usuarioId.Value);
+                    TempData["SuccessMessage"] = "Contraseña cambiada exitosamente";
+                    
+                    // Redirigir según el rol
+                    return usuario.Rol switch
+                    {
+                        RolUsuario.Administrador or RolUsuario.Empleado => RedirectToAction("Index", "Home"),
+                        RolUsuario.Propietario => RedirectToAction("MisInmuebles", "Inmuebles"),
+                        RolUsuario.Inquilino => RedirectToAction("MiContrato", "Contratos"),
+                        _ => RedirectToAction("Index", "Home")
+                    };
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Error al cambiar la contraseña";
+                    return RedirectToAction(nameof(CambioContrasenaObligatorio));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cambiar contraseña obligatoria: {UsuarioId}", usuarioId.Value);
+                TempData["ErrorMessage"] = "Error interno del servidor";
+                return RedirectToAction(nameof(CambioContrasenaObligatorio));
             }
         }
     }

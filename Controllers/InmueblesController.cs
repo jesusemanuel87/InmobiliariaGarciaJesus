@@ -6,6 +6,7 @@ using InmobiliariaGarciaJesus.Services;
 using InmobiliariaGarciaJesus.Extensions;
 using System.Collections.Generic;
 using InmobiliariaGarciaJesus.Attributes;
+using AuthService = InmobiliariaGarciaJesus.Services.AuthenticationService;
 
 namespace InmobiliariaGarciaJesus.Controllers
 {
@@ -177,6 +178,71 @@ namespace InmobiliariaGarciaJesus.Controllers
                 TempData["Error"] = "Error al cargar los inmuebles: " + ex.Message;
                 ViewBag.UserRole = this.GetUserRole();
                 return View(new PagedResult<Inmueble>(new List<Inmueble>(), 0, 1, 20));
+            }
+        }
+
+        // GET: Inmuebles/MisInmuebles - Vista de inmuebles del propietario logueado
+        [AuthorizeMultipleRoles(RolUsuario.Propietario)]
+        public async Task<IActionResult> MisInmuebles()
+        {
+            try
+            {
+                // Obtener el usuario logueado usando AuthService
+                var usuarioId = AuthService.GetUsuarioId(User);
+                if (!usuarioId.HasValue)
+                {
+                    return RedirectToAction("Login", "Auth");
+                }
+
+                // Obtener usuario con todas sus relaciones cargadas
+                var usuarioRepo = HttpContext.RequestServices.GetService<UsuarioRepository>();
+                if (usuarioRepo == null)
+                {
+                    TempData["Error"] = "Error al cargar datos del usuario";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                var usuario = await usuarioRepo.GetByIdAsync(usuarioId.Value);
+                if (usuario?.PropietarioId == null)
+                {
+                    TempData["Error"] = "No tiene permisos para acceder a esta sección. Debe ser un propietario.";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                // Obtener inmuebles del propietario
+                var todosInmuebles = await _inmuebleRepository.GetAllAsync();
+                var inmuebles = todosInmuebles.Where(i => i.PropietarioId == usuario.PropietarioId.Value).ToList();
+                
+                // Obtener contratos para calcular disponibilidad
+                var inmuebleIds = inmuebles.Select(i => i.Id).ToList();
+                var contratos = await _contratoRepository.GetByInmuebleIdsAsync(inmuebleIds);
+                
+                var fechaActual = DateTime.Now;
+                var estadosDisponibilidad = new Dictionary<int, string>();
+                
+                foreach (var inmueble in inmuebles)
+                {
+                    estadosDisponibilidad[inmueble.Id] = DeterminarDisponibilidad(inmueble, contratos, fechaActual);
+                }
+
+                // Crear resultado paginado
+                var resultado = new PagedResult<Inmueble>(inmuebles, inmuebles.Count, 1, inmuebles.Count);
+
+                // Pasar datos a la vista
+                ViewBag.EstadosDisponibilidad = estadosDisponibilidad;
+                ViewBag.PagedResult = resultado;
+                ViewBag.UserRole = "Propietario";
+                ViewBag.CanViewAllStates = false;
+                ViewBag.TiposInmueble = await _tipoInmuebleRepository.GetActivosAsync();
+                ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
+                ViewBag.EsMisInmuebles = true; // Flag para que la vista sepa que es la vista del propietario
+                
+                return View("Index", resultado);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error al cargar sus inmuebles: " + ex.Message;
+                return RedirectToAction("Index", "Home");
             }
         }
 

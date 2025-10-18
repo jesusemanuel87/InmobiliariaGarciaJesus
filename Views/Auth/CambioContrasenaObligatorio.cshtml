@@ -1,0 +1,202 @@
+@model InmobiliariaGarciaJesus.Models.Usuario
+
+@{
+    ViewData["Title"] = "Cambio de Contraseña Obligatorio";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        Cambio de Contraseña Obligatorio
+                    </h4>
+                </div>
+                <div class="card-body">
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Hola @Model.NombreCompleto,</strong><br><br>
+                        Por seguridad, debe cambiar su contraseña temporal antes de continuar usando el sistema.
+                        <br><br>
+                        <strong>Requisitos de la contraseña:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Mínimo 6 caracteres</li>
+                            <li>Se recomienda usar una combinación de letras, números y símbolos</li>
+                            <li>No use información personal fácil de adivinar</li>
+                        </ul>
+                    </div>
+
+                    <form asp-action="CambiarClave" method="post" id="cambioClaveForm">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label">
+                                <i class="fas fa-key"></i> Nueva Contraseña
+                            </label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="newPassword" 
+                                       name="newPassword" 
+                                       required
+                                       minlength="6"
+                                       placeholder="Ingrese su nueva contraseña">
+                                <button class="btn btn-outline-secondary" 
+                                        type="button" 
+                                        onclick="togglePassword('newPassword')">
+                                    <i class="fas fa-eye" id="newPassword-icon"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Mínimo 6 caracteres</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">
+                                <i class="fas fa-check"></i> Confirmar Contraseña
+                            </label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="confirmPassword" 
+                                       name="confirmPassword" 
+                                       required
+                                       minlength="6"
+                                       placeholder="Confirme su nueva contraseña">
+                                <button class="btn btn-outline-secondary" 
+                                        type="button" 
+                                        onclick="togglePassword('confirmPassword')">
+                                    <i class="fas fa-eye" id="confirmPassword-icon"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback" id="passwordMismatch">
+                                Las contraseñas no coinciden
+                            </div>
+                        </div>
+
+                        <!-- Indicador de fortaleza de contraseña -->
+                        <div class="mb-3">
+                            <label class="form-label">Fortaleza de la contraseña</label>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar" 
+                                     id="strengthBar" 
+                                     role="progressbar" 
+                                     style="width: 0%"
+                                     aria-valuenow="0" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100"></div>
+                            </div>
+                            <small id="strengthText" class="form-text"></small>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i> Cambiar Contraseña
+                            </button>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-lock"></i> 
+                                No podrá acceder al sistema sin cambiar su contraseña
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <a asp-action="Logout" class="btn btn-link text-muted">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Toggle password visibility
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.getElementById(fieldId + '-icon');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Password strength checker
+        document.getElementById('newPassword').addEventListener('input', function() {
+            const password = this.value;
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+            
+            let strength = 0;
+            let text = '';
+            let color = '';
+            
+            if (password.length >= 6) strength += 25;
+            if (password.length >= 10) strength += 25;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password)) strength += 15;
+            if (/[^a-zA-Z0-9]/.test(password)) strength += 10;
+            
+            if (strength < 40) {
+                text = 'Débil';
+                color = 'bg-danger';
+            } else if (strength < 70) {
+                text = 'Media';
+                color = 'bg-warning';
+            } else {
+                text = 'Fuerte';
+                color = 'bg-success';
+            }
+            
+            strengthBar.style.width = strength + '%';
+            strengthBar.className = 'progress-bar ' + color;
+            strengthText.textContent = text;
+        });
+
+        // Validar coincidencia de contraseñas
+        document.getElementById('cambioClaveForm').addEventListener('submit', function(e) {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                e.preventDefault();
+                document.getElementById('confirmPassword').classList.add('is-invalid');
+                document.getElementById('passwordMismatch').style.display = 'block';
+                return false;
+            }
+            
+            if (newPassword.length < 6) {
+                e.preventDefault();
+                alert('La contraseña debe tener al menos 6 caracteres');
+                return false;
+            }
+        });
+
+        // Remover indicador de error al escribir
+        document.getElementById('confirmPassword').addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+            document.getElementById('passwordMismatch').style.display = 'none';
+        });
+    </script>
+}

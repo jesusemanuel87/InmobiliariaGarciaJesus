@@ -4,6 +4,7 @@ using InmobiliariaGarciaJesus.Repositories;
 using InmobiliariaGarciaJesus.Services;
 using InmobiliariaGarciaJesus.Attributes;
 using System.Text.Json;
+using AuthService = InmobiliariaGarciaJesus.Services.AuthenticationService;
 
 namespace InmobiliariaGarciaJesus.Controllers
 {
@@ -717,6 +718,165 @@ namespace InmobiliariaGarciaJesus.Controllers
             {
                 // Log error
                 return BadRequest("Error al cargar información de auditoría");
+            }
+        }
+
+        // GET: Pagos/MisPagos - Vista de pagos del inquilino logueado
+        [AuthorizeMultipleRoles(RolUsuario.Inquilino)]
+        public async Task<IActionResult> MisPagos()
+        {
+            try
+            {
+                // Obtener el usuario logueado usando AuthService
+                var usuarioId = AuthService.GetUsuarioId(User);
+                if (!usuarioId.HasValue)
+                {
+                    return RedirectToAction("Login", "Auth");
+                }
+
+                var usuario = await _usuarioRepository.GetByIdAsync(usuarioId.Value);
+                if (usuario?.InquilinoId == null)
+                {
+                    TempData["Error"] = "No tiene permisos para acceder a esta sección. Debe ser un inquilino.";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                // Actualizar estados automáticamente antes de mostrar
+                await _pagoService.ActualizarEstadosPagosAsync();
+
+                // Obtener contratos del inquilino
+                var todosContratos = await _contratoRepository.GetAllAsync();
+                var misContratos = todosContratos
+                    .Where(c => c.InquilinoId == usuario.InquilinoId.Value)
+                    .Select(c => c.Id)
+                    .ToList();
+
+                if (!misContratos.Any())
+                {
+                    ViewBag.SinPagos = true;
+                    ViewBag.UserRole = "Inquilino";
+                    ViewBag.EsMisPagos = true;
+                    return View("Index");
+                }
+
+                // Pasar IDs de contratos para filtrar en GetPagosData
+                ViewBag.MisContratosIds = string.Join(",", misContratos);
+                ViewBag.UserRole = "Inquilino";
+                ViewBag.EsMisPagos = true;
+                
+                return View("Index");
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error al cargar sus pagos: " + ex.Message;
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
+        // POST: Pagos/GetMisPagosData - DataTables AJAX endpoint para inquilinos
+        [HttpPost]
+        [AuthorizeMultipleRoles(RolUsuario.Inquilino)]
+        public async Task<IActionResult> GetMisPagosData([FromBody] JsonElement request)
+        {
+            try
+            {
+                // Obtener el usuario logueado
+                var usuarioId = AuthService.GetUsuarioId(User);
+                if (!usuarioId.HasValue)
+                {
+                    return Json(new { error = "Usuario no autenticado" });
+                }
+
+                var usuario = await _usuarioRepository.GetByIdAsync(usuarioId.Value);
+                if (usuario?.InquilinoId == null)
+                {
+                    return Json(new { error = "No tiene permisos" });
+                }
+
+                // Actualizar estados automáticamente
+                await _pagoService.ActualizarEstadosPagosAsync();
+                
+                var pagosWithRelatedData = await _pagoRepository.GetAllWithRelatedDataAsync();
+                
+                // Filtrar solo pagos de contratos del inquilino
+                var todosContratos = await _contratoRepository.GetAllAsync();
+                var misContratosIds = todosContratos
+                    .Where(c => c.InquilinoId == usuario.InquilinoId.Value)
+                    .Select(c => c.Id)
+                    .ToList();
+
+                var misPagos = pagosWithRelatedData
+                    .Where(p => misContratosIds.Contains(((dynamic)p).ContratoId))
+                    .ToList();
+                
+                // Parse DataTables parameters (igual que GetPagosData)
+                int draw = request.TryGetProperty("draw", out var drawProp) ? drawProp.GetInt32() : 0;
+                int start = request.TryGetProperty("start", out var startProp) ? startProp.GetInt32() : 0;
+                int length = request.TryGetProperty("length", out var lengthProp) ? lengthProp.GetInt32() : 10;
+                
+                string searchValue = "";
+                if (request.TryGetProperty("search", out var searchProp) && 
+                    searchProp.TryGetProperty("value", out var searchValueProp))
+                {
+                    searchValue = searchValueProp.GetString() ?? "";
+                }
+                
+                // Parse custom filters
+                string filtroEstado = request.TryGetProperty("filtroEstado", out var estadoProp) ? estadoProp.GetString() ?? "" : "";
+                
+                var allPagos = misPagos.ToList();
+                var totalRecords = allPagos.Count;
+                
+                // Apply filters
+                if (!string.IsNullOrEmpty(filtroEstado))
+                {
+                    allPagos = allPagos.Where(p => ((dynamic)p).Estado.ToString().Equals(filtroEstado, StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+                
+                // Apply search filter
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    allPagos = allPagos.Where(p =>
+                        (((dynamic)p).ContratoId.ToString().Contains(searchValue)) ||
+                        (((dynamic)p).Importe.ToString().Contains(searchValue)) ||
+                        (((dynamic)p).InmuebleDireccion?.ToString()?.Contains(searchValue, StringComparison.OrdinalIgnoreCase) == true)
+                    ).ToList();
+                }
+
+                var filteredRecords = allPagos.Count;
+
+                // Apply sorting (por defecto: fecha vencimiento descendente)
+                allPagos = allPagos.OrderByDescending(p => ((dynamic)p).FechaVencimiento).ToList();
+                
+                // Apply pagination
+                var pagedData = allPagos
+                    .Skip(start)
+                    .Take(length)
+                    .Select(p => new
+                    {
+                        id = ((dynamic)p).Id,
+                        contratoId = ((dynamic)p).ContratoId,
+                        numeroPago = ((dynamic)p).NumeroPago,
+                        fechaVencimiento = ((dynamic)p).FechaVencimiento,
+                        importe = ((dynamic)p).Importe,
+                        estado = ((dynamic)p).Estado,
+                        fechaPago = ((dynamic)p).FechaPago,
+                        inmuebleDireccion = ((dynamic)p).InmuebleDireccion,
+                        observaciones = ((dynamic)p).Observaciones
+                    })
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = filteredRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
             }
         }
 

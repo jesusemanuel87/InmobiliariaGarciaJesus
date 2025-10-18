@@ -159,9 +159,10 @@ class PagosDataTablesConfig {
         ];
     }
 
-    static getAjaxConfig() {
+    static getAjaxConfig(isInquilinoView = false) {
+        const url = isInquilinoView ? '/Pagos/GetMisPagosData' : '/Pagos/GetPagosData';
         return {
-            url: '/Pagos/GetPagosData',
+            url: url,
             type: 'POST',
             contentType: 'application/json',
             data: function(d) {

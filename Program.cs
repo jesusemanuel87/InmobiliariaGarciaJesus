@@ -114,6 +114,9 @@ app.UseAuthentication();
 // Middleware personalizado para validar consistencia de sesión
 app.UseMiddleware<SessionValidationMiddleware>();
 
+// Middleware para forzar cambio de contraseña si RequiereCambioClave = true
+app.UseRequirePasswordChange();
+
 app.UseAuthorization();
 
 app.MapStaticAssets();

@@ -27,6 +27,9 @@ class PagosIndexManager {
             this.filters.reinitialize();
         }
 
+        // Detectar si es vista de inquilino (MisPagos)
+        const isInquilinoView = window.esMisPagos === true;
+        
         this.table = $('#pagosTable').DataTable({
             processing: true,
             serverSide: true,
@@ -34,7 +37,7 @@ class PagosIndexManager {
             pageLength: 10,
             lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
             columns: PagosDataTablesConfig.getColumns(),
-            ajax: PagosDataTablesConfig.getAjaxConfig(),
+            ajax: PagosDataTablesConfig.getAjaxConfig(isInquilinoView),
             order: PagosDataTablesConfig.getDefaultOrder(),
             language: DataTablesConfig.getSpanishLanguage(),
             dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +

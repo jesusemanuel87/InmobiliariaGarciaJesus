@@ -39,6 +39,17 @@ namespace InmobiliariaGarciaJesus.Models
         [Display(Name = "Estado")]
         public bool Estado { get; set; } = true;
 
+        [Display(Name = "Requiere Cambio de Clave")]
+        public bool RequiereCambioClave { get; set; } = false;
+
+        // Propiedad de compatibilidad para Password (mapea a ClaveHash)
+        [NotMapped]
+        public string Password
+        {
+            get => ClaveHash;
+            set => ClaveHash = value;
+        }
+
         // Foreign Keys (solo uno será válido según el rol)
         public int? EmpleadoId { get; set; }
         public int? PropietarioId { get; set; }

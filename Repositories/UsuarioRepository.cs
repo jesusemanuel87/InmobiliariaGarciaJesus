@@ -29,7 +29,6 @@ namespace InmobiliariaGarciaJesus.Repositories
                          LEFT JOIN Empleados e ON u.EmpleadoId = e.Id
                          LEFT JOIN Propietarios p ON u.PropietarioId = p.Id
                          LEFT JOIN Inquilinos i ON u.InquilinoId = i.Id
-                         WHERE u.Estado = 1 
                          ORDER BY u.NombreUsuario";
             
             using var command = new MySqlCommand(query, connection);
@@ -204,7 +203,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             var query = @"UPDATE Usuarios SET 
                          NombreUsuario = @NombreUsuario, Email = @Email, ClaveHash = @ClaveHash,
                          FotoPerfil = @FotoPerfil, Rol = @Rol, EmpleadoId = @EmpleadoId,
-                         PropietarioId = @PropietarioId, InquilinoId = @InquilinoId
+                         PropietarioId = @PropietarioId, InquilinoId = @InquilinoId, Estado = @Estado
                          WHERE Id = @Id";
             
             using var command = new MySqlCommand(query, connection);
@@ -271,6 +270,29 @@ namespace InmobiliariaGarciaJesus.Repositories
             
             using var command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@Email", email);
+            if (excludeId.HasValue)
+            {
+                command.Parameters.AddWithValue("@ExcludeId", excludeId.Value);
+            }
+            
+            var count = Convert.ToInt32(await command.ExecuteScalarAsync());
+            return count > 0;
+        }
+
+        public async Task<bool> EmailExistsWithRoleAsync(string email, RolUsuario rol, int? excludeId = null)
+        {
+            using var connection = new MySqlConnection(_connectionString);
+            await connection.OpenAsync();
+            
+            var query = "SELECT COUNT(*) FROM Usuarios WHERE Email = @Email AND Rol = @Rol";
+            if (excludeId.HasValue)
+            {
+                query += " AND Id != @ExcludeId";
+            }
+            
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Email", email);
+            command.Parameters.AddWithValue("@Rol", (int)rol);
             if (excludeId.HasValue)
             {
                 command.Parameters.AddWithValue("@ExcludeId", excludeId.Value);

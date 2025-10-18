@@ -15,10 +15,11 @@
                     <!-- Información sobre el proceso de validación -->
                     <div class="alert alert-info alert-dismissible fade show" role="alert">
                         <i class="fas fa-info-circle"></i> <strong>Información importante:</strong>
-                        <p class="mb-0 mt-2">
-                            Su cuenta será creada con estado <strong>Inactivo</strong> y deberá ser validada por un administrador antes de poder iniciar sesión.
-                            Recibirá una notificación cuando su cuenta sea activada.
-                        </p>
+                        <ul class="mb-0 mt-2">
+                            <li>Su cuenta será creada con estado <strong>Inactivo</strong> y deberá ser validada por un administrador antes de poder iniciar sesión.</li>
+                            <li>Si ya tiene una cuenta como Propietario, puede registrarse también como Inquilino usando el <strong>mismo email</strong> pero con un <strong>nombre de usuario diferente</strong>.</li>
+                            <li>Cada rol tendrá acceso a funcionalidades específicas del sistema.</li>
+                        </ul>
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
 
@@ -75,6 +76,25 @@
                                     <div class="form-text" id="emailHelp"></div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Campo para validar cuenta existente (multi-rol) - Oculto por defecto -->
+                        <div id="existingAccountValidation" class="alert alert-warning" style="display: none;">
+                            <h6><i class="fas fa-user-check"></i> Ya tiene una cuenta con este email</h6>
+                            <p class="mb-2">Para agregar un nuevo rol, ingrese su contraseña actual:</p>
+                            <div class="mb-3">
+                                <label for="ExistingPassword" class="form-label">Contraseña de su cuenta existente</label>
+                                <div class="input-group">
+                                    <input type="password" id="ExistingPassword" class="form-control" placeholder="Ingrese su contraseña" />
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleExistingPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text" id="existingPasswordHelp"></div>
+                            </div>
+                            <button type="button" id="validateExistingAccount" class="btn btn-primary btn-sm">
+                                <i class="fas fa-check"></i> Validar y Continuar
+                            </button>
                         </div>
 
                         <!-- Contraseñas -->
@@ -178,5 +198,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="~/js/Auth/register.js"></script>
+    <script src="~/js/Auth/register.js?v=@DateTime.Now.Ticks"></script>
 }

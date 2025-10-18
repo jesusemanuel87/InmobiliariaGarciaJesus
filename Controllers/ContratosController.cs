@@ -4,6 +4,7 @@ using InmobiliariaGarciaJesus.Models.Common;
 using InmobiliariaGarciaJesus.Repositories;
 using InmobiliariaGarciaJesus.Services;
 using InmobiliariaGarciaJesus.Attributes;
+using AuthService = InmobiliariaGarciaJesus.Services.AuthenticationService;
 
 namespace InmobiliariaGarciaJesus.Controllers
 {
@@ -156,6 +157,133 @@ namespace InmobiliariaGarciaJesus.Controllers
             {
                 TempData["Error"] = "Error al cargar el contrato: " + ex.Message;
                 return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // GET: Contratos/MisContratos - Vista de contratos de inmuebles del propietario logueado
+        [AuthorizeMultipleRoles(RolUsuario.Propietario)]
+        public async Task<IActionResult> MisContratos()
+        {
+            try
+            {
+                // Obtener el usuario logueado usando AuthService
+                var usuarioId = AuthService.GetUsuarioId(User);
+                if (!usuarioId.HasValue)
+                {
+                    return RedirectToAction("Login", "Auth");
+                }
+
+                var usuario = await _usuarioRepository.GetByIdAsync(usuarioId.Value);
+                if (usuario?.PropietarioId == null)
+                {
+                    TempData["Error"] = "No tiene permisos para acceder a esta sección. Debe ser un propietario.";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                // Obtener todos los inmuebles del propietario
+                var inmuebleRepo = HttpContext.RequestServices.GetService<IRepository<Inmueble>>();
+                if (inmuebleRepo == null)
+                {
+                    TempData["Error"] = "Error al cargar datos";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                var todosInmuebles = await inmuebleRepo.GetAllAsync();
+                var misInmuebles = todosInmuebles.Where(i => i.PropietarioId == usuario.PropietarioId.Value).ToList();
+                var misInmueblesIds = misInmuebles.Select(i => i.Id).ToList();
+
+                // Obtener contratos de esos inmuebles
+                var todosContratos = await _contratoRepository.GetAllAsync();
+                var misContratos = todosContratos
+                    .Where(c => misInmueblesIds.Contains(c.InmuebleId))
+                    .OrderByDescending(c => c.FechaInicio)
+                    .ToList();
+
+                if (!misContratos.Any())
+                {
+                    ViewBag.SinContratos = true;
+                    ViewBag.UserRole = "Propietario";
+                    return View("Index", new PagedResult<Contrato>(new List<Contrato>(), 0, 1, 20));
+                }
+
+                // Crear resultado paginado
+                var resultado = new PagedResult<Contrato>(misContratos, misContratos.Count, 1, misContratos.Count);
+
+                // Pasar datos a la vista
+                ViewBag.UserRole = "Propietario";
+                ViewBag.EsMisContratos = true; // Flag para que la vista sepa que es la vista del propietario
+                
+                return View("Index", resultado);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error al cargar sus contratos: " + ex.Message;
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
+        // GET: Contratos/MiContrato - Vista del contrato del inquilino logueado
+        [AuthorizeMultipleRoles(RolUsuario.Inquilino)]
+        public async Task<IActionResult> MiContrato()
+        {
+            try
+            {
+                // Obtener el usuario logueado usando AuthService
+                var usuarioId = AuthService.GetUsuarioId(User);
+                if (!usuarioId.HasValue)
+                {
+                    return RedirectToAction("Login", "Auth");
+                }
+
+                var usuario = await _usuarioRepository.GetByIdAsync(usuarioId.Value);
+                if (usuario?.InquilinoId == null)
+                {
+                    TempData["Error"] = "No tiene permisos para acceder a esta sección. Debe ser un inquilino.";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                // Obtener contratos del inquilino (activo y futuros)
+                var todosContratos = await _contratoRepository.GetAllAsync();
+                var misContratos = todosContratos
+                    .Where(c => c.InquilinoId == usuario.InquilinoId.Value)
+                    .OrderByDescending(c => c.FechaInicio)
+                    .ToList();
+
+                if (!misContratos.Any())
+                {
+                    ViewBag.SinContratos = true;
+                    ViewBag.UserRole = "Inquilino";
+                    return View("Index", new PagedResult<Contrato>(new List<Contrato>(), 0, 1, 20));
+                }
+
+                // Buscar contrato activo
+                var fechaActual = DateTime.Now;
+                var contratoActivo = misContratos.FirstOrDefault(c => 
+                    c.FechaInicio <= fechaActual && 
+                    c.FechaFin >= fechaActual &&
+                    c.Estado != EstadoContrato.Cancelado &&
+                    c.Estado != EstadoContrato.Finalizado);
+
+                // Si no hay activo, mostrar el más reciente
+                var contratoMostrar = contratoActivo ?? misContratos.First();
+
+                // Obtener pagos del contrato
+                var pagos = await _pagoService.GetPagosByContratoAsync(contratoMostrar.Id);
+
+                // Crear resultado paginado
+                var resultado = new PagedResult<Contrato>(new List<Contrato> { contratoMostrar }, 1, 1, 1);
+
+                // Pasar datos a la vista
+                ViewBag.UserRole = "Inquilino";
+                ViewBag.Pagos = pagos;
+                ViewBag.EsMiContrato = true; // Flag para que la vista sepa que es la vista del inquilino
+                
+                return View("Index", resultado);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error al cargar su contrato: " + ex.Message;
+                return RedirectToAction("Index", "Home");
             }
         }
 

@@ -117,41 +117,87 @@ function verPropietariosSinUsuario() {
     const modal = new bootstrap.Modal(document.getElementById('personasSinUsuarioModal'));
     document.getElementById('personasSinUsuarioModalLabel').innerHTML = '<i class="fas fa-home"></i> Propietarios sin Usuario';
     document.getElementById('personasSinUsuarioModalBody').innerHTML = `
-        <div class="text-center">
+        <div class="text-center py-4">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Cargando...</span>
             </div>
+            <p class="mt-2 text-muted">Cargando propietarios...</p>
         </div>
     `;
     modal.show();
 
-    fetch('/Propietarios/Index')
-        .then(response => response.text())
-        .then(html => {
-            // Aquí deberías hacer una petición a un endpoint que devuelva propietarios sin usuario
-            // Por ahora mostramos un mensaje
-            document.getElementById('personasSinUsuarioModalBody').innerHTML = `
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> 
-                    <strong>Funcionalidad en desarrollo</strong><br>
-                    Para crear usuarios para propietarios existentes:<br><br>
-                    <ol>
-                        <li>Vaya al módulo <strong>Propietarios</strong></li>
-                        <li>Identifique propietarios sin usuario (aparecen sin badge de usuario)</li>
-                        <li>Use el botón "Crear Usuario" en la sección de detalles</li>
-                    </ol>
-                    <p class="mb-0 mt-3">
-                        <strong>Nota:</strong> El username será generado automáticamente como <code>nombre.apellido</code> 
-                        y la contraseña temporal será el <strong>DNI</strong> del propietario.
-                    </p>
-                </div>
-            `;
+    fetch('/Usuarios/GetPropietariosSinUsuario')
+        .then(response => response.json())
+        .then(result => {
+            if (result.success && result.data.length > 0) {
+                let html = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Propietarios activos sin usuario</strong><br>
+                        Haga clic en "Crear Usuario" para generar credenciales de acceso.
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>DNI</th>
+                                    <th>Nombre Completo</th>
+                                    <th>Email</th>
+                                    <th class="text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                result.data.forEach(prop => {
+                    html += `
+                        <tr>
+                            <td>${prop.dni}</td>
+                            <td>${prop.nombre} ${prop.apellido}</td>
+                            <td><small>${prop.email}</small></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-success" onclick="crearUsuarioParaPersona(${prop.id}, 'Propietario', '${prop.nombre} ${prop.apellido}')">
+                                    <i class="fas fa-user-plus"></i> Crear Usuario
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <small>
+                            <i class="fas fa-key"></i> <strong>Nota:</strong> El username será <code>nombre.apellido</code> 
+                            y la contraseña temporal será el <strong>DNI</strong>. El usuario deberá cambiar su contraseña en el primer inicio de sesión.
+                        </small>
+                    </div>
+                `;
+                
+                document.getElementById('personasSinUsuarioModalBody').innerHTML = html;
+            } else if (result.success) {
+                document.getElementById('personasSinUsuarioModalBody').innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> 
+                        <strong>¡Excelente!</strong><br>
+                        Todos los propietarios activos ya tienen usuarios asignados.
+                    </div>
+                `;
+            } else {
+                document.getElementById('personasSinUsuarioModalBody').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> ${result.message}
+                    </div>
+                `;
+            }
         })
         .catch(error => {
             console.error('Error:', error);
             document.getElementById('personasSinUsuarioModalBody').innerHTML = `
                 <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle"></i> Error al cargar propietarios
+                    <i class="fas fa-exclamation-triangle"></i> Error al cargar propietarios sin usuario
                 </div>
             `;
         });
@@ -161,63 +207,148 @@ function verInquilinosSinUsuario() {
     const modal = new bootstrap.Modal(document.getElementById('personasSinUsuarioModal'));
     document.getElementById('personasSinUsuarioModalLabel').innerHTML = '<i class="fas fa-user"></i> Inquilinos sin Usuario';
     document.getElementById('personasSinUsuarioModalBody').innerHTML = `
-        <div class="text-center">
+        <div class="text-center py-4">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Cargando...</span>
             </div>
+            <p class="mt-2 text-muted">Cargando inquilinos...</p>
         </div>
     `;
     modal.show();
 
-    // Similar al anterior
-    setTimeout(() => {
-        document.getElementById('personasSinUsuarioModalBody').innerHTML = `
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> 
-                <strong>Funcionalidad en desarrollo</strong><br>
-                Para crear usuarios para inquilinos existentes:<br><br>
-                <ol>
-                    <li>Vaya al módulo <strong>Inquilinos</strong></li>
-                    <li>Identifique inquilinos sin usuario (aparecen sin badge de usuario)</li>
-                    <li>Use el botón "Crear Usuario" en la sección de detalles</li>
-                </ol>
-                <p class="mb-0 mt-3">
-                    <strong>Nota:</strong> El username será generado automáticamente como <code>nombre.apellido</code> 
-                    y la contraseña temporal será el <strong>DNI</strong> del inquilino.
-                </p>
-            </div>
-        `;
-    }, 500);
+    fetch('/Usuarios/GetInquilinosSinUsuario')
+        .then(response => response.json())
+        .then(result => {
+            if (result.success && result.data.length > 0) {
+                let html = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Inquilinos activos sin usuario</strong><br>
+                        Haga clic en "Crear Usuario" para generar credenciales de acceso.
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>DNI</th>
+                                    <th>Nombre Completo</th>
+                                    <th>Email</th>
+                                    <th class="text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                result.data.forEach(inq => {
+                    html += `
+                        <tr>
+                            <td>${inq.dni}</td>
+                            <td>${inq.nombre} ${inq.apellido}</td>
+                            <td><small>${inq.email}</small></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-info" onclick="crearUsuarioParaPersona(${inq.id}, 'Inquilino', '${inq.nombre} ${inq.apellido}')">
+                                    <i class="fas fa-user-plus"></i> Crear Usuario
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <small>
+                            <i class="fas fa-key"></i> <strong>Nota:</strong> El username será <code>nombre.apellido</code> 
+                            y la contraseña temporal será el <strong>DNI</strong>. El usuario deberá cambiar su contraseña en el primer inicio de sesión.
+                        </small>
+                    </div>
+                `;
+                
+                document.getElementById('personasSinUsuarioModalBody').innerHTML = html;
+            } else if (result.success) {
+                document.getElementById('personasSinUsuarioModalBody').innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> 
+                        <strong>¡Excelente!</strong><br>
+                        Todos los inquilinos activos ya tienen usuarios asignados.
+                    </div>
+                `;
+            } else {
+                document.getElementById('personasSinUsuarioModalBody').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> ${result.message}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('personasSinUsuarioModalBody').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Error al cargar inquilinos sin usuario
+                </div>
+            `;
+        });
 }
 
-function crearUsuarioParaPersona(personaId, tipo) {
-    if (!confirm(`¿Está seguro que desea crear un usuario para este ${tipo}?\n\nSe generará un username automático y la contraseña será el DNI.`)) {
-        return;
-    }
+function crearUsuarioParaPersona(personaId, tipo, nombreCompleto) {
+    Swal.fire({
+        title: `¿Crear Usuario para ${tipo}?`,
+        html: `<p>Se creará un usuario para <strong>${nombreCompleto}</strong></p>
+               <p class="text-muted mb-0"><small><i class="fas fa-key"></i> Username: <code>nombre.apellido</code><br>
+               <i class="fas fa-lock"></i> Contraseña temporal: <strong>DNI</strong></small></p>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0d6efd',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, crear',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Creando usuario...',
+                text: 'Por favor espere',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
-    fetch(`/Usuarios/CrearUsuarioParaPersona`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-        },
-        body: JSON.stringify({ 
-            personaId: personaId,
-            tipo: tipo
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('success', data.message);
-            setTimeout(() => location.reload(), 2000);
-        } else {
-            showAlert('danger', data.message);
+            fetch(`/Usuarios/CrearUsuarioParaPersona`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                },
+                body: JSON.stringify({ 
+                    personaId: personaId,
+                    tipo: tipo
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: '¡Usuario Creado!',
+                        html: `<p>${data.message}</p>
+                               <p class="text-warning mt-3"><i class="fas fa-exclamation-triangle"></i> El usuario está <strong>inactivo</strong>. 
+                               Debe activarlo desde la lista de usuarios.</p>`,
+                        icon: 'success',
+                        confirmButtonColor: '#198754',
+                        confirmButtonText: 'Entendido'
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Error al crear el usuario', 'error');
+            });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showAlert('danger', 'Error al crear el usuario');
     });
 }
 

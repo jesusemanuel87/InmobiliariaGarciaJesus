@@ -12,6 +12,12 @@ namespace InmobiliariaGarciaJesus.Controllers
         public int Id { get; set; }
     }
 
+    public class CrearUsuarioRequest
+    {
+        public int PersonaId { get; set; }
+        public string Tipo { get; set; } = string.Empty;
+    }
+
     [AuthorizeMultipleRoles(RolUsuario.Administrador)]
     public class UsuariosController : Controller
     {
@@ -190,20 +196,90 @@ namespace InmobiliariaGarciaJesus.Controllers
             }
         }
 
-        // POST: Usuarios/CrearUsuarioParaPersona
-        [HttpPost]
-        public async Task<IActionResult> CrearUsuarioParaPersona(int personaId, string tipo)
+        // GET: Usuarios/GetPropietariosSinUsuario
+        [HttpGet]
+        public async Task<IActionResult> GetPropietariosSinUsuario()
         {
             try
             {
-                _logger.LogInformation("CrearUsuarioParaPersona: PersonaId={PersonaId}, Tipo={Tipo}", personaId, tipo);
+                var todosLosPropietarios = await _propietarioRepository.GetAllAsync();
+                var propietariosSinUsuario = new List<object>();
 
-                if (tipo != "Propietario" && tipo != "Inquilino")
+                foreach (var propietario in todosLosPropietarios)
+                {
+                    var usuarios = await _usuarioRepository.GetUsuariosByPersonaAsync(propietario.Id, RolUsuario.Propietario);
+                    if (!usuarios.Any() && propietario.Estado)
+                    {
+                        propietariosSinUsuario.Add(new
+                        {
+                            id = propietario.Id,
+                            nombre = propietario.Nombre,
+                            apellido = propietario.Apellido,
+                            dni = propietario.Dni,
+                            email = propietario.Email,
+                            telefono = propietario.Telefono
+                        });
+                    }
+                }
+
+                return Json(new { success = true, data = propietariosSinUsuario });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener propietarios sin usuario");
+                return Json(new { success = false, message = "Error al cargar propietarios" });
+            }
+        }
+
+        // GET: Usuarios/GetInquilinosSinUsuario
+        [HttpGet]
+        public async Task<IActionResult> GetInquilinosSinUsuario()
+        {
+            try
+            {
+                var todosLosInquilinos = await _inquilinoRepository.GetAllAsync();
+                var inquilinosSinUsuario = new List<object>();
+
+                foreach (var inquilino in todosLosInquilinos)
+                {
+                    var usuarios = await _usuarioRepository.GetUsuariosByPersonaAsync(inquilino.Id, RolUsuario.Inquilino);
+                    if (!usuarios.Any() && inquilino.Estado)
+                    {
+                        inquilinosSinUsuario.Add(new
+                        {
+                            id = inquilino.Id,
+                            nombre = inquilino.Nombre,
+                            apellido = inquilino.Apellido,
+                            dni = inquilino.Dni,
+                            email = inquilino.Email,
+                            telefono = inquilino.Telefono
+                        });
+                    }
+                }
+
+                return Json(new { success = true, data = inquilinosSinUsuario });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener inquilinos sin usuario");
+                return Json(new { success = false, message = "Error al cargar inquilinos" });
+            }
+        }
+
+        // POST: Usuarios/CrearUsuarioParaPersona
+        [HttpPost]
+        public async Task<IActionResult> CrearUsuarioParaPersona([FromBody] CrearUsuarioRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("CrearUsuarioParaPersona: PersonaId={PersonaId}, Tipo={Tipo}", request.PersonaId, request.Tipo);
+
+                if (request.Tipo != "Propietario" && request.Tipo != "Inquilino")
                 {
                     return Json(new { success = false, message = "Tipo de usuario inválido" });
                 }
 
-                var tipoUsuario = tipo == "Propietario" ? RolUsuario.Propietario : RolUsuario.Inquilino;
+                var tipoUsuario = request.Tipo == "Propietario" ? RolUsuario.Propietario : RolUsuario.Inquilino;
 
                 // Verificar que la persona exista y no tenga usuario
                 Usuario? usuario = null;
@@ -215,14 +291,14 @@ namespace InmobiliariaGarciaJesus.Controllers
 
                 if (tipoUsuario == RolUsuario.Propietario)
                 {
-                    var propietario = await _propietarioRepository.GetByIdAsync(personaId);
+                    var propietario = await _propietarioRepository.GetByIdAsync(request.PersonaId);
                     if (propietario == null)
                     {
                         return Json(new { success = false, message = "Propietario no encontrado" });
                     }
 
                     // Verificar que no tenga usuario
-                    var usuarios = await _usuarioRepository.GetUsuariosByPersonaAsync(personaId, RolUsuario.Propietario);
+                    var usuarios = await _usuarioRepository.GetUsuariosByPersonaAsync(request.PersonaId, RolUsuario.Propietario);
                     if (usuarios.Any())
                     {
                         return Json(new { success = false, message = "Este propietario ya tiene un usuario asociado" });
@@ -236,14 +312,14 @@ namespace InmobiliariaGarciaJesus.Controllers
                 }
                 else
                 {
-                    var inquilino = await _inquilinoRepository.GetByIdAsync(personaId);
+                    var inquilino = await _inquilinoRepository.GetByIdAsync(request.PersonaId);
                     if (inquilino == null)
                     {
                         return Json(new { success = false, message = "Inquilino no encontrado" });
                     }
 
                     // Verificar que no tenga usuario
-                    var usuarios = await _usuarioRepository.GetUsuariosByPersonaAsync(personaId, RolUsuario.Inquilino);
+                    var usuarios = await _usuarioRepository.GetUsuariosByPersonaAsync(request.PersonaId, RolUsuario.Inquilino);
                     if (usuarios.Any())
                     {
                         return Json(new { success = false, message = "Este inquilino ya tiene un usuario asociado" });
@@ -281,18 +357,18 @@ namespace InmobiliariaGarciaJesus.Controllers
 
                 if (tipoUsuario == RolUsuario.Propietario)
                 {
-                    usuario.PropietarioId = personaId;
+                    usuario.PropietarioId = request.PersonaId;
                 }
                 else
                 {
-                    usuario.InquilinoId = personaId;
+                    usuario.InquilinoId = request.PersonaId;
                 }
 
                 var usuarioId = await _usuarioRepository.CreateAsync(usuario);
 
                 if (usuarioId > 0)
                 {
-                    _logger.LogInformation("Usuario creado: {UsuarioId} para {Tipo} {PersonaId}", usuarioId, tipo, personaId);
+                    _logger.LogInformation("Usuario creado: {UsuarioId} para {Tipo} {PersonaId}", usuarioId, request.Tipo, request.PersonaId);
                     return Json(new 
                     { 
                         success = true, 
@@ -305,7 +381,7 @@ namespace InmobiliariaGarciaJesus.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear usuario para persona: {PersonaId}", personaId);
+                _logger.LogError(ex, "Error al crear usuario para persona: {PersonaId}", request.PersonaId);
                 return Json(new { success = false, message = "Error interno: " + ex.Message });
             }
         }

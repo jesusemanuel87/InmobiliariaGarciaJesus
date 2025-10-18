@@ -21,7 +21,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             await connection.OpenAsync();
             
             var query = @"SELECT u.Id, u.NombreUsuario, u.Email, u.ClaveHash, u.FotoPerfil, u.Rol, 
-                         u.FechaCreacion, u.UltimoAcceso, u.Estado, u.EmpleadoId, u.PropietarioId, u.InquilinoId,
+                         u.FechaCreacion, u.UltimoAcceso, u.Estado, u.RequiereCambioClave, u.EmpleadoId, u.PropietarioId, u.InquilinoId,
                          e.Nombre as EmpleadoNombre, e.Apellido as EmpleadoApellido, e.Rol as EmpleadoRol,
                          p.Nombre as PropietarioNombre, p.Apellido as PropietarioApellido,
                          i.Nombre as InquilinoNombre, i.Apellido as InquilinoApellido
@@ -54,7 +54,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             await connection.OpenAsync();
             
             var query = @"SELECT u.Id, u.NombreUsuario, u.Email, u.ClaveHash, u.FotoPerfil, u.Rol, 
-                         u.FechaCreacion, u.UltimoAcceso, u.Estado, u.EmpleadoId, u.PropietarioId, u.InquilinoId,
+                         u.FechaCreacion, u.UltimoAcceso, u.Estado, u.RequiereCambioClave, u.EmpleadoId, u.PropietarioId, u.InquilinoId,
                          e.Nombre as EmpleadoNombre, e.Apellido as EmpleadoApellido, e.Dni as EmpleadoDni, 
                          e.Telefono as EmpleadoTelefono, e.Email as EmpleadoEmail, e.Rol as EmpleadoRol, e.FechaIngreso,
                          p.Nombre as PropietarioNombre, p.Apellido as PropietarioApellido, p.Dni as PropietarioDni,
@@ -86,7 +86,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             await connection.OpenAsync();
             
             var query = @"SELECT u.Id, u.NombreUsuario, u.Email, u.ClaveHash, u.FotoPerfil, u.Rol, 
-                         u.FechaCreacion, u.UltimoAcceso, u.Estado, u.EmpleadoId, u.PropietarioId, u.InquilinoId,
+                         u.FechaCreacion, u.UltimoAcceso, u.Estado, u.RequiereCambioClave, u.EmpleadoId, u.PropietarioId, u.InquilinoId,
                          e.Nombre as EmpleadoNombre, e.Apellido as EmpleadoApellido, e.Dni as EmpleadoDni, 
                          e.Telefono as EmpleadoTelefono, e.Email as EmpleadoEmail, e.Rol as EmpleadoRol, e.FechaIngreso,
                          p.Nombre as PropietarioNombre, p.Apellido as PropietarioApellido, p.Dni as PropietarioDni,
@@ -118,7 +118,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             await connection.OpenAsync();
             
             var query = @"SELECT u.Id, u.NombreUsuario, u.Email, u.ClaveHash, u.FotoPerfil, u.Rol, 
-                         u.FechaCreacion, u.UltimoAcceso, u.Estado, u.EmpleadoId, u.PropietarioId, u.InquilinoId,
+                         u.FechaCreacion, u.UltimoAcceso, u.Estado, u.RequiereCambioClave, u.EmpleadoId, u.PropietarioId, u.InquilinoId,
                          e.Nombre as EmpleadoNombre, e.Apellido as EmpleadoApellido, e.Dni as EmpleadoDni, 
                          e.Telefono as EmpleadoTelefono, e.Email as EmpleadoEmail, e.Rol as EmpleadoRol, e.FechaIngreso,
                          p.Nombre as PropietarioNombre, p.Apellido as PropietarioApellido, p.Dni as PropietarioDni,
@@ -160,7 +160,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             };
             
             var query = $@"SELECT u.Id, u.NombreUsuario, u.Email, u.ClaveHash, u.FotoPerfil, u.Rol, 
-                          u.FechaCreacion, u.UltimoAcceso, u.Estado, u.EmpleadoId, u.PropietarioId, u.InquilinoId
+                          u.FechaCreacion, u.UltimoAcceso, u.Estado, u.RequiereCambioClave, u.EmpleadoId, u.PropietarioId, u.InquilinoId
                           FROM Usuarios u
                           WHERE {whereClause} AND u.Estado = 1";
             
@@ -183,9 +183,9 @@ namespace InmobiliariaGarciaJesus.Repositories
             await connection.OpenAsync();
             
             var query = @"INSERT INTO Usuarios (NombreUsuario, Email, ClaveHash, FotoPerfil, Rol, 
-                         EmpleadoId, PropietarioId, InquilinoId, Estado) 
+                         EmpleadoId, PropietarioId, InquilinoId, Estado, RequiereCambioClave) 
                          VALUES (@NombreUsuario, @Email, @ClaveHash, @FotoPerfil, @Rol, 
-                         @EmpleadoId, @PropietarioId, @InquilinoId, @Estado);
+                         @EmpleadoId, @PropietarioId, @InquilinoId, @Estado, @RequiereCambioClave);
                          SELECT LAST_INSERT_ID();";
             
             using var command = new MySqlCommand(query, connection);
@@ -203,7 +203,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             var query = @"UPDATE Usuarios SET 
                          NombreUsuario = @NombreUsuario, Email = @Email, ClaveHash = @ClaveHash,
                          FotoPerfil = @FotoPerfil, Rol = @Rol, EmpleadoId = @EmpleadoId,
-                         PropietarioId = @PropietarioId, InquilinoId = @InquilinoId, Estado = @Estado
+                         PropietarioId = @PropietarioId, InquilinoId = @InquilinoId, Estado = @Estado, RequiereCambioClave = @RequiereCambioClave
                          WHERE Id = @Id";
             
             using var command = new MySqlCommand(query, connection);
@@ -337,6 +337,7 @@ namespace InmobiliariaGarciaJesus.Repositories
                 FechaCreacion = reader.GetDateTime(reader.GetOrdinal("FechaCreacion")),
                 UltimoAcceso = reader.IsDBNull(reader.GetOrdinal("UltimoAcceso")) ? null : reader.GetDateTime(reader.GetOrdinal("UltimoAcceso")),
                 Estado = reader.GetBoolean(reader.GetOrdinal("Estado")),
+                RequiereCambioClave = reader.GetBoolean(reader.GetOrdinal("RequiereCambioClave")),
                 EmpleadoId = reader.IsDBNull(reader.GetOrdinal("EmpleadoId")) ? null : reader.GetInt32(reader.GetOrdinal("EmpleadoId")),
                 PropietarioId = reader.IsDBNull(reader.GetOrdinal("PropietarioId")) ? null : reader.GetInt32(reader.GetOrdinal("PropietarioId")),
                 InquilinoId = reader.IsDBNull(reader.GetOrdinal("InquilinoId")) ? null : reader.GetInt32(reader.GetOrdinal("InquilinoId"))
@@ -442,6 +443,7 @@ namespace InmobiliariaGarciaJesus.Repositories
             command.Parameters.AddWithValue("@PropietarioId", usuario.PropietarioId ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@InquilinoId", usuario.InquilinoId ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Estado", usuario.Estado);
+            command.Parameters.AddWithValue("@RequiereCambioClave", usuario.RequiereCambioClave);
         }
     }
 }

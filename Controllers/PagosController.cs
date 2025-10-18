@@ -856,13 +856,13 @@ namespace InmobiliariaGarciaJesus.Controllers
                     {
                         id = ((dynamic)p).Id,
                         contratoId = ((dynamic)p).ContratoId,
-                        numeroPago = ((dynamic)p).NumeroPago,
+                        inquilinoNombre = ((dynamic)p).InquilinoNombre ?? "Sin inquilino",
+                        inmuebleDireccion = ((dynamic)p).InmuebleDireccion ?? "Sin dirección",
                         fechaVencimiento = ((dynamic)p).FechaVencimiento,
-                        importe = ((dynamic)p).Importe,
-                        estado = ((dynamic)p).Estado,
-                        fechaPago = ((dynamic)p).FechaPago,
-                        inmuebleDireccion = ((dynamic)p).InmuebleDireccion,
-                        observaciones = ((dynamic)p).Observaciones
+                        monto = ((dynamic)p).Importe,
+                        multas = ((dynamic)p).Multas,
+                        intereses = ((dynamic)p).Intereses,
+                        estado = ((dynamic)p).Estado.ToString()
                     })
                     .ToList();
 

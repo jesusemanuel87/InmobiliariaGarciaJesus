@@ -421,6 +421,7 @@ $RECYCLE.BIN/
 
 # Documentation
 DEPENDENCY_INJECTION_COMPARISON.md
+docs-ignore/
 
 ##
 ## Visual Studio Code

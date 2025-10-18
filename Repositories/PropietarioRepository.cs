@@ -82,6 +82,38 @@ namespace InmobiliariaGarciaJesus.Repositories
             return null;
         }
 
+        public async Task<Propietario?> GetByDniAsync(string dni)
+        {
+            using var connection = new MySqlConnection(_connectionString);
+            await connection.OpenAsync();
+            
+            var query = @"SELECT Id, Nombre, Apellido, Dni, Telefono, Email, Direccion, FechaCreacion, Estado 
+                         FROM Propietarios WHERE Dni = @Dni";
+            
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Dni", dni);
+            
+            using var reader = await command.ExecuteReaderAsync();
+            
+            if (await reader.ReadAsync())
+            {
+                return new Propietario
+                {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    Nombre = reader["Nombre"].ToString() ?? string.Empty,
+                    Apellido = reader["Apellido"].ToString() ?? string.Empty,
+                    Dni = reader["Dni"].ToString() ?? string.Empty,
+                    Telefono = reader["Telefono"] == DBNull.Value ? null : reader["Telefono"].ToString(),
+                    Email = reader["Email"].ToString() ?? string.Empty,
+                    Direccion = reader["Direccion"] == DBNull.Value ? null : reader["Direccion"].ToString(),
+                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                    Estado = Convert.ToInt32(reader["Estado"]) == 1
+                };
+            }
+            
+            return null;
+        }
+
         public async Task<int> CreateAsync(Propietario propietario)
         {
             using var connection = new MySqlConnection(_connectionString);

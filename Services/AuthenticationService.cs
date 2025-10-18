@@ -21,11 +21,13 @@ namespace InmobiliariaGarciaJesus.Services
                 var claims = new List<Claim>
                 {
                     new(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+                    new("UsuarioId", usuario.Id.ToString()), // Para middleware
                     new(ClaimTypes.Name, usuario.NombreUsuario),
                     new(ClaimTypes.Email, usuario.Email),
                     new(ClaimTypes.Role, usuario.Rol.ToString()),
                     new("FullName", usuario.NombreCompleto),
-                    new("RoleDescription", usuario.RolDescripcion)
+                    new("RoleDescription", usuario.RolDescripcion),
+                    new("RequiereCambioClave", usuario.RequiereCambioClave.ToString())
                 };
 
                 // Agregar foto de perfil si existe

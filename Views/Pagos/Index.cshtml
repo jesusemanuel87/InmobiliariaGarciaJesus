@@ -1,6 +1,12 @@
 @{
     ViewData["Title"] = "Pagos";
+    var esMisPagos = ViewBag.EsMisPagos ?? false;
 }
+
+<script>
+    // Pasar datos del servidor a JavaScript
+    window.esMisPagos = @Json.Serialize(esMisPagos);
+</script>
 
 <div class="container-fluid">
     <div class="row">

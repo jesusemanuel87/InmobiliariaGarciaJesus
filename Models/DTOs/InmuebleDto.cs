@@ -17,9 +17,21 @@ namespace InmobiliariaGarciaJesus.Models.DTOs
         public decimal? Superficie { get; set; }
         public decimal? Latitud { get; set; }
         public decimal? Longitud { get; set; }
-        public bool Disponible { get; set; }
-        public decimal? Precio { get; set; }
+        
+        /// <summary>
+        /// Estado del inmueble: Activo o Inactivo (controlado por el propietario)
+        /// </summary>
         public string Estado { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// Disponibilidad del inmueble basada en contratos:
+        /// - Disponible: Sin contrato activo/reservado
+        /// - Reservado: Con contrato en estado Reservado
+        /// - No Disponible: Con contrato activo
+        /// </summary>
+        public string Disponibilidad { get; set; } = string.Empty;
+        
+        public decimal? Precio { get; set; }
         public string Uso { get; set; } = string.Empty;
         public DateTime FechaCreacion { get; set; }
         public string? ImagenPortadaUrl { get; set; }
@@ -79,11 +91,11 @@ namespace InmobiliariaGarciaJesus.Models.DTOs
     }
 
     /// <summary>
-    /// DTO para actualizar estado de inmueble
+    /// DTO para actualizar estado de inmueble (Activo/Inactivo)
     /// </summary>
     public class ActualizarEstadoInmuebleDto
     {
         [Required(ErrorMessage = "El estado es obligatorio")]
-        public bool Disponible { get; set; }
+        public bool Activo { get; set; }
     }
 }

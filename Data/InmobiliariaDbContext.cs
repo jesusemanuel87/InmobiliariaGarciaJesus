@@ -143,18 +143,21 @@ namespace InmobiliariaGarciaJesus.Data
             modelBuilder.Entity<Pago>()
                 .HasIndex(p => p.ContratoId);
 
-            // Configuración de propiedades computadas (excluir de BD)
-            modelBuilder.Entity<Pago>()
-                .Ignore(p => p.TotalAPagar);
-
+            // Configuración de propiedades calculadas
+            modelBuilder.Entity<Inmueble>()
+                .Ignore(i => i.Tipo);
+            
             modelBuilder.Entity<Inmueble>()
                 .Ignore(i => i.ImagenPortada);
-
+            
             modelBuilder.Entity<Inmueble>()
                 .Ignore(i => i.ImagenPortadaUrl);
-
+            
             modelBuilder.Entity<Inmueble>()
                 .Ignore(i => i.GoogleMapsUrl);
+            
+            modelBuilder.Entity<Inmueble>()
+                .Ignore(i => i.Disponible);
 
             // Configuración de relación Inmueble -> TipoInmuebleEntity
             modelBuilder.Entity<Inmueble>()
@@ -180,9 +183,14 @@ namespace InmobiliariaGarciaJesus.Data
                 .Property(p => p.MetodoPago)
                 .HasConversion<string>();
 
+            // Estado: BD usa 1=Activo, 0=Inactivo pero enum C# usa Activo=0, Inactivo=1
+            // Necesitamos invertir el mapeo
             modelBuilder.Entity<Inmueble>()
                 .Property(i => i.Estado)
-                .HasConversion<int>();
+                .HasConversion(
+                    v => v == EstadoInmueble.Activo ? 1 : 0,  // C# → BD: Activo=1, Inactivo=0
+                    v => v == 1 ? EstadoInmueble.Activo : EstadoInmueble.Inactivo  // BD → C#: 1=Activo, 0=Inactivo
+                );
 
             modelBuilder.Entity<Inmueble>()
                 .Property(i => i.Uso)

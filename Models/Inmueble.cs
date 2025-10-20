@@ -77,6 +77,7 @@ namespace InmobiliariaGarciaJesus.Models
         public int PropietarioId { get; set; }
 
         [Display(Name = "Disponible")]
+        [NotMapped] // Esta columna no existe en la BD, se calcula desde contratos
         public bool Disponible { get; set; } = true;
 
         [Display(Name = "Precio")]

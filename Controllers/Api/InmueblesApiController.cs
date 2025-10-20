@@ -52,10 +52,17 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 }
 
                 var inmuebles = await _context.Inmuebles
-                    .Include(i => i.Imagenes)
+                    .Include(i => i.TipoInmueble)
                     .Where(i => i.PropietarioId == propietarioId.Value)
                     .OrderByDescending(i => i.FechaCreacion)
                     .ToListAsync();
+                
+                // Cargar colecciones por separado (EF Core no permite múltiples Include de colecciones)
+                foreach (var inmueble in inmuebles)
+                {
+                    await _context.Entry(inmueble).Collection(i => i.Imagenes!).LoadAsync();
+                    await _context.Entry(inmueble).Collection(i => i.Contratos!).LoadAsync();
+                }
 
                 var inmueblesDto = inmuebles.Select(i => MapearInmuebleADto(i)).ToList();
 
@@ -87,7 +94,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 }
 
                 var inmueble = await _context.Inmuebles
-                    .Include(i => i.Imagenes)
+                    .Include(i => i.TipoInmueble)
                     .FirstOrDefaultAsync(i => i.Id == id);
 
                 if (inmueble == null)
@@ -100,6 +107,10 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 {
                     return StatusCode(403, ApiResponse.ErrorResponse("No tiene permiso para acceder a este inmueble"));
                 }
+
+                // Cargar colecciones por separado
+                await _context.Entry(inmueble).Collection(i => i.Imagenes!).LoadAsync();
+                await _context.Entry(inmueble).Collection(i => i.Contratos!).LoadAsync();
 
                 var inmuebleDto = MapearInmuebleADto(inmueble);
 
@@ -138,7 +149,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                     return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
                 }
 
-                // Crear inmueble (por defecto deshabilitado según requisitos)
+                // Crear inmueble (por defecto inactivo según requisitos)
                 var inmueble = new Inmueble
                 {
                     Direccion = request.Direccion,
@@ -152,8 +163,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                     Precio = request.Precio,
                     Uso = (UsoInmueble)request.Uso,
                     PropietarioId = propietarioId.Value,
-                    Disponible = false, // Por defecto deshabilitado según requisitos
-                    Estado = EstadoInmueble.Inactivo, // Por defecto inactivo
+                    Estado = EstadoInmueble.Inactivo, // Por defecto inactivo hasta que lo active el administrador
                     FechaCreacion = DateTime.Now
                 };
 
@@ -211,7 +221,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 }
 
                 var inmueble = await _context.Inmuebles
-                    .Include(i => i.Imagenes)
+                    .Include(i => i.TipoInmueble)
                     .FirstOrDefaultAsync(i => i.Id == id);
 
                 if (inmueble == null)
@@ -225,16 +235,36 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                     return StatusCode(403, ApiResponse.ErrorResponse("No tiene permiso para modificar este inmueble"));
                 }
 
-                // Actualizar disponibilidad
-                inmueble.Disponible = request.Disponible;
-                inmueble.Estado = request.Disponible ? EstadoInmueble.Activo : EstadoInmueble.Inactivo;
+                // Cargar colecciones por separado
+                await _context.Entry(inmueble).Collection(i => i.Imagenes!).LoadAsync();
+                await _context.Entry(inmueble).Collection(i => i.Contratos!).LoadAsync();
+
+                // Verificar si intenta inactivar y hay contratos activos/reservados
+                if (!request.Activo)
+                {
+                    var contratoActivo = inmueble.Contratos?
+                        .FirstOrDefault(c => c.Estado == EstadoContrato.Activo || c.Estado == EstadoContrato.Reservado);
+                    
+                    if (contratoActivo != null)
+                    {
+                        string motivo = contratoActivo.Estado == EstadoContrato.Reservado
+                            ? "El inmueble está Reservado con un contrato vigente"
+                            : "El inmueble está No Disponible con un contrato activo";
+                        
+                        return BadRequest(ApiResponse.ErrorResponse($"No se puede inactivar el inmueble. {motivo}."));
+                    }
+                }
+
+                // Actualizar estado
+                inmueble.Estado = request.Activo ? EstadoInmueble.Activo : EstadoInmueble.Inactivo;
 
                 await _context.SaveChangesAsync();
 
                 var inmuebleDto = MapearInmuebleADto(inmueble);
 
-                _logger.LogInformation($"Estado de inmueble ID: {id} actualizado a {request.Disponible} por propietario ID: {propietarioId}");
-                return Ok(ApiResponse<InmuebleDto>.SuccessResponse(inmuebleDto, "Estado del inmueble actualizado exitosamente"));
+                string nuevoEstado = request.Activo ? "Activo" : "Inactivo";
+                _logger.LogInformation($"Estado de inmueble ID: {id} actualizado a {nuevoEstado} por propietario ID: {propietarioId}");
+                return Ok(ApiResponse<InmuebleDto>.SuccessResponse(inmuebleDto, $"Estado del inmueble actualizado a {nuevoEstado}"));
             }
             catch (Exception ex)
             {
@@ -247,18 +277,23 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
         private InmuebleDto MapearInmuebleADto(Inmueble inmueble)
         {
-            // Mapear tipo basado en TipoId
-            string tipoNombre = inmueble.TipoId switch
+            // Obtener nombre del tipo desde la entidad relacionada
+            string tipoNombre = inmueble.TipoInmueble?.Nombre ?? "Sin tipo";
+
+            // Calcular disponibilidad basada en contratos
+            string disponibilidad = "Disponible"; // Por defecto
+            var contratoActivo = inmueble.Contratos?
+                .FirstOrDefault(c => c.Estado == EstadoContrato.Activo || c.Estado == EstadoContrato.Reservado);
+            
+            if (contratoActivo != null)
             {
-                1 => "Casa",
-                2 => "Departamento",
-                3 => "Monoambiente",
-                4 => "Local",
-                5 => "Oficina",
-                6 => "Terreno",
-                7 => "Galpón",
-                _ => "Sin tipo"
-            };
+                disponibilidad = contratoActivo.Estado == EstadoContrato.Reservado 
+                    ? "Reservado" 
+                    : "No Disponible";
+            }
+
+            // Obtener URL base del servidor
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
 
             return new InmuebleDto
             {
@@ -272,17 +307,19 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 Superficie = inmueble.Superficie,
                 Latitud = inmueble.Latitud,
                 Longitud = inmueble.Longitud,
-                Disponible = inmueble.Disponible,
-                Precio = inmueble.Precio,
                 Estado = inmueble.Estado.ToString(),
+                Disponibilidad = disponibilidad,
+                Precio = inmueble.Precio,
                 Uso = inmueble.Uso.ToString(),
                 FechaCreacion = inmueble.FechaCreacion,
-                ImagenPortadaUrl = inmueble.ImagenPortadaUrl,
+                ImagenPortadaUrl = !string.IsNullOrEmpty(inmueble.ImagenPortadaUrl) 
+                    ? $"{baseUrl}{inmueble.ImagenPortadaUrl}" 
+                    : null,
                 Imagenes = inmueble.Imagenes?.Select(img => new InmuebleImagenDto
                 {
                     Id = img.Id,
                     NombreArchivo = img.NombreArchivo,
-                    RutaCompleta = img.RutaCompleta,
+                    RutaCompleta = $"{baseUrl}{img.RutaCompleta}",
                     EsPortada = img.EsPortada,
                     Descripcion = img.Descripcion
                 }).ToList() ?? new List<InmuebleImagenDto>()

@@ -126,6 +126,31 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         }
 
         /// <summary>
+        /// Login de propietarios (formato form-urlencoded)
+        /// </summary>
+        /// <param name="email">Email del usuario</param>
+        /// <param name="password">Contraseña del usuario</param>
+        /// <returns>Token JWT y datos del propietario</returns>
+        [HttpPost("login-form")]
+        [AllowAnonymous]
+        [Consumes("application/x-www-form-urlencoded")]
+        [ProducesResponseType(typeof(ApiResponse<LoginResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<ApiResponse<LoginResponseDto>>> LoginForm([FromForm] string email, [FromForm] string password)
+        {
+            // Crear objeto LoginRequestDto y reutilizar el método Login existente
+            var request = new LoginRequestDto
+            {
+                Email = email,
+                Password = password
+            };
+
+            // Reutilizar la lógica del método Login
+            return await Login(request);
+        }
+
+        /// <summary>
         /// Cambiar contraseña del propietario autenticado
         /// </summary>
         [HttpPost("cambiar-password")]

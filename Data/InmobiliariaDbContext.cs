@@ -156,6 +156,13 @@ namespace InmobiliariaGarciaJesus.Data
             modelBuilder.Entity<Inmueble>()
                 .Ignore(i => i.GoogleMapsUrl);
 
+            // Configuración de relación Inmueble -> TipoInmuebleEntity
+            modelBuilder.Entity<Inmueble>()
+                .HasOne(i => i.TipoInmueble)
+                .WithMany(t => t.Inmuebles)
+                .HasForeignKey(i => i.TipoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Configuración de conversión de enums a enteros
             modelBuilder.Entity<Usuario>()
                 .Property(u => u.Rol)
@@ -163,15 +170,15 @@ namespace InmobiliariaGarciaJesus.Data
 
             modelBuilder.Entity<Contrato>()
                 .Property(c => c.Estado)
-                .HasConversion<int>();
+                .HasConversion<string>();
 
             modelBuilder.Entity<Pago>()
                 .Property(p => p.Estado)
-                .HasConversion<int>();
+                .HasConversion<string>();
 
             modelBuilder.Entity<Pago>()
                 .Property(p => p.MetodoPago)
-                .HasConversion<int?>();
+                .HasConversion<string>();
 
             modelBuilder.Entity<Inmueble>()
                 .Property(i => i.Estado)
@@ -179,7 +186,7 @@ namespace InmobiliariaGarciaJesus.Data
 
             modelBuilder.Entity<Inmueble>()
                 .Property(i => i.Uso)
-                .HasConversion<int>();
+                .HasConversion<string>();
         }
     }
 }

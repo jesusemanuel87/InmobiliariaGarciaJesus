@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using InmobiliariaGarciaJesus.Data;
 using InmobiliariaGarciaJesus.Models;
 using InmobiliariaGarciaJesus.Models.DTOs;
@@ -13,7 +14,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Produces("application/json")]
     public class InmueblesApiController : ControllerBase
     {
@@ -52,7 +53,6 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 var inmuebles = await _context.Inmuebles
                     .Include(i => i.Imagenes)
-                    .Include(i => i.Tipo)
                     .Where(i => i.PropietarioId == propietarioId.Value)
                     .OrderByDescending(i => i.FechaCreacion)
                     .ToListAsync();
@@ -88,7 +88,6 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 var inmueble = await _context.Inmuebles
                     .Include(i => i.Imagenes)
-                    .Include(i => i.Tipo)
                     .FirstOrDefaultAsync(i => i.Id == id);
 
                 if (inmueble == null)
@@ -169,7 +168,6 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 // Recargar con relaciones
                 await _context.Entry(inmueble).Collection(i => i.Imagenes!).LoadAsync();
-                await _context.Entry(inmueble).Reference(i => i.Tipo).LoadAsync();
 
                 var inmuebleDto = MapearInmuebleADto(inmueble);
 
@@ -214,7 +212,6 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 var inmueble = await _context.Inmuebles
                     .Include(i => i.Imagenes)
-                    .Include(i => i.Tipo)
                     .FirstOrDefaultAsync(i => i.Id == id);
 
                 if (inmueble == null)
@@ -250,6 +247,19 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
         private InmuebleDto MapearInmuebleADto(Inmueble inmueble)
         {
+            // Mapear tipo basado en TipoId
+            string tipoNombre = inmueble.TipoId switch
+            {
+                1 => "Casa",
+                2 => "Departamento",
+                3 => "Monoambiente",
+                4 => "Local",
+                5 => "Oficina",
+                6 => "Terreno",
+                7 => "Galpón",
+                _ => "Sin tipo"
+            };
+
             return new InmuebleDto
             {
                 Id = inmueble.Id,
@@ -257,7 +267,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 Localidad = inmueble.Localidad,
                 Provincia = inmueble.Provincia,
                 TipoId = inmueble.TipoId,
-                TipoNombre = inmueble.Tipo?.Nombre ?? "Sin tipo",
+                TipoNombre = tipoNombre,
                 Ambientes = inmueble.Ambientes,
                 Superficie = inmueble.Superficie,
                 Latitud = inmueble.Latitud,

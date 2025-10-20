@@ -98,8 +98,12 @@ namespace InmobiliariaGarciaJesus.Models
         [ForeignKey("PropietarioId")]
         public virtual Propietario? Propietario { get; set; }
 
-        [ForeignKey("TipoId")] // public virtual EstadoInmueble Eastado { get; set; } 
-        public virtual dynamic? Tipo { get; set; }
+        [ForeignKey("TipoId")]
+        public virtual TipoInmuebleEntity? TipoInmueble { get; set; }
+
+        // Propiedad computada para compatibilidad con vistas antiguas
+        [NotMapped]
+        public dynamic? Tipo => TipoInmueble != null ? (dynamic)new { Nombre = TipoInmueble.Nombre } : null;
 
         public virtual ICollection<Contrato>? Contratos { get; set; }
         

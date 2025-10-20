@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using InmobiliariaGarciaJesus.Data;
 using InmobiliariaGarciaJesus.Models.DTOs;
 using InmobiliariaGarciaJesus.Services;
@@ -12,7 +13,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Produces("application/json")]
     public class PropietarioApiController : ControllerBase
     {

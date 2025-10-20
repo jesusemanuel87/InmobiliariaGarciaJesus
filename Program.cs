@@ -75,6 +75,36 @@ builder.Services.AddAuthentication(options =>
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
         };
+        
+        // Configurar eventos para devolver JSON en lugar de redireccionar
+        options.Events = new JwtBearerEvents
+        {
+            OnChallenge = context =>
+            {
+                // Evitar redirección, devolver 401 JSON
+                context.HandleResponse();
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/json";
+                var result = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    success = false,
+                    message = "No autorizado. Token JWT requerido o inválido",
+                    errors = new[] { "Por favor incluya el header: Authorization: Bearer {token}" }
+                });
+                return context.Response.WriteAsync(result);
+            },
+            OnForbidden = context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.ContentType = "application/json";
+                var result = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    success = false,
+                    message = "Acceso prohibido. No tiene permisos para esta operación"
+                });
+                return context.Response.WriteAsync(result);
+            }
+        };
     });
 
 

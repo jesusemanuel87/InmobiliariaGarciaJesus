@@ -50,15 +50,19 @@ namespace InmobiliariaGarciaJesus.Models
 
         [Display(Name = "Fecha de Finalización Real")]
         [DataType(DataType.Date)]
+        [Column("fecha_finalizacion_real")]
         public DateTime? FechaFinalizacionReal { get; set; }
 
         [Display(Name = "Multa por Finalización")]
+        [Column("multa_finalizacion")]
         public decimal? MultaFinalizacion { get; set; }
 
         [Display(Name = "Meses Adeudados")]
+        [Column("meses_adeudados")]
         public int? MesesAdeudados { get; set; }
 
         [Display(Name = "Importe Adeudado")]
+        [Column("importe_adeudado")]
         public decimal? ImporteAdeudado { get; set; }
 
         // Campos de auditoría

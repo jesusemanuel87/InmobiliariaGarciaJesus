@@ -49,12 +49,7 @@ namespace InmobiliariaGarciaJesus.Repositories
                     FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
                     Localidad = reader["Localidad"]?.ToString(),
                     Provincia = reader["Provincia"]?.ToString(),
-                    Disponible = true, // Default to available since column doesn't exist yet
-                    Tipo = reader["TipoNombre"] != DBNull.Value ? (dynamic)new 
-                    {
-                        Id = Convert.ToInt32(reader["TipoId"]),
-                        Nombre = reader["TipoNombre"]?.ToString() ?? "Sin tipo"
-                    } : null
+                    Disponible = true // Default to available since column doesn't exist yet
                 };
                 inmuebles.Add(inmueble);
             }
@@ -154,12 +149,7 @@ namespace InmobiliariaGarciaJesus.Repositories
                         Telefono = reader["Telefono"]?.ToString(),
                         Email = reader["Email"].ToString() ?? string.Empty,
                         Direccion = reader["PropietarioDireccion"]?.ToString()
-                    },
-                    Tipo = reader["TipoNombre"] != DBNull.Value ? (dynamic)new 
-                    {
-                        Id = Convert.ToInt32(reader["TipoId"]),
-                        Nombre = reader["TipoNombre"]?.ToString() ?? "Sin tipo"
-                    } : null
+                    }
                 };
             }
             
@@ -426,12 +416,7 @@ namespace InmobiliariaGarciaJesus.Repositories
                         FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
                         Localidad = reader["Localidad"]?.ToString(),
                         Provincia = reader["Provincia"]?.ToString(),
-                        Disponible = true,
-                        Tipo = reader["TipoNombre"] != DBNull.Value ? (dynamic)new 
-                        {
-                            Id = Convert.ToInt32(reader["TipoId"]),
-                            Nombre = reader["TipoNombre"]?.ToString() ?? "Sin tipo"
-                        } : null
+                        Disponible = true
                     };
                     inmuebles.Add(inmueble);
                 }

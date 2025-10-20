@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace InmobiliariaGarciaJesus.Models.DTOs
 {
@@ -92,10 +93,37 @@ namespace InmobiliariaGarciaJesus.Models.DTOs
 
     /// <summary>
     /// DTO para actualizar estado de inmueble (Activo/Inactivo)
+    /// Acepta tanto formato boolean como string por compatibilidad
     /// </summary>
     public class ActualizarEstadoInmuebleDto
     {
-        [Required(ErrorMessage = "El estado es obligatorio")]
-        public bool Activo { get; set; }
+        /// <summary>
+        /// Estado como boolean (true=Activo, false=Inactivo)
+        /// </summary>
+        public bool? Activo { get; set; }
+        
+        /// <summary>
+        /// Estado como string ("Activo" o "Inactivo")
+        /// Para compatibilidad con apps que envían string
+        /// </summary>
+        [JsonPropertyName("estado")]
+        public string? Estado { get; set; }
+        
+        /// <summary>
+        /// Obtiene el estado como enum, priorizando el campo que tenga valor
+        /// </summary>
+        public EstadoInmueble ObtenerEstado()
+        {
+            // Priorizar el campo Estado (string) si viene
+            if (!string.IsNullOrEmpty(Estado))
+            {
+                return Estado.Trim().Equals("Activo", StringComparison.OrdinalIgnoreCase)
+                    ? EstadoInmueble.Activo
+                    : EstadoInmueble.Inactivo;
+            }
+            
+            // Si no, usar el campo Activo (boolean)
+            return Activo.GetValueOrDefault() ? EstadoInmueble.Activo : EstadoInmueble.Inactivo;
+        }
     }
 }

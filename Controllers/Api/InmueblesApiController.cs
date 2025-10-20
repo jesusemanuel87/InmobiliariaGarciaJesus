@@ -239,8 +239,17 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 await _context.Entry(inmueble).Collection(i => i.Imagenes!).LoadAsync();
                 await _context.Entry(inmueble).Collection(i => i.Contratos!).LoadAsync();
 
+                // Log del request recibido para debugging
+                _logger.LogInformation($"=== REQUEST RECIBIDO ===");
+                _logger.LogInformation($"Estado string: '{request.Estado}', Activo boolean: {request.Activo}");
+                
+                // Obtener el estado solicitado (acepta tanto string como boolean)
+                var nuevoEstadoEnum = request.ObtenerEstado();
+                
+                _logger.LogInformation($"Estado interpretado: {nuevoEstadoEnum}");
+
                 // Verificar si intenta inactivar y hay contratos activos/reservados
-                if (!request.Activo)
+                if (nuevoEstadoEnum == EstadoInmueble.Inactivo)
                 {
                     var contratoActivo = inmueble.Contratos?
                         .FirstOrDefault(c => c.Estado == EstadoContrato.Activo || c.Estado == EstadoContrato.Reservado);
@@ -256,15 +265,20 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 }
 
                 // Actualizar estado
-                inmueble.Estado = request.Activo ? EstadoInmueble.Activo : EstadoInmueble.Inactivo;
+                var estadoAnterior = inmueble.Estado;
+                inmueble.Estado = nuevoEstadoEnum;
+                
+                _logger.LogInformation($"Actualizando inmueble ID: {id} - Estado anterior: {estadoAnterior}, Nuevo estado: {inmueble.Estado}");
 
                 await _context.SaveChangesAsync();
+                
+                _logger.LogInformation($"SaveChanges completado para inmueble ID: {id}");
 
                 var inmuebleDto = MapearInmuebleADto(inmueble);
 
-                string nuevoEstado = request.Activo ? "Activo" : "Inactivo";
-                _logger.LogInformation($"Estado de inmueble ID: {id} actualizado a {nuevoEstado} por propietario ID: {propietarioId}");
-                return Ok(ApiResponse<InmuebleDto>.SuccessResponse(inmuebleDto, $"Estado del inmueble actualizado a {nuevoEstado}"));
+                string nuevoEstadoStr = inmueble.Estado.ToString();
+                _logger.LogInformation($"Estado de inmueble ID: {id} actualizado a {nuevoEstadoStr} por propietario ID: {propietarioId}");
+                return Ok(ApiResponse<InmuebleDto>.SuccessResponse(inmuebleDto, $"Estado del inmueble actualizado a {nuevoEstadoStr}"));
             }
             catch (Exception ex)
             {

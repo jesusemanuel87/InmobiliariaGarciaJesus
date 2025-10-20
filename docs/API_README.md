@@ -74,7 +74,41 @@ http://localhost:5000/api/docs
 | GET | `/` | Listar mis inmuebles | ✅ |
 | GET | `/{id}` | Detalle de inmueble | ✅ |
 | POST | `/` | Crear inmueble (inactivo) | ✅ |
-| PATCH | `/{id}/estado` | Habilitar/Deshabilitar | ✅ |
+| PATCH | `/{id}/estado` | Activar/Inactivar inmueble | ✅ |
+
+#### **PATCH `/api/InmueblesApi/{id}/estado`** - Actualizar Estado del Inmueble
+
+**Request Body:**
+```json
+{
+  "activo": true   // true = Activar, false = Inactivar
+}
+```
+
+**Validaciones:**
+- ⚠️ No se puede inactivar si el inmueble tiene contrato Activo o Reservado
+- ✅ Solo el propietario puede cambiar el estado de su inmueble
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Estado del inmueble actualizado a Activo",
+  "data": {
+    "id": 5,
+    "estado": "Activo",
+    "disponibilidad": "Disponible"
+  }
+}
+```
+
+**Response Error (400 Bad Request):**
+```json
+{
+  "success": false,
+  "message": "No se puede inactivar el inmueble. El inmueble está Reservado con un contrato vigente."
+}
+```
 
 ### **Contratos** (`/api/ContratosApi`)
 | Método | Endpoint | Descripción | Auth |

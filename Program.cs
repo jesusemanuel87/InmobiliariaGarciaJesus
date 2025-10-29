@@ -154,8 +154,13 @@ builder.Services.AddScoped<DatabaseSeederService>();
 builder.Services.AddScoped<ProfilePhotoService>();
 builder.Services.AddScoped<JwtService>();
 
-// Servicio en segundo plano para actualización automática de pagos
-builder.Services.AddHostedService<PaymentBackgroundService>();
+// Servicio de Georef con fallback a BD local
+builder.Services.AddHttpClient(); // Necesario para GeorefService
+builder.Services.AddScoped<GeorefService>();
+
+// Servicios en segundo plano
+builder.Services.AddHostedService<PaymentBackgroundService>(); // Actualización de pagos cada hora
+builder.Services.AddHostedService<GeorefBackgroundService>(); // Sincronización de Georef cada 30 días
 
 // Configurar CORS para la aplicación móvil
 builder.Services.AddCors(options =>

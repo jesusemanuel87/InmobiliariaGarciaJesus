@@ -5,7 +5,7 @@
 
 class GeorefService {
     constructor() {
-        this.baseUrl = 'https://apis.datos.gob.ar/georef/api';
+        this.baseUrl = '/api/GeorefApi';
         this.cache = {
             provincias: null,
             localidades: {}

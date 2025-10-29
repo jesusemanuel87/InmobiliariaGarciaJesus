@@ -25,6 +25,11 @@ namespace InmobiliariaGarciaJesus.Data
         public DbSet<Pago> Pagos { get; set; }
         public DbSet<Configuracion> Configuraciones { get; set; }
         public DbSet<TipoInmuebleEntity> TiposInmueble { get; set; }
+        
+        // Cache de API Georef
+        public DbSet<GeorefProvincia> GeorefProvincias { get; set; }
+        public DbSet<GeorefLocalidad> GeorefLocalidades { get; set; }
+        public DbSet<GeorefSyncLog> GeorefSyncLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

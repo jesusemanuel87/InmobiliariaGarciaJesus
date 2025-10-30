@@ -158,6 +158,9 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddHttpClient(); // Necesario para GeorefService
 builder.Services.AddScoped<GeorefService>();
 
+// Servicio de Notificaciones para app móvil
+builder.Services.AddScoped<NotificacionService>();
+
 // Servicios en segundo plano
 builder.Services.AddHostedService<PaymentBackgroundService>(); // Actualización de pagos cada hora
 builder.Services.AddHostedService<GeorefBackgroundService>(); // Sincronización de Georef cada 30 días

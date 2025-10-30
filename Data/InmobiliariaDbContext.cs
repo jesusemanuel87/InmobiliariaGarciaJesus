@@ -30,6 +30,9 @@ namespace InmobiliariaGarciaJesus.Data
         public DbSet<GeorefProvincia> GeorefProvincias { get; set; }
         public DbSet<GeorefLocalidad> GeorefLocalidades { get; set; }
         public DbSet<GeorefSyncLog> GeorefSyncLogs { get; set; }
+        
+        // Notificaciones para app móvil
+        public DbSet<Notificacion> Notificaciones { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -46,6 +49,7 @@ namespace InmobiliariaGarciaJesus.Data
             modelBuilder.Entity<Pago>().ToTable("pagos");
             modelBuilder.Entity<Configuracion>().ToTable("configuracion");
             modelBuilder.Entity<TipoInmuebleEntity>().ToTable("tiposinmueble");
+            modelBuilder.Entity<Notificacion>().ToTable("notificaciones");
 
             // Configuración de relaciones y comportamiento de eliminación
             

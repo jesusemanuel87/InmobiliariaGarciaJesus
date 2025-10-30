@@ -33,7 +33,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         }
 
         /// <summary>
-        /// Listar contratos de un inmueble específico con sus pagos
+        /// Listar contratos ACTIVOS de un inmueble específico con sus pagos
         /// </summary>
         [HttpGet("inmueble/{inmuebleId}")]
         [ProducesResponseType(typeof(ApiResponse<List<ContratoDto>>), StatusCodes.Status200OK)]
@@ -64,12 +64,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                     return StatusCode(403, ApiResponse.ErrorResponse("No tiene permiso para acceder a los contratos de este inmueble"));
                 }
 
-                // Obtener contratos con sus relaciones
+                // Obtener contratos con sus relaciones (solo activos)
                 var contratos = await _context.Contratos
                     .Include(c => c.Inmueble)
                         .ThenInclude(i => i!.Imagenes)
                     .Include(c => c.Inquilino)
-                    .Where(c => c.InmuebleId == inmuebleId)
+                    .Where(c => c.InmuebleId == inmuebleId && c.Estado == EstadoContrato.Activo)
                     .OrderByDescending(c => c.FechaCreacion)
                     .ToListAsync();
 
@@ -148,7 +148,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         }
 
         /// <summary>
-        /// Listar todos los contratos de los inmuebles del propietario
+        /// Listar todos los contratos ACTIVOS de los inmuebles del propietario
         /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<List<ContratoDto>>), StatusCodes.Status200OK)]
@@ -169,12 +169,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                     .Select(i => i.Id)
                     .ToListAsync();
 
-                // Obtener contratos
+                // Obtener contratos (solo activos)
                 var contratos = await _context.Contratos
                     .Include(c => c.Inmueble)
                         .ThenInclude(i => i!.Imagenes)
                     .Include(c => c.Inquilino)
-                    .Where(c => inmueblesIds.Contains(c.InmuebleId))
+                    .Where(c => inmueblesIds.Contains(c.InmuebleId) && c.Estado == EstadoContrato.Activo)
                     .OrderByDescending(c => c.FechaCreacion)
                     .ToListAsync();
 

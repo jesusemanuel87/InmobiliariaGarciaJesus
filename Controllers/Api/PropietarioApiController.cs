@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,17 +22,20 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         private readonly JwtService _jwtService;
         private readonly ILogger<PropietarioApiController> _logger;
         private readonly IWebHostEnvironment _environment;
+        private readonly UsuarioService _usuarioService;
 
         public PropietarioApiController(
             InmobiliariaDbContext context,
             JwtService jwtService,
             ILogger<PropietarioApiController> logger,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            UsuarioService usuarioService)
         {
             _context = context;
             _jwtService = jwtService;
             _logger = logger;
             _environment = environment;
+            _usuarioService = usuarioService;
         }
 
         /// <summary>
@@ -235,6 +239,77 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al subir foto de perfil");
+                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+            }
+        }
+
+        /// <summary>
+        /// Cambiar contraseña del propietario autenticado según especificación Android
+        /// Método: PUT
+        /// Ruta: /api/Propietarios/changePassword
+        /// Tipo: application/x-www-form-urlencoded
+        /// </summary>
+        [HttpPut("/api/Propietarios/changePassword")]
+        [Consumes("application/x-www-form-urlencoded")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult> ChangePassword([FromForm] string currentPassword, [FromForm] string newPassword)
+        {
+            try
+            {
+                // Validaciones básicas
+                if (string.IsNullOrWhiteSpace(currentPassword))
+                {
+                    return BadRequest(ApiResponse.ErrorResponse("La contraseña actual es obligatoria"));
+                }
+
+                if (string.IsNullOrWhiteSpace(newPassword))
+                {
+                    return BadRequest(ApiResponse.ErrorResponse("La nueva contraseña es obligatoria"));
+                }
+
+                if (newPassword.Length < 6)
+                {
+                    return BadRequest(ApiResponse.ErrorResponse("La contraseña debe tener al menos 6 caracteres"));
+                }
+
+                if (currentPassword == newPassword)
+                {
+                    return BadRequest(ApiResponse.ErrorResponse("La nueva contraseña debe ser diferente a la actual"));
+                }
+
+                // Obtener usuario autenticado
+                var usuarioId = _jwtService.ObtenerUsuarioId(User);
+                if (usuarioId == null)
+                {
+                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                }
+
+                var usuario = await _context.Usuarios.FindAsync(usuarioId.Value);
+                if (usuario == null)
+                {
+                    return NotFound(ApiResponse.ErrorResponse("Usuario no encontrado"));
+                }
+
+                // Verificar contraseña actual
+                if (!BCrypt.Net.BCrypt.Verify(currentPassword, usuario.Password))
+                {
+                    return BadRequest(ApiResponse.ErrorResponse("La contraseña actual es incorrecta"));
+                }
+
+                // Actualizar contraseña
+                usuario.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Contraseña cambiada para usuario ID: {usuarioId}");
+                
+                // Respuesta void (solo status 200 OK)
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cambiar contraseña");
                 return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
             }
         }

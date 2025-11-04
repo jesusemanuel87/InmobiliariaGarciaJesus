@@ -82,7 +82,8 @@ namespace InmobiliariaGarciaJesus.Repositories
                          c.Estado, c.FechaCreacion, c.MotivoCancelacion, c.CreadoPorId, c.TerminadoPorId, c.FechaTerminacion,
                          i.Nombre as InquilinoNombre, i.Apellido as InquilinoApellido, i.DNI as InquilinoDNI,
                          i.Telefono as InquilinoTelefono, i.Email as InquilinoEmail,
-                         inm.Direccion as InmuebleDireccion, inm.TipoId as InmuebleTipo, inm.Ambientes as InmuebleAmbientes
+                         inm.Direccion as InmuebleDireccion, inm.TipoId as InmuebleTipo, inm.Ambientes as InmuebleAmbientes,
+                         inm.PropietarioId as InmueblePropietarioId
                          FROM contratos c
                          INNER JOIN inquilinos i ON c.InquilinoId = i.Id
                          INNER JOIN inmuebles inm ON c.InmuebleId = inm.Id
@@ -123,7 +124,8 @@ namespace InmobiliariaGarciaJesus.Repositories
                         Id = Convert.ToInt32(reader["InmuebleId"]),
                         Direccion = reader["InmuebleDireccion"].ToString() ?? string.Empty,
                         TipoId = reader["InmuebleTipo"] == DBNull.Value ? 1 : Convert.ToInt32(reader["InmuebleTipo"]),
-                        Ambientes = Convert.ToInt32(reader["InmuebleAmbientes"])
+                        Ambientes = Convert.ToInt32(reader["InmuebleAmbientes"]),
+                        PropietarioId = Convert.ToInt32(reader["InmueblePropietarioId"])
                     }
                 };
             }

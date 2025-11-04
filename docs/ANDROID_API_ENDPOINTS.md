@@ -642,6 +642,7 @@ data class Pago(
 | `/api/PagosApi/contrato/{contratoId}/pendientes` | GET | Pagos pendientes | ✅ Sí |
 | `/api/PagosApi/{pagoId}/registrar` | POST | Registrar pago + notificar | ✅ Sí |
 | `/api/PagosApi/contrato/{contratoId}/historial` | GET | Historial de pagos | ✅ Sí |
+| `/api/Propietarios/changePassword` | PUT | Cambiar contraseña (form-urlencoded) | ✅ Sí |
 
 ---
 
@@ -757,6 +758,129 @@ Content-Type: application/json
 
 ---
 
+## 🔐 8. API de Gestión de Cuenta
+
+### **Cambiar Contraseña**
+
+```http
+PUT /api/Propietarios/changePassword
+Authorization: Bearer {token}
+Content-Type: application/x-www-form-urlencoded
+
+currentPassword=password123&newPassword=newPassword456
+```
+
+**Especificación:**
+- **Método:** PUT
+- **Ruta:** `/api/Propietarios/changePassword`
+- **Tipo de envío:** `application/x-www-form-urlencoded`
+- **Headers:** `Authorization: Bearer {token}`
+- **Parámetros:**
+  - `currentPassword`: string (contraseña actual)
+  - `newPassword`: string (contraseña nueva)
+- **Respuesta:** Void (200 OK sin body)
+
+**Validaciones:**
+- ✅ Contraseña actual debe ser correcta
+- ✅ Nueva contraseña mínimo 6 caracteres
+- ✅ Nueva contraseña debe ser diferente a la actual
+
+**Response Exitoso:**
+```
+HTTP 200 OK
+(Sin body - respuesta void)
+```
+
+**Response Error (contraseña actual incorrecta):**
+```json
+{
+  "success": false,
+  "message": "La contraseña actual es incorrecta",
+  "data": null,
+  "errors": null
+}
+```
+
+**Response Error (validación):**
+```json
+{
+  "success": false,
+  "message": "La contraseña debe tener al menos 6 caracteres",
+  "data": null,
+  "errors": null
+}
+```
+
+---
+
+**Código Android (Retrofit):**
+
+```kotlin
+// Interface Retrofit - Usando @FormUrlEncoded
+@FormUrlEncoded
+@PUT("Propietarios/changePassword")
+suspend fun changePassword(
+    @Header("Authorization") token: String,
+    @Field("currentPassword") currentPassword: String,
+    @Field("newPassword") newPassword: String
+): Response<Unit>
+
+// Uso en Activity/Fragment
+lifecycleScope.launch {
+    try {
+        val currentPassword = etContrasenaActual.text.toString()
+        val newPassword = etContrasenaNueva.text.toString()
+        
+        // Validar antes de enviar
+        if (currentPassword.isEmpty()) {
+            Toast.makeText(this@CambiarContrasenaActivity, 
+                "Ingrese la contraseña actual", Toast.LENGTH_SHORT).show()
+            return@launch
+        }
+        
+        if (newPassword.length < 6) {
+            Toast.makeText(this@CambiarContrasenaActivity, 
+                "La contraseña debe tener al menos 6 caracteres", 
+                Toast.LENGTH_SHORT).show()
+            return@launch
+        }
+        
+        val token = "Bearer ${PreferenceHelper.getToken(this@CambiarContrasenaActivity)}"
+        val response = RetrofitClient.api.changePassword(token, currentPassword, newPassword)
+        
+        if (response.isSuccessful) {
+            Toast.makeText(this@CambiarContrasenaActivity, 
+                "Contraseña actualizada exitosamente", 
+                Toast.LENGTH_SHORT).show()
+            finish() // Volver a pantalla anterior
+        } else {
+            // Parsear error del body
+            val errorBody = response.errorBody()?.string()
+            val errorMsg = try {
+                val json = JSONObject(errorBody)
+                json.getString("message")
+            } catch (e: Exception) {
+                "Error al cambiar contraseña"
+            }
+            
+            Toast.makeText(this@CambiarContrasenaActivity, 
+                errorMsg, Toast.LENGTH_LONG).show()
+        }
+    } catch (e: Exception) {
+        Toast.makeText(this@CambiarContrasenaActivity, 
+            "Error de conexión: ${e.message}", 
+            Toast.LENGTH_SHORT).show()
+    }
+}
+```
+
+**⚠️ Importante:** 
+- Usa `@FormUrlEncoded` y `@Field` (NO `@Body`)
+- La respuesta es void (sin body en success)
+- Usa `Response<Unit>` en lugar de `ApiResponse<Unit>`
+
+---
+
 ## 🚀 **Todo Listo para Consumir desde Android!**
 
 1. ✅ **Provincias y Localidades**: `/api/GeorefApi/*` (con fallback a BD)
@@ -766,5 +890,6 @@ Content-Type: application/json
 5. ✅ **Contratos Activos**: `/api/ContratosApi/*` (solo retorna contratos activos)
 6. ✅ **Notificaciones In-App**: `/api/NotificacionesApi/*` (badge, contador, marcar leídas)
 7. ✅ **Pagos**: `/api/PagosApi/*` (registrar pagos con notificación automática)
+8. ✅ **Cambiar Contraseña**: `/api/PropietarioApi/cambiar-contrasena` (gestión de cuenta)
 
 **Reemplaza la BASE_URL en tu app Android y empieza a consumir! 🎉**

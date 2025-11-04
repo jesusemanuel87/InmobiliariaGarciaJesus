@@ -15,13 +15,23 @@ namespace InmobiliariaGarciaJesus.Controllers
         private readonly IRepository<Contrato> _contratoRepository;
         private readonly IPagoService _pagoService;
         private readonly UsuarioRepository _usuarioRepository;
+        private readonly NotificacionService _notificacionService;
+        private readonly ILogger<PagosController> _logger;
 
-        public PagosController(PagoRepository pagoRepository, IRepository<Contrato> contratoRepository, IPagoService pagoService, UsuarioRepository usuarioRepository)
+        public PagosController(
+            PagoRepository pagoRepository, 
+            IRepository<Contrato> contratoRepository, 
+            IPagoService pagoService, 
+            UsuarioRepository usuarioRepository,
+            NotificacionService notificacionService,
+            ILogger<PagosController> logger)
         {
             _pagoRepository = pagoRepository;
             _contratoRepository = contratoRepository;
             _pagoService = pagoService;
             _usuarioRepository = usuarioRepository;
+            _notificacionService = notificacionService;
+            _logger = logger;
         }
 
         // GET: Pagos
@@ -536,6 +546,23 @@ namespace InmobiliariaGarciaJesus.Controllers
                 pago.Observaciones = viewModel.Observaciones;
                 
                 await _pagoRepository.UpdateAsync(pago);
+
+                // Obtener el contrato para determinar el propietario
+                var contrato = await _contratoRepository.GetByIdAsync(pago.ContratoId);
+                if (contrato?.Inmueble?.PropietarioId != null)
+                {
+                    // Crear notificación in-app para el propietario
+                    try
+                    {
+                        await _notificacionService.NotificarPagoRegistrado(pago, contrato.Inmueble.PropietarioId);
+                        _logger.LogInformation($"Notificación creada para pago {pago.Id} del propietario {contrato.Inmueble.PropietarioId}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, $"Error al crear notificación para pago {pago.Id}, pero el pago fue registrado");
+                        // No fallar la operación si falla la notificación
+                    }
+                }
 
                 return Json(new { 
                     success = true, 

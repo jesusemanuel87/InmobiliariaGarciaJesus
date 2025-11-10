@@ -21,10 +21,20 @@ builder.Services.AddControllersWithViews()
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
-// Configurar DbContext con MySQL
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<InmobiliariaDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+// Configurar DbContext con MySQL (o InMemory para tests)
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    // Usar InMemory Database para tests con nombre fijo para compartir entre Factory y Tests
+    builder.Services.AddDbContext<InmobiliariaDbContext>(options =>
+        options.UseInMemoryDatabase("InmobiliariaTestDb_Shared"));
+}
+else
+{
+    // Usar MySQL en producción/desarrollo
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    builder.Services.AddDbContext<InmobiliariaDbContext>(options =>
+        options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+}
 
 // Configurar sesiones
 builder.Services.AddDistributedMemoryCache();
@@ -275,3 +285,6 @@ app.MapControllerRoute(
 
 
 app.Run();
+
+// Hacer la clase Program accesible para tests de integración
+public partial class Program { }

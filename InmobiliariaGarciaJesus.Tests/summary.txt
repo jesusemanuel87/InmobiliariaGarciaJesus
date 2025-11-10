@@ -1,0 +1,31 @@
+﻿
+  Con error InmobiliariaGarciaJesus.Tests.Controllers.AuthApiControllerTests.Login_ConCredencialesValidas_RetornaTokenY
+DatosPropietario [1 ms]
+  Correctas 
+InmobiliariaGarciaJesus.Tests.Controllers.AuthApiControllerTests.Login_ConPasswordIncorrecta_RetornaUnauthorized [1 s]
+  Con error InmobiliariaGarciaJesus.Tests.Controllers.InmueblesApiControllerTests.ActualizarEstado_ActivarInmuebleInact
+ivo_CambiaEstadoAActivo [2 s]
+  Correctas 
+InmobiliariaGarciaJesus.Tests.Controllers.AuthApiControllerTests.Login_ConEmailInexistente_RetornaUnauthorized [156 ms]
+  Con error InmobiliariaGarciaJesus.Tests.Controllers.InmueblesApiControllerTests.ActualizarEstado_DesactivarInmuebleAc
+tivo_CambiaEstadoAInactivo [1 s]
+  Con error InmobiliariaGarciaJesus.Tests.Controllers.InmueblesApiControllerTests.CrearInmueble_ConDireccionVacia_Retor
+naBadRequest [839 ms]
+  Con error InmobiliariaGarciaJesus.Tests.Controllers.InmueblesApiControllerTests.ActualizarEstado_DesactivarConContrat
+oActivo_RetornaBadRequest [914 ms]
+  Con error InmobiliariaGarciaJesus.Tests.Controllers.InmueblesApiControllerTests.CrearInmueble_ConDatosValidosSinImage
+n_RetornaCreatedConEstadoInactivo [665 ms]
+  Correctas InmobiliariaGarciaJesus.Tests.Controllers.InmueblesApiControllerTests.ActualizarEstado_InmuebleDeOtroPropie
+tario_RetornaForbidden [573 ms]
+  Correctas InmobiliariaGarciaJesus.Tests.Controllers.InmueblesApiControllerTests.CrearInmueble_ConImagenBase64_GuardaI
+magenCorrectamente [786 ms]
+  Correctas InmobiliariaGarciaJesus.Tests.Controllers.InmueblesApiControllerTests.CrearInmueble_ConPrecioNegativo_Retor
+naBadRequest [1 s]
+  Correctas 
+InmobiliariaGarciaJesus.Tests.Controllers.InmueblesApiControllerTests.CrearInmueble_SinToken_RetornaUnauthorized [150 
+ms]
+Pruebas totales: 12
+     Correcto: 6
+     Incorrecto: 6
+
+

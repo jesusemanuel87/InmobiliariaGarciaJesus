@@ -420,7 +420,6 @@ $RECYCLE.BIN/
 *.sln.iml
 
 # Documentation
-DEPENDENCY_INJECTION_COMPARISON.md
 docs-ignore/
 
 ##
@@ -431,3 +430,4 @@ docs-ignore/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+docs/BREAKPOINTS_API_DEMO.md

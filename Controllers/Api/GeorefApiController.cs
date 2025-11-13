@@ -27,18 +27,18 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// </summary>
         /// <returns>Lista de provincias ordenadas alfabéticamente</returns>
         [HttpGet("provincias")]
-        [ProducesResponseType(typeof(ApiResponse<List<GeorefService.ProvinciaDto>>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<List<GeorefService.ProvinciaDto>>>> ObtenerProvincias()
+        [ProducesResponseType(typeof(List<GeorefService.ProvinciaDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<GeorefService.ProvinciaDto>>> ObtenerProvincias()
         {
             try
             {
                 var provincias = await _georefService.ObtenerProvinciasAsync();
-                return Ok(ApiResponse<List<GeorefService.ProvinciaDto>>.SuccessResponse(provincias));
+                return Ok(provincias);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener provincias");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error al obtener provincias"));
+                return StatusCode(500, new { error = "Error al obtener provincias" });
             }
         }
 
@@ -48,18 +48,18 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// <param name="provinciaNombre">Nombre de la provincia</param>
         /// <returns>Lista de localidades ordenadas alfabéticamente</returns>
         [HttpGet("localidades/{provinciaNombre}")]
-        [ProducesResponseType(typeof(ApiResponse<List<GeorefService.LocalidadDto>>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<List<GeorefService.LocalidadDto>>>> ObtenerLocalidades(string provinciaNombre)
+        [ProducesResponseType(typeof(List<GeorefService.LocalidadDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<GeorefService.LocalidadDto>>> ObtenerLocalidades(string provinciaNombre)
         {
             try
             {
                 var localidades = await _georefService.ObtenerLocalidadesAsync(provinciaNombre);
-                return Ok(ApiResponse<List<GeorefService.LocalidadDto>>.SuccessResponse(localidades));
+                return Ok(localidades);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al obtener localidades de {provinciaNombre}");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error al obtener localidades"));
+                return StatusCode(500, new { error = "Error al obtener localidades" });
             }
         }
 
@@ -67,8 +67,8 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Fuerza la sincronización de provincias desde API Georef (solo admin)
         /// </summary>
         [HttpPost("sync/provincias")]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse>> SincronizarProvincias()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult> SincronizarProvincias()
         {
             try
             {
@@ -76,15 +76,15 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 
                 if (exitoso)
                 {
-                    return Ok(ApiResponse.SuccessResponse("Provincias sincronizadas correctamente"));
+                    return Ok(new { message = "Provincias sincronizadas correctamente" });
                 }
 
-                return BadRequest(ApiResponse.ErrorResponse("No se pudieron sincronizar las provincias"));
+                return BadRequest(new { error = "No se pudieron sincronizar las provincias" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al sincronizar provincias");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error al sincronizar provincias"));
+                return StatusCode(500, new { error = "Error al sincronizar provincias" });
             }
         }
 
@@ -92,8 +92,8 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Fuerza la sincronización de localidades de una provincia desde API Georef (solo admin)
         /// </summary>
         [HttpPost("sync/localidades/{provinciaNombre}")]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse>> SincronizarLocalidades(string provinciaNombre)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult> SincronizarLocalidades(string provinciaNombre)
         {
             try
             {
@@ -101,15 +101,15 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 
                 if (exitoso)
                 {
-                    return Ok(ApiResponse.SuccessResponse($"Localidades de {provinciaNombre} sincronizadas correctamente"));
+                    return Ok(new { message = $"Localidades de {provinciaNombre} sincronizadas correctamente" });
                 }
 
-                return BadRequest(ApiResponse.ErrorResponse("No se pudieron sincronizar las localidades"));
+                return BadRequest(new { error = "No se pudieron sincronizar las localidades" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al sincronizar localidades de {provinciaNombre}");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error al sincronizar localidades"));
+                return StatusCode(500, new { error = "Error al sincronizar localidades" });
             }
         }
     }

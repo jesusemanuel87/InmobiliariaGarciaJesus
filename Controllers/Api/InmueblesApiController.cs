@@ -39,16 +39,16 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Listar inmuebles del propietario autenticado
         /// </summary>
         [HttpGet]
-        [ProducesResponseType(typeof(ApiResponse<List<InmuebleDto>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<ApiResponse<List<InmuebleDto>>>> ListarInmuebles()
+        [ProducesResponseType(typeof(List<InmuebleDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<List<InmuebleDto>>> ListarInmuebles()
         {
             try
             {
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var inmuebles = await _context.Inmuebles
@@ -66,12 +66,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 var inmueblesDto = inmuebles.Select(i => MapearInmuebleADto(i)).ToList();
 
-                return Ok(ApiResponse<List<InmuebleDto>>.SuccessResponse(inmueblesDto));
+                return Ok(inmueblesDto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al listar inmuebles");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -79,18 +79,18 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Obtener detalle de un inmueble específico
         /// </summary>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<InmuebleDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<InmuebleDto>>> ObtenerInmueble(int id)
+        [ProducesResponseType(typeof(InmuebleDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<InmuebleDto>> ObtenerInmueble(int id)
         {
             try
             {
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var inmueble = await _context.Inmuebles
@@ -99,13 +99,13 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 if (inmueble == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse("Inmueble no encontrado"));
+                    return NotFound(new { error = "Inmueble no encontrado" });
                 }
 
                 // Verificar que el inmueble pertenece al propietario autenticado
                 if (inmueble.PropietarioId != propietarioId.Value)
                 {
-                    return StatusCode(403, ApiResponse.ErrorResponse("No tiene permiso para acceder a este inmueble"));
+                    return StatusCode(403, new { error = "No tiene permiso para acceder a este inmueble" });
                 }
 
                 // Cargar colecciones por separado
@@ -114,12 +114,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 var inmuebleDto = MapearInmuebleADto(inmueble);
 
-                return Ok(ApiResponse<InmuebleDto>.SuccessResponse(inmuebleDto));
+                return Ok(inmuebleDto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al obtener inmueble ID: {id}");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -127,10 +127,10 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Crear un nuevo inmueble (por defecto deshabilitado según requisitos)
         /// </summary>
         [HttpPost]
-        [ProducesResponseType(typeof(ApiResponse<InmuebleDto>), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<ApiResponse<InmuebleDto>>> CrearInmueble([FromBody] CrearInmuebleDto request)
+        [ProducesResponseType(typeof(InmuebleDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<InmuebleDto>> CrearInmueble([FromBody] CrearInmuebleDto request)
         {
             try
             {
@@ -140,13 +140,13 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                         .SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage)
                         .ToList();
-                    return BadRequest(ApiResponse.ErrorResponse("Datos de entrada inválidos", errors));
+                    return BadRequest(new { error = "Datos de entrada inválidos", details = errors });
                 }
 
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 // Crear inmueble (por defecto inactivo según requisitos)
@@ -182,13 +182,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 var inmuebleDto = MapearInmuebleADto(inmueble);
 
                 _logger.LogInformation($"Inmueble creado ID: {inmueble.Id} por propietario ID: {propietarioId}");
-                return CreatedAtAction(nameof(ObtenerInmueble), new { id = inmueble.Id }, 
-                    ApiResponse<InmuebleDto>.SuccessResponse(inmuebleDto, "Inmueble creado exitosamente (estado: inactivo)"));
+                return CreatedAtAction(nameof(ObtenerInmueble), new { id = inmueble.Id }, inmuebleDto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear inmueble");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -196,12 +195,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Habilitar/Deshabilitar un inmueble
         /// </summary>
         [HttpPatch("{id}/estado")]
-        [ProducesResponseType(typeof(ApiResponse<InmuebleDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<InmuebleDto>>> ActualizarEstado(int id, [FromBody] ActualizarEstadoInmuebleDto request)
+        [ProducesResponseType(typeof(InmuebleDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<InmuebleDto>> ActualizarEstado(int id, [FromBody] ActualizarEstadoInmuebleDto request)
         {
             try
             {
@@ -211,13 +210,13 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                         .SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage)
                         .ToList();
-                    return BadRequest(ApiResponse.ErrorResponse("Datos de entrada inválidos", errors));
+                    return BadRequest(new { error = "Datos de entrada inválidos", details = errors });
                 }
 
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var inmueble = await _context.Inmuebles
@@ -226,13 +225,13 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 if (inmueble == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse("Inmueble no encontrado"));
+                    return NotFound(new { error = "Inmueble no encontrado" });
                 }
 
                 // Verificar que el inmueble pertenece al propietario autenticado
                 if (inmueble.PropietarioId != propietarioId.Value)
                 {
-                    return StatusCode(403, ApiResponse.ErrorResponse("No tiene permiso para modificar este inmueble"));
+                    return StatusCode(403, new { error = "No tiene permiso para modificar este inmueble" });
                 }
 
                 // Cargar colecciones por separado
@@ -260,7 +259,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                             ? "El inmueble está Reservado con un contrato vigente"
                             : "El inmueble está No Disponible con un contrato activo";
                         
-                        return BadRequest(ApiResponse.ErrorResponse($"No se puede inactivar el inmueble. {motivo}."));
+                        return BadRequest(new { error = $"No se puede inactivar el inmueble. {motivo}." });
                     }
                 }
 
@@ -278,12 +277,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 string nuevoEstadoStr = inmueble.Estado.ToString();
                 _logger.LogInformation($"Estado de inmueble ID: {id} actualizado a {nuevoEstadoStr} por propietario ID: {propietarioId}");
-                return Ok(ApiResponse<InmuebleDto>.SuccessResponse(inmuebleDto, $"Estado del inmueble actualizado a {nuevoEstadoStr}"));
+                return Ok(inmuebleDto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al actualizar estado de inmueble ID: {id}");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 

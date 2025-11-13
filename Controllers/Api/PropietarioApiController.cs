@@ -42,17 +42,17 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Obtener perfil del propietario autenticado
         /// </summary>
         [HttpGet("perfil")]
-        [ProducesResponseType(typeof(ApiResponse<PropietarioDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<PropietarioDto>>> ObtenerPerfil()
+        [ProducesResponseType(typeof(PropietarioDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<PropietarioDto>> ObtenerPerfil()
         {
             try
             {
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var propietario = await _context.Propietarios
@@ -60,7 +60,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 if (propietario == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse("Propietario no encontrado"));
+                    return NotFound(new { error = "Propietario no encontrado" });
                 }
 
                 // Obtener foto de perfil del usuario
@@ -81,12 +81,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                     FotoPerfil = usuario?.FotoPerfil
                 };
 
-                return Ok(ApiResponse<PropietarioDto>.SuccessResponse(propietarioDto));
+                return Ok(propietarioDto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener perfil del propietario");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -94,11 +94,11 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Actualizar perfil del propietario autenticado
         /// </summary>
         [HttpPut("perfil")]
-        [ProducesResponseType(typeof(ApiResponse<PropietarioDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<PropietarioDto>>> ActualizarPerfil([FromBody] ActualizarPerfilDto request)
+        [ProducesResponseType(typeof(PropietarioDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<PropietarioDto>> ActualizarPerfil([FromBody] ActualizarPerfilDto request)
         {
             try
             {
@@ -108,13 +108,13 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                         .SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage)
                         .ToList();
-                    return BadRequest(ApiResponse.ErrorResponse("Datos de entrada inválidos", errors));
+                    return BadRequest(new { error = "Datos de entrada inválidos", details = errors });
                 }
 
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var propietario = await _context.Propietarios
@@ -122,7 +122,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 if (propietario == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse("Propietario no encontrado"));
+                    return NotFound(new { error = "Propietario no encontrado" });
                 }
 
                 // Actualizar datos
@@ -152,12 +152,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 };
 
                 _logger.LogInformation($"Perfil actualizado para propietario ID: {propietarioId}");
-                return Ok(ApiResponse<PropietarioDto>.SuccessResponse(propietarioDto, "Perfil actualizado exitosamente"));
+                return Ok(propietarioDto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al actualizar perfil del propietario");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -165,22 +165,22 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Subir foto de perfil
         /// </summary>
         [HttpPost("perfil/foto")]
-        [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<ApiResponse<string>>> SubirFotoPerfil([FromForm] IFormFile foto)
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<string>> SubirFotoPerfil([FromForm] IFormFile foto)
         {
             try
             {
                 if (foto == null || foto.Length == 0)
                 {
-                    return BadRequest(ApiResponse.ErrorResponse("No se recibió ninguna imagen"));
+                    return BadRequest(new { error = "No se recibió ninguna imagen" });
                 }
 
                 // Validar tamaño (máx 5MB)
                 if (foto.Length > 5 * 1024 * 1024)
                 {
-                    return BadRequest(ApiResponse.ErrorResponse("La imagen no puede superar 5MB"));
+                    return BadRequest(new { error = "La imagen no puede superar 5MB" });
                 }
 
                 // Validar extensión
@@ -188,19 +188,19 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 var extensionesPermitidas = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
                 if (!extensionesPermitidas.Contains(extension))
                 {
-                    return BadRequest(ApiResponse.ErrorResponse("Formato de imagen no permitido. Use: jpg, jpeg, png, gif o webp"));
+                    return BadRequest(new { error = "Formato de imagen no permitido. Use: jpg, jpeg, png, gif o webp" });
                 }
 
                 var usuarioId = _jwtService.ObtenerUsuarioId(User);
                 if (usuarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var usuario = await _context.Usuarios.FindAsync(usuarioId.Value);
                 if (usuario == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse("Usuario no encontrado"));
+                    return NotFound(new { error = "Usuario no encontrado" });
                 }
 
                 // Crear directorio si no existe
@@ -234,12 +234,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation($"Foto de perfil actualizada para usuario ID: {usuarioId}");
-                return Ok(ApiResponse<string>.SuccessResponse(usuario.FotoPerfil, "Foto de perfil actualizada exitosamente"));
+                return Ok(usuario.FotoPerfil);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al subir foto de perfil");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -252,8 +252,8 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         [HttpPut("/api/Propietarios/changePassword")]
         [Consumes("application/x-www-form-urlencoded")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult> ChangePassword([FromForm] string currentPassword, [FromForm] string newPassword)
         {
             try
@@ -261,41 +261,41 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 // Validaciones básicas
                 if (string.IsNullOrWhiteSpace(currentPassword))
                 {
-                    return BadRequest(ApiResponse.ErrorResponse("La contraseña actual es obligatoria"));
+                    return BadRequest(new { error = "La contraseña actual es obligatoria" });
                 }
 
                 if (string.IsNullOrWhiteSpace(newPassword))
                 {
-                    return BadRequest(ApiResponse.ErrorResponse("La nueva contraseña es obligatoria"));
+                    return BadRequest(new { error = "La nueva contraseña es obligatoria" });
                 }
 
                 if (newPassword.Length < 6)
                 {
-                    return BadRequest(ApiResponse.ErrorResponse("La contraseña debe tener al menos 6 caracteres"));
+                    return BadRequest(new { error = "La contraseña debe tener al menos 6 caracteres" });
                 }
 
                 if (currentPassword == newPassword)
                 {
-                    return BadRequest(ApiResponse.ErrorResponse("La nueva contraseña debe ser diferente a la actual"));
+                    return BadRequest(new { error = "La nueva contraseña debe ser diferente a la actual" });
                 }
 
                 // Obtener usuario autenticado
                 var usuarioId = _jwtService.ObtenerUsuarioId(User);
                 if (usuarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var usuario = await _context.Usuarios.FindAsync(usuarioId.Value);
                 if (usuario == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse("Usuario no encontrado"));
+                    return NotFound(new { error = "Usuario no encontrado" });
                 }
 
                 // Verificar contraseña actual
                 if (!BCrypt.Net.BCrypt.Verify(currentPassword, usuario.Password))
                 {
-                    return BadRequest(ApiResponse.ErrorResponse("La contraseña actual es incorrecta"));
+                    return BadRequest(new { error = "La contraseña actual es incorrecta" });
                 }
 
                 // Actualizar contraseña
@@ -310,7 +310,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al cambiar contraseña");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
     }

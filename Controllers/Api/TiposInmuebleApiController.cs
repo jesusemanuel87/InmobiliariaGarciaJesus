@@ -28,8 +28,8 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// </summary>
         /// <returns>Lista de tipos de inmuebles</returns>
         [HttpGet]
-        [ProducesResponseType(typeof(ApiResponse<List<TipoInmuebleDto>>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<List<TipoInmuebleDto>>>> ObtenerTiposInmueble()
+        [ProducesResponseType(typeof(List<TipoInmuebleDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<TipoInmuebleDto>>> ObtenerTiposInmueble()
         {
             try
             {
@@ -49,12 +49,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 _logger.LogInformation($"Tipos de inmuebles obtenidos para API: {tiposDto.Count}");
                 
-                return Ok(ApiResponse<List<TipoInmuebleDto>>.SuccessResponse(tiposDto));
+                return Ok(tiposDto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener tipos de inmuebles para API");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error al obtener tipos de inmuebles"));
+                return StatusCode(500, new { error = "Error al obtener tipos de inmuebles" });
             }
         }
 
@@ -64,9 +64,9 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// <param name="id">ID del tipo de inmueble</param>
         /// <returns>Tipo de inmueble</returns>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<TipoInmuebleDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<TipoInmuebleDto>>> ObtenerTipoInmueblePorId(int id)
+        [ProducesResponseType(typeof(TipoInmuebleDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<TipoInmuebleDto>> ObtenerTipoInmueblePorId(int id)
         {
             try
             {
@@ -74,7 +74,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 
                 if (tipo == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse($"Tipo de inmueble con ID {id} no encontrado"));
+                    return NotFound(new { error = $"Tipo de inmueble con ID {id} no encontrado" });
                 }
 
                 var tipoDto = new TipoInmuebleDto
@@ -84,12 +84,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                     Descripcion = tipo.Descripcion
                 };
 
-                return Ok(ApiResponse<TipoInmuebleDto>.SuccessResponse(tipoDto));
+                return Ok(tipoDto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al obtener tipo de inmueble ID: {id}");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error al obtener tipo de inmueble"));
+                return StatusCode(500, new { error = "Error al obtener tipo de inmueble" });
             }
         }
     }

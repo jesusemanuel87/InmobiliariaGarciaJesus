@@ -36,16 +36,16 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Obtener todas las notificaciones del propietario (leídas y no leídas)
         /// </summary>
         [HttpGet]
-        [ProducesResponseType(typeof(ApiResponse<List<NotificacionDto>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<ApiResponse<List<NotificacionDto>>>> ObtenerNotificaciones()
+        [ProducesResponseType(typeof(List<NotificacionDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<List<NotificacionDto>>> ObtenerNotificaciones()
         {
             try
             {
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var notificaciones = await _context.Notificaciones
@@ -65,12 +65,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                     })
                     .ToListAsync();
 
-                return Ok(ApiResponse<List<NotificacionDto>>.SuccessResponse(notificaciones));
+                return Ok(notificaciones);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener notificaciones");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -78,16 +78,16 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Obtener solo las notificaciones NO LEÍDAS
         /// </summary>
         [HttpGet("no-leidas")]
-        [ProducesResponseType(typeof(ApiResponse<List<NotificacionDto>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<ApiResponse<List<NotificacionDto>>>> ObtenerNotificacionesNoLeidas()
+        [ProducesResponseType(typeof(List<NotificacionDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<List<NotificacionDto>>> ObtenerNotificacionesNoLeidas()
         {
             try
             {
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var notificaciones = await _context.Notificaciones
@@ -106,12 +106,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                     })
                     .ToListAsync();
 
-                return Ok(ApiResponse<List<NotificacionDto>>.SuccessResponse(notificaciones));
+                return Ok(notificaciones);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener notificaciones no leídas");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -119,28 +119,28 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Obtener contador de notificaciones no leídas (para badge)
         /// </summary>
         [HttpGet("contador")]
-        [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<ApiResponse<int>>> ObtenerContadorNoLeidas()
+        [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<int>> ObtenerContadorNoLeidas()
         {
             try
             {
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var contador = await _context.Notificaciones
                     .Where(n => n.PropietarioId == propietarioId.Value && !n.Leida)
                     .CountAsync();
 
-                return Ok(ApiResponse<int>.SuccessResponse(contador));
+                return Ok(contador);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener contador de notificaciones");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -148,17 +148,17 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Marcar una notificación como leída
         /// </summary>
         [HttpPatch("{notificacionId}/marcar-leida")]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<ApiResponse>> MarcarComoLeida(int notificacionId)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult> MarcarComoLeida(int notificacionId)
         {
             try
             {
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var notificacion = await _context.Notificaciones
@@ -166,7 +166,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 if (notificacion == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse("Notificación no encontrada"));
+                    return NotFound(new { error = "Notificación no encontrada" });
                 }
 
                 if (!notificacion.Leida)
@@ -176,12 +176,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                     await _context.SaveChangesAsync();
                 }
 
-                return Ok(ApiResponse.SuccessResponse("Notificación marcada como leída"));
+                return Ok(new { message = "Notificación marcada como leída" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al marcar notificación {notificacionId} como leída");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -189,16 +189,16 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Marcar TODAS las notificaciones como leídas
         /// </summary>
         [HttpPatch("marcar-todas-leidas")]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<ApiResponse>> MarcarTodasComoLeidas()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult> MarcarTodasComoLeidas()
         {
             try
             {
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var notificacionesNoLeidas = await _context.Notificaciones
@@ -213,12 +213,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 await _context.SaveChangesAsync();
 
-                return Ok(ApiResponse.SuccessResponse($"{notificacionesNoLeidas.Count} notificaciones marcadas como leídas"));
+                return Ok(new { message = $"{notificacionesNoLeidas.Count} notificaciones marcadas como leídas" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al marcar todas las notificaciones como leídas");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -226,17 +226,17 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Eliminar una notificación
         /// </summary>
         [HttpDelete("{notificacionId}")]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<ApiResponse>> EliminarNotificacion(int notificacionId)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult> EliminarNotificacion(int notificacionId)
         {
             try
             {
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var notificacion = await _context.Notificaciones
@@ -244,18 +244,18 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 if (notificacion == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse("Notificación no encontrada"));
+                    return NotFound(new { error = "Notificación no encontrada" });
                 }
 
                 _context.Notificaciones.Remove(notificacion);
                 await _context.SaveChangesAsync();
 
-                return Ok(ApiResponse.SuccessResponse("Notificación eliminada"));
+                return Ok(new { message = "Notificación eliminada" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al eliminar notificación {notificacionId}");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
     }

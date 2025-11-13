@@ -38,10 +38,10 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// <returns>Token JWT y datos del propietario</returns>
         [HttpPost("login")]
         [AllowAnonymous]
-        [ProducesResponseType(typeof(ApiResponse<LoginResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<ApiResponse<LoginResponseDto>>> Login([FromBody] LoginRequestDto request)
+        [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginRequestDto request)
         {
             try
             {
@@ -51,7 +51,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                         .SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage)
                         .ToList();
-                    return BadRequest(ApiResponse.ErrorResponse("Datos de entrada inválidos", errors));
+                    return BadRequest(new { error = "Datos de entrada inválidos", details = errors });
                 }
 
                 // Buscar usuario por email
@@ -62,28 +62,28 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 if (usuario == null)
                 {
                     _logger.LogWarning($"Intento de login fallido: Email {request.Email} no encontrado");
-                    return Unauthorized(ApiResponse.ErrorResponse("Credenciales inválidas"));
+                    return Unauthorized(new { error = "Credenciales inválidas" });
                 }
 
                 // Verificar que sea un propietario
                 if (usuario.Rol != RolUsuario.Propietario || usuario.Propietario == null)
                 {
                     _logger.LogWarning($"Intento de login de usuario no propietario: {request.Email}");
-                    return Unauthorized(ApiResponse.ErrorResponse("Acceso no autorizado. Solo propietarios pueden usar esta aplicación"));
+                    return Unauthorized(new { error = "Acceso no autorizado. Solo propietarios pueden usar esta aplicación" });
                 }
 
                 // Verificar contraseña
                 if (!BCrypt.Net.BCrypt.Verify(request.Password, usuario.ClaveHash))
                 {
                     _logger.LogWarning($"Intento de login fallido: Contraseña incorrecta para {request.Email}");
-                    return Unauthorized(ApiResponse.ErrorResponse("Credenciales inválidas"));
+                    return Unauthorized(new { error = "Credenciales inválidas" });
                 }
 
                 // Verificar que la cuenta esté activa
                 if (!usuario.Estado)
                 {
                     _logger.LogWarning($"Intento de login de cuenta inactiva: {request.Email}");
-                    return Unauthorized(ApiResponse.ErrorResponse("Cuenta inactiva. Contacte al administrador"));
+                    return Unauthorized(new { error = "Cuenta inactiva. Contacte al administrador" });
                 }
 
                 // Actualizar último acceso
@@ -116,12 +116,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 };
 
                 _logger.LogInformation($"Login exitoso para propietario: {usuario.Email}");
-                return Ok(ApiResponse<LoginResponseDto>.SuccessResponse(response, "Login exitoso"));
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error en login");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -134,10 +134,10 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         [HttpPost("login-form")]
         [AllowAnonymous]
         [Consumes("application/x-www-form-urlencoded")]
-        [ProducesResponseType(typeof(ApiResponse<LoginResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<ApiResponse<LoginResponseDto>>> LoginForm([FromForm] string email, [FromForm] string password)
+        [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<LoginResponseDto>> LoginForm([FromForm] string email, [FromForm] string password)
         {
             // Crear objeto LoginRequestDto y reutilizar el método Login existente
             var request = new LoginRequestDto
@@ -155,10 +155,10 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// </summary>
         [HttpPost("cambiar-password")]
         [Authorize]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<ApiResponse>> CambiarPassword([FromBody] CambiarPasswordRequestDto request)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult> CambiarPassword([FromBody] CambiarPasswordRequestDto request)
         {
             try
             {
@@ -168,25 +168,25 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                         .SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage)
                         .ToList();
-                    return BadRequest(ApiResponse.ErrorResponse("Datos de entrada inválidos", errors));
+                    return BadRequest(new { error = "Datos de entrada inválidos", errors });
                 }
 
                 var usuarioId = _jwtService.ObtenerUsuarioId(User);
                 if (usuarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("Usuario no autenticado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var usuario = await _context.Usuarios.FindAsync(usuarioId.Value);
                 if (usuario == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse("Usuario no encontrado"));
+                    return NotFound(new { error = "Usuario no encontrado" });
                 }
 
                 // Verificar contraseña actual
                 if (!BCrypt.Net.BCrypt.Verify(request.PasswordActual, usuario.ClaveHash))
                 {
-                    return BadRequest(ApiResponse.ErrorResponse("La contraseña actual es incorrecta"));
+                    return BadRequest(new { error = "La contraseña actual es incorrecta" });
                 }
 
                 // Actualizar contraseña
@@ -195,12 +195,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation($"Contraseña cambiada exitosamente para usuario ID: {usuarioId}");
-                return Ok(ApiResponse.SuccessResponse("Contraseña actualizada exitosamente"));
+                return Ok(new { message = "Contraseña actualizada exitosamente" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al cambiar contraseña");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -209,10 +209,10 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// </summary>
         [HttpPost("reset-password")]
         [AllowAnonymous]
-        [ProducesResponseType(typeof(ApiResponse<ResetPasswordResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<ResetPasswordResponseDto>>> ResetPassword([FromBody] ResetPasswordRequestDto request)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordRequestDto request)
         {
             try
             {
@@ -222,7 +222,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                         .SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage)
                         .ToList();
-                    return BadRequest(ApiResponse.ErrorResponse("Datos de entrada inválidos", errors));
+                    return BadRequest(new { error = "Datos de entrada inválidos", errors });
                 }
 
                 // Buscar propietario por email y DNI
@@ -232,7 +232,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 if (propietario == null)
                 {
                     _logger.LogWarning($"Intento de reset de contraseña fallido: Email {request.Email} y DNI {request.Dni} no coinciden");
-                    return NotFound(ApiResponse.ErrorResponse("No se encontró un propietario con esos datos"));
+                    return Ok(new { message = "Si el email existe, se enviará un correo con instrucciones para restablecer la contraseña" });
                 }
 
                 // Buscar usuario asociado
@@ -241,7 +241,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 if (usuario == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse("No se encontró una cuenta de usuario asociada"));
+                    return NotFound(new { error = "No se encontró una cuenta de usuario asociada" });
                 }
 
                 // Generar nueva contraseña temporal (8 caracteres aleatorios)
@@ -260,15 +260,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 _logger.LogInformation($"Contraseña restablecida para usuario: {usuario.Email}");
                 
                 // NOTA: En producción, esto debería enviarse por email, no retornarse en la respuesta
-                return Ok(ApiResponse<ResetPasswordResponseDto>.SuccessResponse(
-                    responseData, 
-                    "Contraseña restablecida. Por seguridad, cámbiela en su próximo inicio de sesión"
-                ));
+                return Ok(responseData);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al resetear contraseña");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 

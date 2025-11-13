@@ -39,17 +39,17 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Obtener pagos pendientes de un contrato
         /// </summary>
         [HttpGet("contrato/{contratoId}/pendientes")]
-        [ProducesResponseType(typeof(ApiResponse<List<PagoDto>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status403Forbidden)]
-        public async Task<ActionResult<ApiResponse<List<PagoDto>>>> ObtenerPagosPendientes(int contratoId)
+        [ProducesResponseType(typeof(List<PagoDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status403Forbidden)]
+        public async Task<ActionResult<List<PagoDto>>> ObtenerPagosPendientes(int contratoId)
         {
             try
             {
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 // Verificar que el contrato pertenece a un inmueble del propietario
@@ -59,12 +59,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 if (contrato == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse("Contrato no encontrado"));
+                    return NotFound(new { error = "Contrato no encontrado" });
                 }
 
                 if (contrato.Inmueble?.PropietarioId != propietarioId.Value)
                 {
-                    return StatusCode(403, ApiResponse.ErrorResponse("No tiene permiso para acceder a este contrato"));
+                    return StatusCode(403, new { error = "No tiene permiso para acceder a este contrato" });
                 }
 
                 // Obtener pagos pendientes
@@ -90,12 +90,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                     FechaCreacion = p.FechaCreacion
                 }).ToList();
 
-                return Ok(ApiResponse<List<PagoDto>>.SuccessResponse(pagos));
+                return Ok(pagos);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al obtener pagos pendientes del contrato {contratoId}");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -103,11 +103,11 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Registrar pago de alquiler y notificar al propietario
         /// </summary>
         [HttpPost("{pagoId}/registrar")]
-        [ProducesResponseType(typeof(ApiResponse<PagoDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ApiResponse<PagoDto>>> RegistrarPago(
+        [ProducesResponseType(typeof(PagoDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<PagoDto>> RegistrarPago(
             int pagoId,
             [FromBody] RegistrarPagoDto request)
         {
@@ -116,7 +116,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 if (!ModelState.IsValid)
@@ -125,7 +125,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                         .SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage)
                         .ToList();
-                    return BadRequest(ApiResponse.ErrorResponse("Datos inválidos", errors));
+                    return BadRequest(new { error = "Datos inválidos", details = errors });
                 }
 
                 // Obtener el pago
@@ -134,7 +134,7 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 if (pago == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse("Pago no encontrado"));
+                    return NotFound(new { error = "Pago no encontrado" });
                 }
 
                 // Obtener el contrato con sus relaciones
@@ -145,19 +145,19 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 if (contrato == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse("Contrato no encontrado"));
+                    return NotFound(new { error = "Contrato no encontrado" });
                 }
 
                 // Verificar permisos
                 if (contrato.Inmueble?.PropietarioId != propietarioId.Value)
                 {
-                    return StatusCode(403, ApiResponse.ErrorResponse("No tiene permiso para registrar este pago"));
+                    return StatusCode(403, new { error = "No tiene permiso para registrar este pago" });
                 }
 
                 // Verificar que no esté ya pagado
                 if (pago.Estado == EstadoPago.Pagado)
                 {
-                    return BadRequest(ApiResponse.ErrorResponse("El pago ya fue registrado"));
+                    return BadRequest(new { error = "El pago ya fue registrado" });
                 }
 
                 // Registrar el pago
@@ -197,15 +197,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                 };
 
                 _logger.LogInformation($"Pago {pagoId} registrado exitosamente por propietario {propietarioId}");
-                return Ok(ApiResponse<PagoDto>.SuccessResponse(
-                    pagoDto, 
-                    "Pago registrado exitosamente. Se ha notificado al propietario."
-                ));
+                return Ok(pagoDto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al registrar pago {pagoId}");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -213,15 +210,15 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
         /// Obtener historial de pagos de un contrato
         /// </summary>
         [HttpGet("contrato/{contratoId}/historial")]
-        [ProducesResponseType(typeof(ApiResponse<List<PagoDto>>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse<List<PagoDto>>>> ObtenerHistorialPagos(int contratoId)
+        [ProducesResponseType(typeof(List<PagoDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<PagoDto>>> ObtenerHistorialPagos(int contratoId)
         {
             try
             {
                 var propietarioId = _jwtService.ObtenerPropietarioId(User);
                 if (propietarioId == null)
                 {
-                    return Unauthorized(ApiResponse.ErrorResponse("No autorizado"));
+                    return Unauthorized(new { error = "No autorizado" });
                 }
 
                 var contrato = await _context.Contratos
@@ -230,12 +227,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
 
                 if (contrato == null)
                 {
-                    return NotFound(ApiResponse.ErrorResponse("Contrato no encontrado"));
+                    return NotFound(new { error = "Contrato no encontrado" });
                 }
 
                 if (contrato.Inmueble?.PropietarioId != propietarioId.Value)
                 {
-                    return StatusCode(403, ApiResponse.ErrorResponse("No tiene permiso"));
+                    return StatusCode(403, new { error = "No tiene permiso" });
                 }
 
                 var pagosEntities = await _context.Pagos
@@ -260,12 +257,12 @@ namespace InmobiliariaGarciaJesus.Controllers.Api
                     FechaCreacion = p.FechaCreacion
                 }).ToList();
 
-                return Ok(ApiResponse<List<PagoDto>>.SuccessResponse(pagos));
+                return Ok(pagos);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al obtener historial de pagos");
-                return StatusCode(500, ApiResponse.ErrorResponse("Error interno del servidor"));
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
     }
